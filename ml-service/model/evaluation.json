@@ -1,0 +1,97 @@
+{
+  "dataset": "training_abstracts.csv",
+  "dataset_rows": 40,
+  "train_rows": 32,
+  "test_rows": 8,
+  "random_state": 42,
+  "accuracy": 0.375,
+  "labels": [
+    "Computer Vision",
+    "Cybersecurity",
+    "Distributed Systems",
+    "Machine Learning",
+    "Natural Language Processing"
+  ],
+  "classification_report": {
+    "Computer Vision": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1-score": 0.6666666666666666,
+      "support": 2.0
+    },
+    "Cybersecurity": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Distributed Systems": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 2.0
+    },
+    "Machine Learning": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "Natural Language Processing": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "accuracy": 0.375,
+    "macro avg": {
+      "precision": 0.4,
+      "recall": 0.3,
+      "f1-score": 0.3333333333333333,
+      "support": 8.0
+    },
+    "weighted avg": {
+      "precision": 0.5,
+      "recall": 0.375,
+      "f1-score": 0.41666666666666663,
+      "support": 8.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      1,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      2,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      2,
+      0
+    ],
+    [
+      0,
+      1,
+      0,
+      0,
+      0
+    ]
+  ]
+}

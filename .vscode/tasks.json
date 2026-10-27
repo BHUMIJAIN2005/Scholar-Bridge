@@ -1,0 +1,73 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "dev",
+      "problemMatcher": [],
+      "label": "Next.js: dev (ScholarBridge)",
+      "detail": "Starts the development server at http://localhost:3000",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "type": "npm",
+      "script": "build",
+      "problemMatcher": [],
+      "label": "Next.js: build (ScholarBridge)",
+      "detail": "Compiles the production build for Vercel deployment"
+    },
+    {
+      "label": "ScholarBridge: Python ML service",
+      "type": "shell",
+      "command": "python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+      "options": {
+        "cwd": "${workspaceFolder}/ml-service"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "Application startup complete"
+        }
+      }
+    },
+    {
+      "label": "ScholarBridge: Backend",
+      "type": "shell",
+      "command": "$jdk = Get-ChildItem (Join-Path $env:LOCALAPPDATA 'jdks') -Directory -Filter 'jdk-25*' | Sort-Object { [version]($_.Name -replace '^jdk-', '') } -Descending | Select-Object -First 1; if (-not $jdk) { throw 'JDK 25 not found under LOCALAPPDATA\\jdks. Install JDK 25 first.' }; $env:JAVA_HOME = $jdk.FullName; $env:Path = (Join-Path $env:JAVA_HOME 'bin') + ';' + $env:Path; .\\mvnw.cmd spring-boot:run",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "Started ScholarBridgeApplication"
+        }
+      }
+    },
+    {
+      "label": "ScholarBridge: Start all local services",
+      "dependsOn": [
+        "ScholarBridge: Python ML service",
+        "ScholarBridge: Backend",
+        "Next.js: dev (ScholarBridge)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

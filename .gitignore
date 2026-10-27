@@ -1,0 +1,28 @@
+﻿# Environment files and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Installed dependencies and generated output
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+backend/target/
+
+# Python-generated files and environments
+**/__pycache__/
+**/.pytest_cache/
+**/.venv/
+venv/
+
+# Local uploads and OS files
+backend/uploads/
+.DS_Store
+desktop.ini

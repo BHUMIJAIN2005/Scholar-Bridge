@@ -1,0 +1,10 @@
+{
+  "name": "scholar-bridge-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix deploy-scholar-bridge-frontend-to-vercel run dev",
+    "build": "npm --prefix deploy-scholar-bridge-frontend-to-vercel run build",
+    "start": "npm --prefix deploy-scholar-bridge-frontend-to-vercel start"
+  }
+}

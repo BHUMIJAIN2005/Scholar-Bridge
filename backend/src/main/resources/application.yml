@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: scholarbridge-backend
+  profiles:
+    default: local
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 22MB
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+server:
+  port: ${PORT:8080}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:local-development-secret-change-this-before-deployment-0123456789}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  uploads:
+    directory: ${SCHOLARBRIDGE_UPLOAD_DIR:./uploads}
+  ml:
+    service-url: ${ML_SERVICE_URL:http://localhost:8000}
+  cors:
+    allowed-origin: ${FRONTEND_ORIGIN:http://localhost:3000}
+  seed:
+    enabled: false

@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "dev",
+      "problemMatcher": [],
+      "label": "Next.js: dev (ScholarBridge)",
+      "detail": "Starts the development server at http://localhost:3000",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "type": "npm",
+      "script": "build",
+      "problemMatcher": [],
+      "label": "Next.js: build (ScholarBridge)",
+      "detail": "Compiles the production build for Vercel deployment"
+    }
+  ]
+}
