@@ -17,10 +17,28 @@ coverage/
 backend/target/
 
 # Python-generated files and environments
-**/__pycache__/
-**/.pytest_cache/
+# Python virtual environments
+.venv/
 **/.venv/
-venv/
+
+# Python cache files
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Test and tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# macOS
+.DS_Store
+
 
 # Local uploads and OS files
 backend/uploads/
