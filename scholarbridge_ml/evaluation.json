@@ -1,0 +1,12 @@
+[
+  {
+    "model":"TF-IDF + Logistic Regression",
+    "accuracy":0.7915106117,
+    "macro_f1":0.7606081768
+  },
+  {
+    "model":"Sentence Embeddings + Logistic Regression",
+    "accuracy":0.77278402,
+    "macro_f1":0.7451187655
+  }
+]
