@@ -1,5 +1,6 @@
 package com.scholarbridge.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -29,8 +30,13 @@ public class ResearchOpening {
     @JoinColumn(name = "faculty_id", nullable = false)
     private User faculty;
 
+    @Column(length = 180)
     private String title;
+
+    @Column(length = 10000)
     private String description;
+
+    @Column(length = 1000)
     private String requiredSkills;
     private int seats;
 

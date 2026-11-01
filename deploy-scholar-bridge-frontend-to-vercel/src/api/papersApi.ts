@@ -21,11 +21,7 @@ export const papersApi = {
     formData.append('file', file);
     formData.append('title', title);
 
-    const response = await axiosClient.post<PaperSubmission>('/api/papers/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await axiosClient.post<PaperSubmission>('/api/papers/upload', formData);
     return response.data;
   },
 

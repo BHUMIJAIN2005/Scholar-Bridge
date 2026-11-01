@@ -1,7 +1,7 @@
 # Phase 1 Development Report
 
 **Project:** ScholarBridge  
-**Report date:** 27 October 2026  
+**Report date:** 30 October 2026
 **Scope:** Current workspace snapshot
 
 ## Executive summary
@@ -45,7 +45,10 @@ This report describes what is evidenced in the workspace; it does not claim that
 
 ### Priority 1 — Prove the current baseline
 
-- Run the Python tests, backend Maven tests, and frontend production build; record results and address failures.
+- Baseline checks completed on 30 October 2026:
+  - Python ML-service tests (`python -m pytest`): **2 passed**.
+  - Backend Maven tests with JDK 25.0.2: **1 passed**. A clean build compiled all 44 backend source files and passed `PlatformFlowIntegrationTest`. Lombok annotation processing is now explicitly configured in [`backend/pom.xml`](./backend/pom.xml), which was needed for a fresh Java 25 compile. The workspace's existing `backend/target/classes` could not be deleted by Maven because of a Windows file lock, so the clean verification ran from a temporary copy of the backend source.
+  - Frontend production build (`pnpm run build`): **passed**, including TypeScript checks and generation of 16 routes.
 - Exercise the key end-to-end flows with all services running: authentication, opening/application review, PDF upload/categorization, conference submission/review, and public showcase.
 - Check API contracts, authorization boundaries, error responses, CORS, and frontend behavior against the running services. Existing test files are evidence of test coverage being started, not proof that the full system currently passes.
 
@@ -79,4 +82,3 @@ This report describes what is evidenced in the workspace; it does not claim that
 **Status: Core implementation present; verification and readiness work remain.**
 
 The repository shows a substantial functional foundation, but the saved ML score, test coverage evidence, and lack of deployment evidence mean the project should not yet be described as fully validated or production-ready. Treat Phase 1 as complete only after the baseline checks and end-to-end workflows above have been run and their outcomes recorded.
-

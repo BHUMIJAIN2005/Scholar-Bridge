@@ -39,13 +39,20 @@ class PlatformFlowIntegrationTest {
             "department", "Computer Science", "researchDomains", "Machine Learning, NLP"));
         String studentToken = signup("student-" + suffix + "@example.edu", "STUDENT", Map.of(
             "skills", "Python, NLP", "year", "Third year"));
+        ResponseEntity<String> invalidPaperUpload = exchange(
+            "/api/papers/upload", HttpMethod.POST, studentToken, Map.of("title", "Paper"));
+        assertThat(invalidPaperUpload.getStatusCode()).isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        String longDescription = "This lab studies how neural networks and transfer learning can classify plant diseases from limited labeled image datasets. "
+            .repeat(5).trim();
 
         ResponseEntity<String> openingResponse = exchange(
             "/api/openings", HttpMethod.POST, facultyToken,
-            Map.of("title", "Language Models", "description", "Research project description for students.",
+            Map.of("title", "Language Models", "description", longDescription,
                 "requiredSkills", "Python, NLP", "seats", 2));
         assertThat(openingResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        long openingId = objectMapper.readTree(openingResponse.getBody()).get("id").asLong();
+        JsonNode opening = objectMapper.readTree(openingResponse.getBody());
+        long openingId = opening.get("id").asLong();
+        assertThat(opening.get("description").asText()).isEqualTo(longDescription);
 
         ResponseEntity<String> applyResponse = exchange(
             "/api/applications", HttpMethod.POST, studentToken,
