@@ -1,6 +1,8 @@
 package com.scholarbridge.dto;
 
 import com.scholarbridge.entity.ApplicationStatus;
+import com.scholarbridge.entity.BlogPostStatus;
+import com.scholarbridge.entity.BlogReactionType;
 import com.scholarbridge.entity.OpeningStatus;
 import com.scholarbridge.entity.PaperStatus;
 import com.scholarbridge.entity.SubmissionStatus;
@@ -13,6 +15,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 public final class ApiDtos {
     private ApiDtos() {}
@@ -161,4 +164,76 @@ public final class ApiDtos {
     ) {}
 
     public record ErrorResponse(String message, Instant timestamp) {}
+
+    public record BlogPostRequest(
+        @NotBlank @Size(max = 150) String title,
+        @NotBlank String content,
+        @Size(max = 300) String summary,
+        @Size(max = 5) List<@NotBlank @Size(max = 80) String> tags,
+        BlogPostStatus status,
+        Long linkedPaperId
+    ) {}
+
+    public record BlogPaperResponse(Long id, String title, String category) {}
+
+    public record BlogAttachmentResponse(
+        Long id,
+        String originalFileName,
+        long fileSize,
+        Instant uploadedAt,
+        String downloadUrl
+    ) {}
+
+    public record BlogPostSummaryResponse(
+        Long id,
+        String authorName,
+        UserRole authorRole,
+        String title,
+        String summary,
+        BlogPostStatus status,
+        BlogPaperResponse linkedPaper,
+        List<String> tags,
+        Instant createdAt,
+        Instant updatedAt
+    ) {}
+
+    public record BlogPostResponse(
+        Long id,
+        String authorName,
+        UserRole authorRole,
+        String title,
+        String summary,
+        String content,
+        BlogPostStatus status,
+        BlogPaperResponse linkedPaper,
+        List<String> tags,
+        List<BlogAttachmentResponse> attachments,
+        Map<BlogReactionType, Long> reactionCounts,
+        BlogReactionType currentUserReaction,
+        Instant createdAt,
+        Instant updatedAt
+    ) {}
+
+    public record BlogTagResponse(String name, long postCount) {}
+
+    public record BlogReactionRequest(BlogReactionType type) {}
+
+    public record BlogCommentRequest(
+        @NotBlank @Size(max = 1000) String content,
+        Long parentCommentId
+    ) {}
+
+    public record BlogCommentUpdateRequest(@NotBlank @Size(max = 1000) String content) {}
+
+    public record BlogCommentResponse(
+        Long id,
+        String authorName,
+        UserRole authorRole,
+        String content,
+        Instant createdAt,
+        Instant updatedAt,
+        long likeCount,
+        boolean likedByCurrentUser,
+        List<BlogCommentResponse> replies
+    ) {}
 }
