@@ -112,6 +112,7 @@ public final class ApiDtos {
         Long id,
         Long studentId,
         String title,
+        String abstractText,
         String fileUrl,
         String category,
         Double confidenceScore,
@@ -141,7 +142,8 @@ public final class ApiDtos {
 
     public record ConferenceSubmitRequest(
         @NotNull Long paperId,
-        @NotBlank @Size(max = 120) String track
+        @NotBlank @Size(max = 120) String track,
+        boolean allowPublicPdf
     ) {}
 
     public record SubmissionStatusRequest(
@@ -158,9 +160,11 @@ public final class ApiDtos {
         String reviewComments,
         String paperTitle,
         String studentName,
+        String abstractText,
         String category,
         Double confidenceScore,
-        Instant acceptedAt
+        Instant acceptedAt,
+        String publicPdfUrl
     ) {}
 
     public record ErrorResponse(String message, Instant timestamp) {}

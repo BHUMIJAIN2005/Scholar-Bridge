@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, Award, FileText, Loader2, RefreshCw, User } from 'lucide-react';
+import { AlertCircle, Award, Download, FileText, Loader2, RefreshCw, Search, User } from 'lucide-react';
 import { CategoryChip } from '@/components/CategoryChip';
 import { conferenceApi, Conference, ConferenceSubmission } from '@/api/conferenceApi';
 
@@ -15,6 +15,7 @@ export default function ShowcasePage() {
   const [conferences, setConferences] = useState<Conference[]>([]);
   const [selectedConference, setSelectedConference] = useState('ALL');
   const [selectedTrack, setSelectedTrack] = useState('ALL');
+  const [searchText, setSearchText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +49,16 @@ export default function ShowcasePage() {
     ? papers
     : papers.filter((paper) => String(paper.conferenceId) === selectedConference), [papers, selectedConference]);
   const tracks = useMemo(() => Array.from(new Set(conferencePapers.map((paper) => paper.track))).sort(), [conferencePapers]);
-  const filteredPapers = conferencePapers.filter((paper) => selectedTrack === 'ALL' || paper.track === selectedTrack);
+  const filteredPapers = conferencePapers.filter((paper) => {
+    const matchesTrack = selectedTrack === 'ALL' || paper.track === selectedTrack;
+    const normalizedSearch = searchText.trim().toLocaleLowerCase();
+    const title = paper.paperTitle?.toLocaleLowerCase() ?? '';
+    const author = paper.studentName?.toLocaleLowerCase() ?? '';
+    const matchesSearch = !normalizedSearch
+      || title.includes(normalizedSearch)
+      || author.includes(normalizedSearch);
+    return matchesTrack && matchesSearch;
+  });
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -65,6 +75,18 @@ export default function ShowcasePage() {
       </div>
 
       <div className="flex flex-col items-center justify-center gap-3">
+        <div className="relative w-full max-w-md">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <label className="sr-only" htmlFor="showcase-search">Search papers by title or author</label>
+          <input
+            id="showcase-search"
+            type="search"
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder="Search by paper title or student author"
+            className="w-full rounded-md border border-neutral-300 bg-white py-2 pl-9 pr-3 text-sm"
+          />
+        </div>
         {conferences.length > 1 && (
           <label className="sr-only" htmlFor="conference-filter">Filter by conference</label>
         )}
@@ -102,7 +124,11 @@ export default function ShowcasePage() {
           <button onClick={loadShowcase} className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700"><RefreshCw size={15} /> Retry</button>
         </div>
       ) : filteredPapers.length === 0 ? (
-        <p className="py-16 text-center text-sm text-neutral-500">No accepted papers are available for this selection yet.</p>
+        <p className="py-16 text-center text-sm text-neutral-500">
+          {papers.length === 0
+            ? 'Accepted research papers will appear here once they are approved for the showcase.'
+            : 'No papers match your search and filters. Try changing or clearing them.'}
+        </p>
       ) : <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {filteredPapers.map((paper) => (
           <div
@@ -114,7 +140,7 @@ export default function ShowcasePage() {
                 <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                   {paper.track}
                 </span>
-                <span className="text-xs text-neutral-400">{paper.acceptedAt ? new Date(paper.acceptedAt).toLocaleDateString() : paper.conferenceName}</span>
+                <span className="text-xs text-neutral-500">{paper.conferenceName}</span>
               </div>
 
               <h2 className="text-lg font-bold text-neutral-900 mb-2 leading-snug">
@@ -125,10 +151,23 @@ export default function ShowcasePage() {
                 <User size={13} className="text-neutral-400" />
                 <span>{paper.studentName ?? 'Student author'}</span>
               </p>
+              {paper.abstractText && (
+                <p className="mb-4 text-sm leading-relaxed text-neutral-600">{paper.abstractText}</p>
+              )}
             </div>
 
             <div className="pt-4 border-t border-neutral-100 flex items-center justify-between">
               {paper.category && <CategoryChip category={paper.category} confidenceScore={paper.confidenceScore} />}
+              {paper.publicPdfUrl && (
+                <a
+                  href={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}${paper.publicPdfUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+                >
+                  <Download size={14} /> View PDF
+                </a>
+              )}
             </div>
           </div>
         ))}

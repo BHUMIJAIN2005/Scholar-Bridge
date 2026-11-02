@@ -45,6 +45,7 @@ function ConferenceSubmitPageInner() {
   const [selectedPaperId, setSelectedPaperId] = useState<number | ''>('');
   const [selectedConferenceId, setSelectedConferenceId] = useState<number | ''>('');
   const [track, setTrack] = useState('');
+  const [allowPublicPdf, setAllowPublicPdf] = useState(false);
 
   // ── Submission state ──────────────────────────────────────────────────────
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,12 +105,14 @@ function ConferenceSubmitPageInner() {
       await conferenceApi.submit(selectedConferenceId as number, {
         paperId: selectedPaperId as number,
         track: track.trim(),
+        allowPublicPdf,
       });
       setSubmitSuccess(true);
       // Reset form
       setSelectedPaperId('');
       setSelectedConferenceId('');
       setTrack('');
+      setAllowPublicPdf(false);
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } };
       if (!axiosErr.response) {
@@ -386,6 +389,19 @@ function ConferenceSubmitPageInner() {
               className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
             />
           </div>
+
+          <label className="flex items-start gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
+            <input
+              type="checkbox"
+              checked={allowPublicPdf}
+              onChange={(event) => setAllowPublicPdf(event.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            <span>
+              I confirm I have permission to share this PDF and allow it to be viewed publicly if accepted.
+              Leave this unchecked to keep the PDF private.
+            </span>
+          </label>
 
           {/* Submit button */}
           <button

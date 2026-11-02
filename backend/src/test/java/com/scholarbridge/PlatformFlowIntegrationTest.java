@@ -4,10 +4,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.scholarbridge.entity.Conference;
+import com.scholarbridge.entity.ConferenceSubmission;
+import com.scholarbridge.entity.PaperStatus;
+import com.scholarbridge.entity.PaperSubmission;
+import com.scholarbridge.entity.SubmissionStatus;
+import com.scholarbridge.entity.User;
+import com.scholarbridge.entity.UserRole;
+import com.scholarbridge.repository.ConferenceRepository;
+import com.scholarbridge.repository.ConferenceSubmissionRepository;
+import com.scholarbridge.repository.PaperSubmissionRepository;
+import com.scholarbridge.repository.UserRepository;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -31,6 +48,21 @@ class PlatformFlowIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserRepository users;
+
+    @Autowired
+    private ConferenceRepository conferences;
+
+    @Autowired
+    private PaperSubmissionRepository papers;
+
+    @Autowired
+    private ConferenceSubmissionRepository submissions;
+
+    @Value("${app.uploads.directory}")
+    private String uploadDirectory;
 
     @Test
     void signupApplyAndFacultyReviewRequireCorrectRolesAndOwnership() throws Exception {
@@ -82,6 +114,107 @@ class PlatformFlowIntegrationTest {
             "/api/applications/" + applicationId + "/status", HttpMethod.PUT, studentToken,
             Map.of("status", "REJECTED"));
         assertThat(forbidden.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void publicPdfRequiresAcceptanceAndExplicitAuthorPermission() throws Exception {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        User student = createUser("public-paper-" + suffix + "@example.edu", UserRole.STUDENT);
+        User faculty = createUser("public-faculty-" + suffix + "@example.edu", UserRole.FACULTY);
+        Conference conference = new Conference();
+        conference.setCreatedBy(faculty);
+        conference.setName("Research Conference");
+        conference.setDepartment("Computer Science");
+        conference.setSubmissionDeadline(Instant.now().plusSeconds(3600));
+        conference.setEventDate(Instant.now().plusSeconds(7200));
+        conference.setTracks(List.of("Artificial Intelligence"));
+        conference = conferences.saveAndFlush(conference);
+
+        Path directory = Paths.get(uploadDirectory).toAbsolutePath().normalize();
+        Files.createDirectories(directory);
+        String filename = UUID.randomUUID() + ".pdf";
+        Path file = directory.resolve(filename);
+        byte[] pdfBytes = "%PDF-1.4 test".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        Files.write(file, pdfBytes);
+        try {
+            long permittedId = createSubmission(student, conference, filename, SubmissionStatus.ACCEPTED, true);
+            long privateId = createSubmission(student, conference, filename, SubmissionStatus.ACCEPTED, false);
+            long unacceptedId = createSubmission(student, conference, filename, SubmissionStatus.SUBMITTED, true);
+
+            ResponseEntity<String> showcaseResponse = rest.getForEntity(
+                "http://localhost:" + port + "/api/conferences/" + conference.getId() + "/showcase",
+                String.class);
+            assertThat(showcaseResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+            JsonNode showcase = objectMapper.readTree(showcaseResponse.getBody());
+            JsonNode permittedRecord = null;
+            JsonNode privateRecord = null;
+            for (JsonNode record : showcase) {
+                if (record.get("id").asLong() == permittedId) permittedRecord = record;
+                if (record.get("id").asLong() == privateId) privateRecord = record;
+            }
+            assertThat(permittedRecord).isNotNull();
+            assertThat(permittedRecord.get("publicPdfUrl").asText())
+                .isEqualTo("/api/public/conference-submissions/" + permittedId + "/paper");
+            assertThat(permittedRecord.get("abstractText").asText()).isEqualTo("Student-written abstract.");
+            assertThat(privateRecord).isNotNull();
+            assertThat(privateRecord.get("publicPdfUrl").isNull()).isTrue();
+
+            ResponseEntity<byte[]> permitted = rest.getForEntity(
+                "http://localhost:" + port + "/api/public/conference-submissions/" + permittedId + "/paper",
+                byte[].class);
+            assertThat(permitted.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(permitted.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
+            assertThat(permitted.getBody()).isEqualTo(pdfBytes);
+
+            ResponseEntity<String> privatePaper = rest.getForEntity(
+                "http://localhost:" + port + "/api/public/conference-submissions/" + privateId + "/paper",
+                String.class);
+            assertThat(privatePaper.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+            ResponseEntity<String> unacceptedPaper = rest.getForEntity(
+                "http://localhost:" + port + "/api/public/conference-submissions/" + unacceptedId + "/paper",
+                String.class);
+            assertThat(unacceptedPaper.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+            ResponseEntity<String> privateRoute = rest.getForEntity(
+                "http://localhost:" + port + "/api/files/999999", String.class);
+            assertThat(privateRoute.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        } finally {
+            Files.deleteIfExists(file);
+        }
+    }
+
+    private User createUser(String email, UserRole role) {
+        User user = new User();
+        user.setName("Integration User");
+        user.setEmail(email);
+        user.setPasswordHash("not-used");
+        user.setRole(role);
+        return users.saveAndFlush(user);
+    }
+
+    private long createSubmission(
+        User student,
+        Conference conference,
+        String filename,
+        SubmissionStatus status,
+        boolean allowPublicPdf
+    ) {
+        PaperSubmission paper = new PaperSubmission();
+        paper.setStudent(student);
+        paper.setTitle("Research paper");
+        paper.setAbstractText("Student-written abstract.");
+        paper.setStoredFilename(filename);
+        paper.setStatus(PaperStatus.DONE);
+        paper = papers.saveAndFlush(paper);
+
+        ConferenceSubmission submission = new ConferenceSubmission();
+        submission.setPaper(paper);
+        submission.setConference(conference);
+        submission.setTrack("Artificial Intelligence");
+        submission.setStatus(status);
+        submission.setPublicPdfAllowed(allowPublicPdf);
+        return submissions.saveAndFlush(submission).getId();
     }
 
     private String signup(String email, String role, Map<String, String> profile) throws Exception {

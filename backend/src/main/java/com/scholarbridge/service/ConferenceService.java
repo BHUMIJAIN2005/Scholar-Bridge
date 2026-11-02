@@ -95,6 +95,7 @@ public class ConferenceService {
         submission.setPaper(paper);
         submission.setConference(conference);
         submission.setTrack(conference.getTracks().stream().filter(track -> track.equalsIgnoreCase(requestedTrack)).findFirst().orElse(requestedTrack));
+        submission.setPublicPdfAllowed(request.allowPublicPdf());
         return mapper.conferenceSubmission(submissions.save(submission));
     }
 

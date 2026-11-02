@@ -18,14 +18,17 @@ export interface ConferenceSubmission {
   reviewComments?: string;
   paperTitle?: string;
   studentName?: string;
+  abstractText?: string;
   category?: string;
   confidenceScore?: number;
   acceptedAt?: string;
+  publicPdfUrl?: string;
 }
 
 export interface SubmitToConferenceRequest {
   paperId: number;
   track: string;
+  allowPublicPdf: boolean;
 }
 
 export const conferenceApi = {

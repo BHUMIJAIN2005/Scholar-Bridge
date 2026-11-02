@@ -1,6 +1,7 @@
 package com.scholarbridge.entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -35,6 +36,9 @@ public class ConferenceSubmission {
     private Conference conference;
 
     private String track;
+
+    @Column(name = "public_pdf_allowed")
+    private Boolean publicPdfAllowed = false;
 
     @Enumerated(EnumType.STRING)
     private SubmissionStatus status = SubmissionStatus.SUBMITTED;

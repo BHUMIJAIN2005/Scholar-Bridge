@@ -11,6 +11,7 @@ export default function MyPapersPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadAbstract, setUploadAbstract] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -55,9 +56,10 @@ export default function MyPapersPage() {
     }
     setIsUploading(true);
     try {
-      await papersApi.upload(uploadFile, uploadTitle.trim());
+      await papersApi.upload(uploadFile, uploadTitle.trim(), uploadAbstract.trim());
       setUploadSuccess(true);
       setUploadTitle('');
+      setUploadAbstract('');
       setUploadFile(null);
       setShowUploadModal(false);
       await loadPapers();
@@ -138,6 +140,24 @@ export default function MyPapersPage() {
                     placeholder="e.g. Cross-Lingual Pre-training for Indic Scripts"
                     className="w-full px-3.5 py-2 rounded-lg border border-neutral-300 text-sm"
                   />
+                </div>
+
+                <div>
+                  <label htmlFor="paper-abstract" className="block text-xs font-semibold text-neutral-700 mb-1">
+                    Short Abstract <span className="font-normal text-neutral-500">(optional)</span>
+                  </label>
+                  <textarea
+                    id="paper-abstract"
+                    rows={4}
+                    maxLength={5000}
+                    value={uploadAbstract}
+                    onChange={(e) => setUploadAbstract(e.target.value)}
+                    placeholder="Briefly describe your research and its main findings."
+                    className="w-full px-3.5 py-2 rounded-lg border border-neutral-300 text-sm"
+                  />
+                  <p className="mt-1 text-[11px] text-neutral-500">
+                    This summary will appear publicly if your paper is accepted at a conference.
+                  </p>
                 </div>
 
                 <div>

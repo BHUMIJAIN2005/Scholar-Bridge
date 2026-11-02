@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -15,7 +16,6 @@ import {
   RefreshCw,
   Users,
   Award,
-  ShieldCheck,
 } from 'lucide-react';
 
 export default function FacultyDashboardPage() {
@@ -62,8 +62,14 @@ export default function FacultyDashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-700/60 text-indigo-100 text-xs font-medium mb-3">
-                <ShieldCheck size={14} />
-                <span>Faculty Dashboard</span>
+                <Image
+                  src="/mits-gwalior-logo.png"
+                  alt=""
+                  width={20}
+                  height={20}
+                  className="h-5 w-5 rounded-full bg-white p-0.5 object-contain"
+                />
+                <span>MITS Gwalior · Faculty Portal</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                 Welcome, {user?.name}!

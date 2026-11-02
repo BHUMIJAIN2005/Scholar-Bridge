@@ -67,9 +67,9 @@ backend/
 - **FacultyProfile** — userId (FK, 1:1), department, researchDomains
 - **ResearchOpening** — id, facultyId (FK), title, description, requiredSkills, seats, status (`OPEN`/`CLOSED`)
 - **Application** — id, studentId (FK), openingId (FK), statementOfInterest, status (`PENDING`/`ACCEPTED`/`REJECTED`), appliedAt
-- **PaperSubmission** — id, studentId (FK), title, fileUrl, extractedText, category, confidenceScore, status (`PROCESSING`/`DONE`/`FAILED`), uploadedAt
+- **PaperSubmission** — id, studentId (FK), title, optional student-provided abstract, fileUrl, extractedText, category, confidenceScore, status (`PROCESSING`/`DONE`/`FAILED`), uploadedAt
 - **Conference** — id, name, department, submissionDeadline, eventDate, tracks (list of strings)
-- **ConferenceSubmission** — id, paperId (FK), conferenceId (FK), track, status (`SUBMITTED`/`UNDER_REVIEW`/`ACCEPTED`/`REJECTED`), reviewComments
+- **ConferenceSubmission** — id, paperId (FK), conferenceId (FK), track, explicit public-PDF permission, status (`SUBMITTED`/`UNDER_REVIEW`/`ACCEPTED`/`REJECTED`), reviewComments
 
 Relationships: `User` 1—1 `StudentProfile`/`FacultyProfile` · `FacultyProfile` 1—N `ResearchOpening` · `StudentProfile` 1—N `Application`/`PaperSubmission` · `PaperSubmission` 1—N `ConferenceSubmission`
 
@@ -96,6 +96,7 @@ Relationships: `User` 1—1 `StudentProfile`/`FacultyProfile` · `FacultyProfile
 | GET | `/api/conferences/{id}/submissions` | Faculty | Review submissions for their track |
 | PUT | `/api/submissions/{id}/status` | Faculty | Accept/reject a submission |
 | GET | `/api/conferences/{id}/showcase` | Public | Accepted papers, grouped by track |
+| GET | `/api/public/conference-submissions/{id}/paper` | Public | Serve a PDF only when the submission is accepted and the author granted public-sharing permission |
 
 ## Step-by-Step Build Plan
 

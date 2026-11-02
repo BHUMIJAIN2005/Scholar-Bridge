@@ -13,6 +13,7 @@ import com.scholarbridge.entity.Application;
 import com.scholarbridge.entity.Conference;
 import com.scholarbridge.entity.ConferenceSubmission;
 import com.scholarbridge.entity.PaperSubmission;
+import com.scholarbridge.entity.SubmissionStatus;
 import com.scholarbridge.entity.ResearchOpening;
 import com.scholarbridge.entity.User;
 import java.util.List;
@@ -65,7 +66,7 @@ public class ApiMapper {
 
     public PaperResponse paper(PaperSubmission paper) {
         return new PaperResponse(
-            paper.getId(), paper.getStudent().getId(), paper.getTitle(),
+            paper.getId(), paper.getStudent().getId(), paper.getTitle(), paper.getAbstractText(),
             "/api/files/" + paper.getId(), paper.getCategory(), paper.getConfidenceScore(),
             paper.getStatus(), paper.getUploadedAt()
         );
@@ -83,7 +84,11 @@ public class ApiMapper {
         return new ConferenceSubmissionResponse(
             submission.getId(), paper.getId(), submission.getConference().getId(), submission.getTrack(),
             submission.getStatus(), submission.getReviewComments(), paper.getTitle(), paper.getStudent().getName(),
-            paper.getCategory(), paper.getConfidenceScore(), submission.getAcceptedAt()
+            paper.getAbstractText(), paper.getCategory(), paper.getConfidenceScore(), submission.getAcceptedAt(),
+            submission.getStatus() == SubmissionStatus.ACCEPTED
+                && Boolean.TRUE.equals(submission.getPublicPdfAllowed())
+                ? "/api/public/conference-submissions/" + submission.getId() + "/paper"
+                : null
         );
     }
 

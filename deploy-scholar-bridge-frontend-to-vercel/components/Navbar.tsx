@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import {
-  GraduationCap,
   LogOut,
   User as UserIcon,
   Menu,
@@ -25,6 +25,7 @@ export const Navbar = () => {
   const { user, isAuthenticated, logout, isStudent, isFaculty } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isLoginPage = pathname === '/login';
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
 
@@ -35,21 +36,38 @@ export const Navbar = () => {
           {/* Logo & Brand */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="h-9 w-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-sm group-hover:bg-emerald-700 transition">
-                <GraduationCap size={20} strokeWidth={2.4} />
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-white p-1 shadow-sm ring-1 ring-neutral-200 transition-transform duration-200 group-hover:scale-105">
+                <Image
+                  src="/mits-gwalior-logo.png"
+                  alt="MITS Gwalior emblem"
+                  width={40}
+                  height={40}
+                  priority
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-lg leading-tight tracking-tight text-neutral-900">
                   Scholar<span className="text-emerald-600">Bridge</span>
                 </span>
-                <span className="text-[10px] text-neutral-400 font-medium tracking-wide uppercase">
-                  Research Platform
+                <span className="text-[10px] text-neutral-500 font-medium tracking-wide">
+                  MITS Gwalior
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-1">
+              {isLoginPage ? (
+                <Link
+                  href="/login"
+                  aria-current="page"
+                  className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-semibold text-neutral-900"
+                >
+                  Sign in
+                </Link>
+              ) : (
+                <div className="contents">
               {/* Public links */}
               <Link
                 href="/showcase"
@@ -185,72 +203,86 @@ export const Navbar = () => {
                   </Link>
                 </>
               )}
+                </div>
+              )}
             </nav>
           </div>
 
           {/* Right Action Menu: Auth or Profile */}
-          <div className="hidden md:flex items-center gap-3">
-            {isAuthenticated && user ? (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-neutral-100/90 border border-neutral-200">
-                  <div
-                    className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                      isFaculty ? 'bg-indigo-600' : 'bg-emerald-600'
-                    }`}
-                  >
-                    {user.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
+          {!isLoginPage && (
+            <div className="hidden items-center gap-3 md:flex">
+              {isAuthenticated && user ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5 rounded-full border border-neutral-200 bg-neutral-100/90 px-3 py-1.5">
+                    <div
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white ${
+                        isFaculty ? 'bg-indigo-600' : 'bg-emerald-600'
+                      }`}
+                    >
+                      {user.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-xs font-semibold leading-tight text-neutral-800">
+                        {user.name}
+                      </span>
+                      <span className="text-[10px] font-medium text-neutral-500">
+                        {user.role}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-xs font-semibold text-neutral-800 leading-tight">
-                      {user.name}
-                    </span>
-                    <span className="text-[10px] text-neutral-500 font-medium">
-                      {user.role}
-                    </span>
-                  </div>
-                </div>
 
-                <button
-                  onClick={logout}
-                  title="Sign out"
-                  className="p-2 rounded-lg text-neutral-500 hover:text-rose-600 hover:bg-rose-50 transition"
-                >
-                  <LogOut size={18} />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/login"
-                  className="px-4 py-2 text-sm font-medium rounded-lg text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 transition"
-                >
-                  Sign in
-                </Link>
-                <Link
-                  href="/signup"
-                  className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition"
-                >
-                  Get Started
-                </Link>
-              </div>
-            )}
-          </div>
+                  <button
+                    onClick={logout}
+                    title="Sign out"
+                    className="rounded-lg p-2 text-neutral-500 transition hover:bg-rose-50 hover:text-rose-600"
+                  >
+                    <LogOut size={18} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/login"
+                    className="rounded-lg px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+                  >
+                    Get Started
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Mobile hamburger button */}
           <div className="flex md:hidden items-center gap-2">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-md text-neutral-600 hover:bg-neutral-100"
-              aria-label="Toggle navigation menu"
-            >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
+            {isLoginPage ? (
+              <Link
+                href="/login"
+                aria-current="page"
+                className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-semibold text-neutral-900"
+              >
+                Sign in
+              </Link>
+            ) : (
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-md text-neutral-600 hover:bg-neutral-100"
+                aria-label="Toggle navigation menu"
+              >
+                {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Mobile dropdown */}
-      {mobileMenuOpen && (
+      {mobileMenuOpen && !isLoginPage && (
         <div className="md:hidden border-t border-neutral-200 bg-white px-4 pt-3 pb-6 space-y-2 shadow-lg">
           <Link
             href="/showcase"

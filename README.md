@@ -4,6 +4,8 @@
 
 ScholarBridge connects students and faculty for research collaboration. Students discover research openings matched to their skills, upload papers they've written, get those papers auto-categorized by an AI service, and can carry accepted work all the way to the department's research conference. Faculty post openings, review applicants alongside their categorized research history, and manage conference submissions.
 
+The public Conference Research Showcase displays accepted paper titles, student authors, conferences, tracks, and optional student-written abstracts. Visitors can search by title or author and filter by conference or track. A paper PDF is public only when its author explicitly grants permission.
+
 This repository's planning is split into four documents, each covering one part of the system in step-by-step detail:
 
 | File | Covers |

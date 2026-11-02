@@ -1,6 +1,7 @@
 package com.scholarbridge.entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -30,6 +31,8 @@ public class PaperSubmission {
     private User student;
 
     private String title;
+    @Column(length = 5000)
+    private String abstractText;
     private String storedFilename;
     private String category;
     private Double confidenceScore;
