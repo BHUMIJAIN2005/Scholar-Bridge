@@ -4,6 +4,7 @@ export interface PaperSubmission {
   id: number;
   studentId: number;
   title: string;
+  abstractText?: string;
   fileUrl: string;
   category?: string;
   confidenceScore?: number;
@@ -16,10 +17,11 @@ export const papersApi = {
    * Upload a research paper (PDF multipart) (Student only).
    * Calls POST /api/papers/upload
    */
-  async upload(file: File, title: string): Promise<PaperSubmission> {
+  async upload(file: File, title: string, abstractText?: string): Promise<PaperSubmission> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('title', title);
+    if (abstractText?.trim()) formData.append('abstractText', abstractText.trim());
 
     const response = await axiosClient.post<PaperSubmission>('/api/papers/upload', formData);
     return response.data;

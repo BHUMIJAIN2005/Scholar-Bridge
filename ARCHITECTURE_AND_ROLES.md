@@ -36,7 +36,8 @@ If a feature involves **reading the content of a document and making a predictio
 ### React Frontend — "what the user sees"
 Talks *only* to the Java backend, never directly to the Python service. It owns:
 - Login/signup forms, dashboards for Student and Faculty
-- Displaying openings, applications, papers, conference submissions
+- Displaying openings, applications, papers, conference submissions, and the public Conference Research Showcase
+- Showing accepted paper titles, authors, conference and track filters, title/author search, optional student-provided abstracts, and PDFs only when the author explicitly permits public access
 - File upload UI (the file itself goes to Java, which then forwards it to Python internally)
 
 ## How a paper upload actually flows through the system

@@ -3,6 +3,7 @@ package com.scholarbridge.controller;
 import com.scholarbridge.dto.ApiDtos.PaperResponse;
 import com.scholarbridge.service.PaperService;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -27,9 +28,10 @@ public class PaperController {
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public PaperResponse upload(
         @RequestParam @NotBlank String title,
+        @RequestParam(required = false) @Size(max = 5000) String abstractText,
         @RequestParam("file") MultipartFile file
     ) {
-        return paperService.upload(title, file);
+        return paperService.upload(title, abstractText, file);
     }
 
     @PostMapping("/{id}/reclassify")

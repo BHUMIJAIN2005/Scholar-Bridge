@@ -480,6 +480,7 @@ public class BlogService {
             .toList();
         return new BlogPostResponse(
             post.getId(),
+            post.getAuthor().getId(),
             post.getAuthor().getName(),
             post.getAuthor().getRole(),
             post.getTitle(),
@@ -504,6 +505,7 @@ public class BlogService {
     ) {
         return new BlogCommentResponse(
             comment.getId(),
+            comment.getAuthor().getId(),
             comment.getAuthor().getName(),
             comment.getAuthor().getRole(),
             comment.getContent(),

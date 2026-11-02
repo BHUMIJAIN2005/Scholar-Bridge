@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -22,9 +23,21 @@ export default function HomePage() {
     <main className="space-y-16 py-10">
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold shadow-xs">
-          <Sparkles size={14} className="text-emerald-600" />
-          <span>Department of Computer Science — MITS DU</span>
+        <div className="inline-flex items-center gap-3 px-3.5 py-2 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold shadow-xs">
+          <span className="h-9 w-9 rounded-lg bg-white p-1 shadow-xs ring-1 ring-emerald-100">
+            <Image
+              src="/mits-gwalior-logo.png"
+              alt="MITS Gwalior emblem"
+              width={36}
+              height={36}
+              className="h-full w-full object-contain"
+            />
+          </span>
+          <span className="text-left">
+            <span className="block">Madhav Institute of Technology &amp; Science</span>
+            <span className="mt-0.5 block text-[10px] font-medium text-emerald-700">Gwalior · Research Collaboration Portal</span>
+          </span>
+          <Sparkles size={14} className="ml-1 shrink-0 text-emerald-600" />
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 max-w-4xl mx-auto leading-tight">

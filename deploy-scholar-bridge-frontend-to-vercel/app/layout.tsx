@@ -2,11 +2,15 @@ import type { Metadata, Viewport } from 'next';
 import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
+import { SiteFooter } from '@/components/SiteFooter';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'ScholarBridge — Research Collaboration & Mentorship Platform',
-  description: 'Connecting students and faculty through research opportunities, mentorship, and conferences.',
+  title: 'ScholarBridge | MITS Gwalior',
+  description: 'Madhav Institute of Technology & Science, Gwalior — connecting students and faculty through research, mentorship, and conferences.',
+  icons: {
+    icon: '/mits-gwalior-logo.png',
+  },
 };
 
 export const viewport: Viewport = {
@@ -27,14 +31,7 @@ export default function RootLayout({
           <div className="flex-1">
             {children}
           </div>
-          <footer className="border-t border-neutral-200 bg-white py-6 mt-12 text-center text-xs text-neutral-500">
-            <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <p>© 2026 ScholarBridge. Department of Computer Science, MITS DU.</p>
-              <div className="flex items-center gap-4">
-                <span>Ideas grow through collaboration.</span>
-              </div>
-            </div>
-          </footer>
+          <SiteFooter />
         </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

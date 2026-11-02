@@ -3,12 +3,15 @@ package com.scholarbridge.service;
 import com.scholarbridge.dto.ApiDtos.CategorizeRequest;
 import com.scholarbridge.dto.ApiDtos.CategorizeResponse;
 import com.scholarbridge.dto.ApiDtos.PaperResponse;
+import com.scholarbridge.entity.ConferenceSubmission;
 import com.scholarbridge.entity.PaperStatus;
 import com.scholarbridge.entity.PaperSubmission;
+import com.scholarbridge.entity.SubmissionStatus;
 import com.scholarbridge.entity.User;
 import com.scholarbridge.entity.UserRole;
 import com.scholarbridge.exception.BusinessRuleException;
 import com.scholarbridge.exception.ResourceNotFoundException;
+import com.scholarbridge.repository.ConferenceSubmissionRepository;
 import com.scholarbridge.repository.PaperSubmissionRepository;
 import com.scholarbridge.security.CurrentUserService;
 import java.io.IOException;
@@ -41,6 +44,7 @@ public class PaperService {
     private static final int MAX_CATEGORIZATION_TEXT_LENGTH = 50_000;
 
     private final PaperSubmissionRepository papers;
+    private final ConferenceSubmissionRepository conferenceSubmissions;
     private final CurrentUserService currentUser;
     private final ApiMapper mapper;
     private final RestClient mlClient;
@@ -48,12 +52,14 @@ public class PaperService {
 
     public PaperService(
         PaperSubmissionRepository papers,
+        ConferenceSubmissionRepository conferenceSubmissions,
         CurrentUserService currentUser,
         ApiMapper mapper,
         RestClient mlClient,
         @Value("${app.uploads.directory}") String uploadDirectory
     ) {
         this.papers = papers;
+        this.conferenceSubmissions = conferenceSubmissions;
         this.currentUser = currentUser;
         this.mapper = mapper;
         this.mlClient = mlClient;
@@ -61,7 +67,7 @@ public class PaperService {
     }
 
     @Transactional
-    public PaperResponse upload(String title, MultipartFile file) {
+    public PaperResponse upload(String title, String abstractText, MultipartFile file) {
         User student = currentUser.requireRole(UserRole.STUDENT);
         if (file == null || file.isEmpty()) {
             throw new BusinessRuleException(HttpStatus.BAD_REQUEST, "Choose a non-empty PDF file.");
@@ -83,6 +89,7 @@ public class PaperService {
             PaperSubmission paper = new PaperSubmission();
             paper.setStudent(student);
             paper.setTitle(title == null || title.isBlank() ? stripPdfExtension(originalName) : title.trim());
+            paper.setAbstractText(abstractText == null || abstractText.isBlank() ? null : abstractText.trim());
             paper.setStoredFilename(storedFilename);
             paper.setStatus(PaperStatus.PROCESSING);
             PaperSubmission saved = papers.saveAndFlush(paper);
@@ -137,6 +144,22 @@ public class PaperService {
         if (user.getRole() == UserRole.STUDENT && !paper.getStudent().getId().equals(user.getId())) {
             throw new BusinessRuleException(HttpStatus.FORBIDDEN, "You cannot access this file.");
         }
+        Path path = uploadDirectory.resolve(paper.getStoredFilename()).normalize();
+        if (!path.startsWith(uploadDirectory) || !Files.isRegularFile(path)) {
+            throw new ResourceNotFoundException("The paper file is no longer available.");
+        }
+        return new DownloadedPaper(new FileSystemResource(path), paper.getTitle() + ".pdf");
+    }
+
+    @Transactional(readOnly = true)
+    public DownloadedPaper getPublicConferencePaper(Long submissionId) {
+        ConferenceSubmission submission = conferenceSubmissions.findById(submissionId)
+            .orElseThrow(() -> new ResourceNotFoundException("The public paper was not found."));
+        if (submission.getStatus() != SubmissionStatus.ACCEPTED
+            || !Boolean.TRUE.equals(submission.getPublicPdfAllowed())) {
+            throw new ResourceNotFoundException("The public paper was not found.");
+        }
+        PaperSubmission paper = submission.getPaper();
         Path path = uploadDirectory.resolve(paper.getStoredFilename()).normalize();
         if (!path.startsWith(uploadDirectory) || !Files.isRegularFile(path)) {
             throw new ResourceNotFoundException("The paper file is no longer available.");
