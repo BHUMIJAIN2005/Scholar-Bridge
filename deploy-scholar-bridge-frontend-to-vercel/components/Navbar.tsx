@@ -71,6 +71,16 @@ export const Navbar = () => {
               >
                 Research Guidance
               </Link>
+              <Link
+                href="/blog"
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                  isActive('/blog')
+                    ? 'bg-neutral-100 text-neutral-900 font-semibold'
+                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                }`}
+              >
+                Blog
+              </Link>
 
               {/* Student specific links */}
               {isAuthenticated && isStudent && (
@@ -255,6 +265,13 @@ export const Navbar = () => {
             className="block px-3 py-2 rounded-md text-base font-medium text-neutral-700 hover:bg-neutral-50"
           >
             Research Guidance
+          </Link>
+          <Link
+            href="/blog"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-md text-base font-medium text-neutral-700 hover:bg-neutral-50"
+          >
+            Blog
           </Link>
 
           {isAuthenticated && isStudent && (

@@ -199,6 +199,7 @@ public final class ApiDtos {
 
     public record BlogPostResponse(
         Long id,
+        Long authorId,
         String authorName,
         UserRole authorRole,
         String title,
@@ -227,6 +228,7 @@ public final class ApiDtos {
 
     public record BlogCommentResponse(
         Long id,
+        Long authorId,
         String authorName,
         UserRole authorRole,
         String content,

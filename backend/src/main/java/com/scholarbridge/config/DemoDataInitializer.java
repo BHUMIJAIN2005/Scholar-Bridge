@@ -28,10 +28,14 @@ public class DemoDataInitializer {
         UserRepository users,
         ResearchOpeningRepository openings,
         ConferenceRepository conferences,
-        PasswordEncoder passwordEncoder
+        PasswordEncoder passwordEncoder,
+        BlogDemoDataSeeder blogDemoDataSeeder
     ) {
         return args -> {
-            if (enabled) initialize(users, openings, conferences, passwordEncoder);
+            if (enabled) {
+                initialize(users, openings, conferences, passwordEncoder);
+                blogDemoDataSeeder.seedIfEmpty();
+            }
         };
     }
 
