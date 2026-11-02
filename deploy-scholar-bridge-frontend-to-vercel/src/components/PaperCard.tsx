@@ -36,10 +36,10 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper, onRefresh }) => {
             <CategoryChip category={paper.category} confidenceScore={paper.confidenceScore} />
           ) : paper.status === 'PROCESSING' ? (
             <span className="text-xs text-amber-600 font-medium flex items-center gap-1.5">
-              <RefreshCw size={12} className="animate-spin" /> Auto-categorizing with ML model...
+              <RefreshCw size={12} className="animate-spin" /> Finding a research area...
             </span>
           ) : (
-            <span className="text-xs text-neutral-400">Category pending</span>
+            <span className="text-xs text-neutral-400">No research area suggested yet</span>
           )}
         </div>
 

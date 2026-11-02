@@ -36,7 +36,7 @@ export default function HomePage() {
 
         <p className="text-base sm:text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
           ScholarBridge bridges the gap between undergraduate ambition and academic mentorship.
-          Discover open lab positions, upload research papers for AI categorization, and carry accepted work to conferences.
+          Discover research opportunities, share your work, and take your ideas to academic conferences.
         </p>
 
         {/* CTA Buttons */}
@@ -81,16 +81,16 @@ export default function HomePage() {
             </div>
             <h2 className="text-2xl font-bold text-neutral-900 mb-2">For Students</h2>
             <p className="text-sm text-neutral-600 mb-6 leading-relaxed">
-              Find faculty labs actively seeking your specific skill set. Get your research papers auto-categorized by AI and submit to prestigious departmental tracks.
+              Find faculty mentors looking for your skills, share your research, and explore opportunities to present your work.
             </p>
             <ul className="space-y-3 text-xs text-neutral-700 mb-8">
               <li className="flex items-center gap-2.5">
                 <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                <span>Browse openings filtered by skills (Python, PyTorch, React, NLP)</span>
+                <span>Find opportunities that match your interests and experience</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                <span>Upload PDF papers and receive automated ML topic classifications</span>
+                <span>Share your research and get a suggested subject area</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
@@ -114,7 +114,7 @@ export default function HomePage() {
             </div>
             <h2 className="text-2xl font-bold text-neutral-900 mb-2">For Faculty Mentors</h2>
             <p className="text-sm text-neutral-600 mb-6 leading-relaxed">
-              Recruit motivated student researchers for your funded grants and projects. Review applicants alongside their AI-classified research history and oversee conference tracks.
+              Connect with motivated student researchers, review their applications and work, and guide conference submissions.
             </p>
             <ul className="space-y-3 text-xs text-neutral-700 mb-8">
               <li className="flex items-center gap-2.5">

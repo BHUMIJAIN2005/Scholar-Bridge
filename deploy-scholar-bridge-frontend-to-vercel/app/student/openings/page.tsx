@@ -19,7 +19,7 @@ export default function BrowseOpeningsPage() {
       setOpenings(await openingsApi.getAll());
     } catch (err) {
       const response = (err as { response?: { data?: { message?: string } } }).response;
-      setError(response?.data?.message ?? 'Could not load research openings. Check the backend and try again.');
+      setError(response?.data?.message ?? 'Could not load research opportunities. Please try again.');
     } finally {
       setIsLoading(false);
     }

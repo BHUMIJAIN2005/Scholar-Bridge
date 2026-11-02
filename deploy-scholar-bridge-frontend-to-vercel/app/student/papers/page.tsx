@@ -23,7 +23,7 @@ export default function MyPapersPage() {
       setPapers(await papersApi.getMyPapers());
     } catch (err) {
       const response = (err as { response?: { data?: { message?: string } } }).response;
-      setError(response?.data?.message ?? 'Could not load your papers. Check the backend and try again.');
+      setError(response?.data?.message ?? 'Could not load your papers. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +63,7 @@ export default function MyPapersPage() {
       await loadPapers();
     } catch (err) {
       const response = (err as { response?: { data?: { message?: string } } }).response;
-      setUploadError(response?.data?.message ?? 'Upload failed. Check the backend and try again.');
+      setUploadError(response?.data?.message ?? 'We couldn’t upload your paper. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -76,7 +76,7 @@ export default function MyPapersPage() {
           <div>
             <h1 className="text-2xl font-bold text-neutral-900">My Research Papers</h1>
             <p className="text-xs text-neutral-500 mt-1">
-              Upload PDF research drafts. Our Python ML microservice will extract text and predict the research category.
+              Share a PDF of your research. We’ll suggest a subject area based on its content.
             </p>
           </div>
           <button
@@ -90,7 +90,7 @@ export default function MyPapersPage() {
 
         {uploadSuccess && (
           <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">
-            Paper uploaded. Its category will appear when processing finishes.
+            Paper uploaded. Its suggested research area will appear shortly.
           </p>
         )}
         {error && (
@@ -122,7 +122,7 @@ export default function MyPapersPage() {
             <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-neutral-200 space-y-4">
               <h2 className="text-lg font-bold text-neutral-900">Upload Research Paper (PDF)</h2>
               <p className="text-xs text-neutral-500">
-                The document will be submitted to <code className="bg-neutral-100 px-1 py-0.5 rounded">/api/papers/upload</code> for processing.
+                Add a title and choose the PDF you’d like to share.
               </p>
 
               <form onSubmit={handleUpload} className="space-y-4">
@@ -168,7 +168,7 @@ export default function MyPapersPage() {
                     disabled={isUploading}
                     className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 disabled:opacity-50"
                   >
-                    {isUploading ? 'Uploading...' : 'Upload & Classify'}
+                    {isUploading ? 'Uploading...' : 'Upload Paper'}
                   </button>
                 </div>
               </form>

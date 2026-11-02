@@ -44,7 +44,7 @@ export default function FacultyDashboardPage() {
       setPendingSubmissions(submissionsByConference.flat().filter((submission) => submission.status === 'SUBMITTED' || submission.status === 'UNDER_REVIEW').length);
     } catch (err) {
       const response = (err as { response?: { data?: { message?: string } } }).response;
-      setError(response?.data?.message ?? 'Could not load your faculty dashboard. Check the backend and retry.');
+      setError(response?.data?.message ?? 'Could not load your dashboard. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -63,13 +63,13 @@ export default function FacultyDashboardPage() {
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-700/60 text-indigo-100 text-xs font-medium mb-3">
                 <ShieldCheck size={14} />
-                <span>Authenticated Faculty Portal</span>
+                <span>Faculty Dashboard</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                 Welcome, {user?.name}!
               </h1>
               <p className="text-indigo-200 text-sm mt-1 max-w-xl">
-                {user?.department ? `${user.department} • ` : ''}Manage your research lab openings, review student applicants with ML paper categories, and evaluate conference submissions.
+                {user?.department ? `${user.department} • ` : ''}Manage research opportunities, review student applications and research, and guide conference submissions.
               </p>
             </div>
             <div className="shrink-0 flex items-center gap-3">

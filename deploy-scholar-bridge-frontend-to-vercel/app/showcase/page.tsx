@@ -34,7 +34,7 @@ export default function ShowcasePage() {
       ));
     } catch (err) {
       const response = (err as { response?: { data?: { message?: string } } }).response;
-      setError(response?.data?.message ?? 'Could not load the public showcase. Check the backend and try again.');
+      setError(response?.data?.message ?? 'Could not load the showcase. Please try again.');
     } finally {
       setIsLoading(false);
     }

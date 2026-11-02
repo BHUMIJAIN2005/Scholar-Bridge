@@ -34,7 +34,7 @@ export default function OpeningDetailPage() {
     ]);
     if (openingResult.status === 'rejected') {
       const response = (openingResult.reason as { response?: { data?: { message?: string } } }).response;
-      setError(response?.data?.message ?? 'Could not load this opening. Check the backend and try again.');
+      setError(response?.data?.message ?? 'Could not load this opportunity. Please try again.');
     } else {
       setOpening(openingResult.value);
       if (applicationsResult.status === 'fulfilled') {

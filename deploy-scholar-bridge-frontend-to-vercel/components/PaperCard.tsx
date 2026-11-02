@@ -23,7 +23,7 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper, onRefresh }) => {
       await papersApi.reclassify(paper.id);
       await onRefresh?.();
     } catch {
-      setActionError('Could not classify this paper. Check the ML service and try again.');
+      setActionError('Could not suggest a research area. Please try again.');
     } finally {
       setIsRetrying(false);
     }
@@ -83,10 +83,10 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper, onRefresh }) => {
             <CategoryChip category={paper.category} confidenceScore={paper.confidenceScore} />
           ) : paper.status === 'PROCESSING' ? (
             <span className="text-xs text-amber-600 font-medium flex items-center gap-1.5">
-              <RefreshCw size={12} className="animate-spin" /> Auto-categorizing with ML model...
+              <RefreshCw size={12} className="animate-spin" /> Finding a research area...
             </span>
           ) : (
-            <span className="text-xs text-neutral-400">Category pending</span>
+            <span className="text-xs text-neutral-400">No research area suggested yet</span>
           )}
         </div>
 
@@ -108,7 +108,7 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper, onRefresh }) => {
             disabled={isRetrying}
             className="text-xs font-medium text-rose-600 hover:text-rose-700 disabled:opacity-50"
           >
-            {isRetrying ? 'Retrying...' : 'Retry classification'}
+            {isRetrying ? 'Trying again...' : 'Try again'}
           </button>
         )}
       </div>
