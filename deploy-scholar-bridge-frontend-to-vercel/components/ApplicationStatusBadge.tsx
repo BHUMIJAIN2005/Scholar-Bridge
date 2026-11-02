@@ -48,9 +48,11 @@ export const ApplicationStatusBadge: React.FC<StatusBadgeProps> = ({ status, cla
       case 'UNDER_REVIEW':
         return 'Under Review';
       case 'DONE':
-        return 'Categorized';
+        return 'Category suggested';
       case 'PROCESSING':
-        return 'Processing ML...';
+        return 'Finding a category';
+      case 'FAILED':
+        return 'Needs attention';
       default:
         return normalized.charAt(0) + normalized.slice(1).toLowerCase();
     }

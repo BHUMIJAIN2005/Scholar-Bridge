@@ -54,7 +54,7 @@ export default function GuidancePage() {
             </div>
             <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200">
               <b className="text-neutral-900 block mb-1">2. Relevant Evidence</b>
-              <p className="text-neutral-500">What projects or libraries (e.g. PyTorch, Spring Boot, Scikit-learn) have you actually used?</p>
+              <p className="text-neutral-500">What projects, tools, or research methods have you used?</p>
             </div>
             <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200">
               <b className="text-neutral-900 block mb-1">3. Deliverable & Commitment</b>
@@ -69,9 +69,9 @@ export default function GuidancePage() {
             <CheckCircle2 size={16} />
             <span>Guide 03</span>
           </div>
-          <h2 className="text-xl font-bold text-neutral-900">Understanding AI Paper Categorization</h2>
+          <h2 className="text-xl font-bold text-neutral-900">Finding the Right Research Area</h2>
           <p className="text-neutral-600 text-sm leading-relaxed">
-            ScholarBridge includes an automated Python ML microservice. When you upload a PDF in "My Papers", the microservice extracts the abstract and body text, passing it through a text classification model to determine research domains (such as Machine Learning, NLP, Distributed Systems) along with a confidence metric. This category determines the conference track for submission.
+            When you share a paper in My Papers, ScholarBridge suggests a research area based on its content. Use that suggestion to help choose a conference track, and review it to make sure it fits your work.
           </p>
         </section>
       </div>

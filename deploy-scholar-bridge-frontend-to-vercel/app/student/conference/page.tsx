@@ -73,7 +73,7 @@ function ConferenceSubmitPageInner() {
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } }).response?.data?.message ??
-        'Failed to load papers and conferences. Check the backend and try again.';
+        'Could not load your papers and conferences. Please try again.';
       setFetchError(msg);
     } finally {
       setIsLoading(false);
@@ -167,7 +167,7 @@ function ConferenceSubmitPageInner() {
           Submit to a Conference
         </h1>
         <p className="text-neutral-500 text-sm">
-          Submit one of your categorized research papers to an open conference for faculty review.
+          Submit a paper with a suggested research area to an open conference for faculty review.
         </p>
       </div>
 
@@ -199,12 +199,10 @@ function ConferenceSubmitPageInner() {
             <BookOpen size={26} className="text-emerald-600" />
           </div>
           <h3 className="text-base font-semibold text-neutral-800 mb-2">
-            No categorized papers available
+            No papers ready to submit
           </h3>
           <p className="text-sm text-neutral-500 mb-6 max-w-sm">
-            Only papers that have been processed and categorized (status:{' '}
-            <span className="font-mono font-semibold text-emerald-700">DONE</span>) can be submitted
-            to conferences. Upload and wait for categorization first.
+            Share a paper first. Once we’ve suggested a research area, you can submit it to a conference.
           </p>
           <Link
             href="/student/papers"
@@ -243,7 +241,7 @@ function ConferenceSubmitPageInner() {
             <label className="block text-sm font-semibold text-neutral-800" htmlFor="paper-select">
               Select Paper
             </label>
-            <p className="text-xs text-neutral-500">Only categorized (DONE) papers are shown.</p>
+            <p className="text-xs text-neutral-500">Only papers with a suggested research area are shown.</p>
             <div className="relative">
               <select
                 id="paper-select"

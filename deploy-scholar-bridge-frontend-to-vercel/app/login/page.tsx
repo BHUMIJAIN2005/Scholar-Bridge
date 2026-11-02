@@ -134,7 +134,7 @@ function LoginFormContent() {
           ) : (
             <>
               <KeyRound size={16} />
-              <span>Sign in with JWT</span>
+              <span>Sign in</span>
             </>
           )}
         </button>

@@ -34,7 +34,7 @@ export default function PostOpeningPage() {
       }, 1500);
     } catch (err) {
       const response = (err as { response?: { data?: { message?: string } } }).response;
-      setError(response?.data?.message ?? 'Could not publish the opening. Check the backend and try again.');
+      setError(response?.data?.message ?? 'Could not publish the opportunity. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

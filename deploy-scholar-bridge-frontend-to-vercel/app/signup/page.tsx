@@ -211,13 +211,13 @@ export default function SignupPage() {
               </span>
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                  Skills & Technical Interests (comma-separated)
+                  Skills & Research Interests (comma-separated)
                 </label>
                 <input
                   type="text"
                   value={skills}
                   onChange={(e) => setSkills(e.target.value)}
-                  placeholder="e.g. Python, NLP, PyTorch, React, Java"
+                  placeholder="e.g. data analysis, programming, research writing"
                   className="w-full px-3.5 py-2 rounded-lg border border-neutral-300 text-sm bg-white"
                 />
               </div>
@@ -278,7 +278,7 @@ export default function SignupPage() {
             {isSubmitting ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                <span>Creating Account & Issuing JWT...</span>
+                <span>Creating your account...</span>
               </>
             ) : (
               <>
@@ -293,7 +293,7 @@ export default function SignupPage() {
           <p className="text-xs text-neutral-600">
             Already have an account?{' '}
             <Link href="/login" className="font-semibold text-emerald-600 hover:text-emerald-700 hover:underline">
-              Sign in with existing credentials
+              Sign in
             </Link>
           </p>
         </div>

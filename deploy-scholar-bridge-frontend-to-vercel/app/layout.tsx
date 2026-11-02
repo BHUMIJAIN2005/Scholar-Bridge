@@ -6,7 +6,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'ScholarBridge — Research Collaboration & Mentorship Platform',
-  description: 'Connecting students and faculty for research collaboration, auto-categorized papers, and conference showcases.',
+  description: 'Connecting students and faculty through research opportunities, mentorship, and conferences.',
 };
 
 export const viewport: Viewport = {
@@ -31,9 +31,7 @@ export default function RootLayout({
             <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
               <p>© 2026 ScholarBridge. Department of Computer Science, MITS DU.</p>
               <div className="flex items-center gap-4">
-                <span>Next.js + Java Spring Boot</span>
-                <span>•</span>
-                <span>JWT Authentication</span>
+                <span>Ideas grow through collaboration.</span>
               </div>
             </div>
           </footer>

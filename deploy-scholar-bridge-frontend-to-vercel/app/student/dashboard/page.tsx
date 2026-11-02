@@ -41,7 +41,7 @@ export default function StudentDashboardPage() {
       setOpenings(openingData.filter((opening) => opening.status === 'OPEN'));
     } catch (err) {
       const response = (err as { response?: { data?: { message?: string } } }).response;
-      setError(response?.data?.message ?? 'Could not load your dashboard. Check the backend and retry.');
+      setError(response?.data?.message ?? 'Could not load your dashboard. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -80,13 +80,13 @@ export default function StudentDashboardPage() {
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-700/60 text-emerald-100 text-xs font-medium mb-3">
                 <ShieldCheck size={14} />
-                <span>Authenticated Student Portal</span>
+                <span>Your Research Dashboard</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                 Welcome, {user?.name}!
               </h1>
               <p className="text-emerald-100 text-sm mt-1 max-w-xl">
-                {user?.year ? `${user.year} • ` : ''}Discover research openings matched to your skills, upload papers for AI categorization, and submit to conferences.
+                {user?.year ? `${user.year} • ` : ''}Explore opportunities, share your research, and submit your work to conferences.
               </p>
             </div>
             <div className="shrink-0 flex items-center gap-3">
@@ -140,7 +140,7 @@ export default function StudentDashboardPage() {
               </div>
             </div>
             <div className="text-2xl font-bold text-neutral-900 mb-1">{isLoading ? <Loader2 size={20} className="animate-spin" /> : `${papers.length} Papers`}</div>
-            <p className="text-xs text-neutral-500 mb-3">Uploaded papers auto-categorized by AI service.</p>
+            <p className="text-xs text-neutral-500 mb-3">Your papers and suggested research areas.</p>
             <Link
               href="/student/papers"
               className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"

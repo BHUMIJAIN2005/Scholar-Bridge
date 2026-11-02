@@ -72,7 +72,7 @@ export default function ViewApplicantsPage() {
         if (facultyOpenings.length > 0) setSelectedOpeningId(facultyOpenings[0].id);
       } catch (err: unknown) {
         const response = (err as { response?: { data?: { message?: string } } }).response;
-        setOpeningsError(response?.data?.message ?? 'Failed to load your research openings. Please check the backend and retry.');
+        setOpeningsError(response?.data?.message ?? 'Could not load your research opportunities. Please try again.');
       } finally {
         setLoadingOpenings(false);
       }
@@ -94,7 +94,7 @@ export default function ViewApplicantsPage() {
         setApplicants(data);
       } catch (err: unknown) {
         const response = (err as { response?: { data?: { message?: string } } }).response;
-        setApplicantsError(response?.data?.message ?? 'Failed to load applicants for this opening. Please check the backend and retry.');
+        setApplicantsError(response?.data?.message ?? 'Could not load applicants for this opportunity. Please try again.');
       } finally {
         setLoadingApplicants(false);
       }
@@ -150,8 +150,7 @@ export default function ViewApplicantsPage() {
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">Student Applicants</h1>
           <p className="text-xs text-neutral-500 mt-1">
-            Review candidate applications for your openings alongside their
-            auto-categorized research history.
+            Review applications alongside each student's research and suggested subject areas.
           </p>
         </div>
 
