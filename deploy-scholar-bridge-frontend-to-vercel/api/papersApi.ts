@@ -33,6 +33,24 @@ export const papersApi = {
     const response = await axiosClient.get<PaperSubmission[]>('/api/papers/my');
     return response.data;
   },
+
+  /**
+   * Retrieve a paper PDF with the authenticated API client.
+   */
+  async getFile(id: number): Promise<Blob> {
+    const response = await axiosClient.get<Blob>(`/api/files/${id}`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  /**
+   * Retry categorization for a previously uploaded paper.
+   */
+  async reclassify(id: number): Promise<PaperSubmission> {
+    const response = await axiosClient.post<PaperSubmission>(`/api/papers/${id}/reclassify`);
+    return response.data;
+  },
 };
 
 export default papersApi;

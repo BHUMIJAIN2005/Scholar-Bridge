@@ -73,7 +73,7 @@ This order means you always have something working and demoable, even if you run
 scholarbridge/
 ├── backend/          # Java Spring Boot project
 ├── frontend/         # React project
-├── ml-service/        # Python FastAPI project
+├── ml-service-v2/     # Active Python FastAPI service and model artifacts
 └── docs/              # these planning files
 ```
 
@@ -91,10 +91,10 @@ Install dependencies once from the workspace root:
 
 ```powershell
 pnpm --dir deploy-scholar-bridge-frontend-to-vercel install
-python -m pip install -r ml-service/requirements.txt
+python -m pip install -r ml-service-v2/requirements.txt
 ```
 
-The trained classifier is already included. If you remove it, regenerate it from `ml-service` with `python -m model.train`.
+The trained classifier and recommendation model are included under `ml-service-v2/models`.
 
 In VS Code, run **Tasks: Run Task** and choose **ScholarBridge: Start all local services**. The individual services can also be launched separately from the task list.
 

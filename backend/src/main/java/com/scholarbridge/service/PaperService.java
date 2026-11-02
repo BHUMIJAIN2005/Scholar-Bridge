@@ -20,19 +20,26 @@ import java.util.UUID;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class PaperService {
+    private static final Logger logger = LoggerFactory.getLogger(PaperService.class);
+    private static final int MAX_CATEGORIZATION_TEXT_LENGTH = 50_000;
+
     private final PaperSubmissionRepository papers;
     private final CurrentUserService currentUser;
     private final ApiMapper mapper;
@@ -96,6 +103,32 @@ public class PaperService {
         return papers.findByStudentIdOrderByUploadedAtDesc(student.getId()).stream().map(mapper::paper).toList();
     }
 
+    @Transactional
+    public PaperResponse reclassify(Long id) {
+        User student = currentUser.requireRole(UserRole.STUDENT);
+        PaperSubmission paper = papers.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Paper was not found."));
+        if (!paper.getStudent().getId().equals(student.getId())) {
+            throw new BusinessRuleException(HttpStatus.FORBIDDEN, "You cannot reclassify this paper.");
+        }
+
+        Path path = uploadDirectory.resolve(paper.getStoredFilename()).normalize();
+        if (!path.startsWith(uploadDirectory) || !Files.isRegularFile(path)) {
+            throw new ResourceNotFoundException("The paper file is no longer available.");
+        }
+        try {
+            byte[] bytes = Files.readAllBytes(path);
+            paper.setCategory(null);
+            paper.setConfidenceScore(null);
+            paper.setStatus(PaperStatus.PROCESSING);
+            papers.saveAndFlush(paper);
+            categorize(paper, bytes);
+            return mapper.paper(paper);
+        } catch (IOException exception) {
+            throw new BusinessRuleException(HttpStatus.INTERNAL_SERVER_ERROR, "The stored PDF could not be read.");
+        }
+    }
+
     @Transactional(readOnly = true)
     public DownloadedPaper getFile(Long id) {
         User user = currentUser.requireUser();
@@ -122,7 +155,7 @@ public class PaperService {
             CategorizeResponse result = mlClient.post()
                 .uri("/categorize")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new CategorizeRequest(text.substring(0, Math.min(text.length(), 1_000_000))))
+                .body(new CategorizeRequest(text.substring(0, Math.min(text.length(), MAX_CATEGORIZATION_TEXT_LENGTH))))
                 .retrieve()
                 .body(CategorizeResponse.class);
             if (result == null || result.category() == null || result.confidence() == null) {
@@ -132,7 +165,9 @@ public class PaperService {
                 paper.setConfidenceScore(Math.max(0, Math.min(1, result.confidence())));
                 paper.setStatus(PaperStatus.DONE);
             }
-        } catch (Exception exception) {
+        } catch (IOException | RestClientException exception) {
+            logger.warn("Could not categorize paper {}. The uploaded file was saved, but categorization failed.",
+                paper.getId(), exception);
             paper.setStatus(PaperStatus.FAILED);
         }
         papers.save(paper);
@@ -153,7 +188,7 @@ public class PaperService {
         public HttpHeaders headers() {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", filename);
+            headers.setContentDisposition(ContentDisposition.inline().filename(filename).build());
             return headers;
         }
     }

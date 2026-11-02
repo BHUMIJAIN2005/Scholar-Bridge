@@ -1,6 +1,7 @@
 
 from pathlib import Path
 import json
+from functools import lru_cache
 from typing import Any
 
 import numpy as np
@@ -8,7 +9,6 @@ import joblib
 import pdfplumber
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
-from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -20,18 +20,25 @@ app = FastAPI(
     version="2.0.0",
 )
 
-# Load models once when the service starts.
+# Load the categorization model at startup. The recommendation encoder is
+# loaded only when recommendations are requested.
 try:
     classifier = joblib.load(MODEL_DIR / "tfidf_classifier.joblib")
-    encoder = SentenceTransformer(
-        str(MODEL_DIR / "sentence_transformer"),
-        device="cpu",
-    )
     CATEGORY_MAP = json.loads(
         (MODEL_DIR / "category_map.json").read_text(encoding="utf-8")
     )
 except Exception as exc:
-    raise RuntimeError(f"Could not load ML artifacts: {exc}") from exc
+    raise RuntimeError(f"Could not load categorization model artifacts: {exc}") from exc
+
+
+@lru_cache(maxsize=1)
+def get_encoder():
+    from sentence_transformers import SentenceTransformer
+
+    return SentenceTransformer(
+        str(MODEL_DIR / "sentence_transformer"),
+        device="cpu",
+    )
 
 
 class CategorizeRequest(BaseModel):
@@ -150,7 +157,7 @@ def recommend(request: RecommendRequest) -> dict[str, Any]:
 
     try:
         opening_texts = [opening_text(opening) for opening in request.openings]
-        vectors = encoder.encode(
+        vectors = get_encoder().encode(
             [student_text] + opening_texts,
             normalize_embeddings=True,
             show_progress_bar=False,
@@ -190,4 +197,3 @@ def recommend(request: RecommendRequest) -> dict[str, Any]:
             status_code=500,
             detail=f"Recommendation failed: {exc}",
         ) from exc
-

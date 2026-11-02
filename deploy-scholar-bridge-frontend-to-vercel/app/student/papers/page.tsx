@@ -108,7 +108,9 @@ export default function MyPapersPage() {
           </div>
         ) : papers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {papers.map((paper) => <PaperCard key={paper.id} paper={paper} />)}
+            {papers.map((paper) => (
+              <PaperCard key={paper.id} paper={paper} onRefresh={loadPapers} />
+            ))}
           </div>
         ) : !error ? (
           <div className="py-16 text-center text-sm text-neutral-500">No papers uploaded yet.</div>

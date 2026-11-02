@@ -1,17 +1,64 @@
 'use client';
 
-import React from 'react';
-import { PaperSubmission } from '@/api/papersApi';
+import React, { useState } from 'react';
+import { PaperSubmission, papersApi } from '@/api/papersApi';
 import { CategoryChip } from './CategoryChip';
 import { ApplicationStatusBadge } from './ApplicationStatusBadge';
 import { FileText, Calendar, ExternalLink, RefreshCw } from 'lucide-react';
 
 interface PaperCardProps {
   paper: PaperSubmission;
-  onRefresh?: () => void;
+  onRefresh?: () => void | Promise<void>;
 }
 
 export const PaperCard: React.FC<PaperCardProps> = ({ paper, onRefresh }) => {
+  const [isOpeningPdf, setIsOpeningPdf] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const handleReclassify = async () => {
+    setIsRetrying(true);
+    setActionError(null);
+    try {
+      await papersApi.reclassify(paper.id);
+      await onRefresh?.();
+    } catch {
+      setActionError('Could not classify this paper. Check the ML service and try again.');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const handleViewPdf = async () => {
+    const previewWindow = window.open('about:blank', '_blank');
+    if (!previewWindow) {
+      setActionError('Allow pop-ups to view this PDF.');
+      return;
+    }
+
+    previewWindow.opener = null;
+    previewWindow.document.title = 'Loading PDF...';
+    previewWindow.document.body.textContent = 'Loading PDF...';
+    setIsOpeningPdf(true);
+    setActionError(null);
+    try {
+      const file = await papersApi.getFile(paper.id);
+      const fileUrl = URL.createObjectURL(file);
+      previewWindow.location.replace(fileUrl);
+      const cleanup = window.setInterval(() => {
+        if (previewWindow.closed) {
+          URL.revokeObjectURL(fileUrl);
+          window.clearInterval(cleanup);
+        }
+      }, 1000);
+    } catch {
+      previewWindow.close();
+      setActionError('Could not open this PDF. Check your connection and try again.');
+    } finally {
+      setIsOpeningPdf(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl border border-neutral-200 p-5 shadow-sm hover:shadow-md transition">
       <div className="flex items-start justify-between gap-4 mb-3">
@@ -44,17 +91,28 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper, onRefresh }) => {
         </div>
 
         {paper.fileUrl && (
-          <a
-            href={paper.fileUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1 hover:underline"
+          <button
+            type="button"
+            onClick={() => void handleViewPdf()}
+            disabled={isOpeningPdf}
+            className="text-xs font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1 hover:underline disabled:opacity-50"
           >
             <span>View PDF</span>
             <ExternalLink size={12} />
-          </a>
+          </button>
+        )}
+        {paper.status === 'FAILED' && (
+          <button
+            type="button"
+            onClick={() => void handleReclassify()}
+            disabled={isRetrying}
+            className="text-xs font-medium text-rose-600 hover:text-rose-700 disabled:opacity-50"
+          >
+            {isRetrying ? 'Retrying...' : 'Retry classification'}
+          </button>
         )}
       </div>
+      {actionError && <p className="mt-2 text-xs text-rose-700" role="alert">{actionError}</p>}
     </div>
   );
 };

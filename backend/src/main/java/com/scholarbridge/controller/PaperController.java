@@ -32,6 +32,11 @@ public class PaperController {
         return paperService.upload(title, file);
     }
 
+    @PostMapping("/{id}/reclassify")
+    public PaperResponse reclassify(@PathVariable Long id) {
+        return paperService.reclassify(id);
+    }
+
     @GetMapping("/my")
     public List<PaperResponse> mine() {
         return paperService.getMine();
