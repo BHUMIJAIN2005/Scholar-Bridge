@@ -7,13 +7,57 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  profileCompleteness?: number;
   photoUrl?: string;
   approvalStatus?: 'PENDING' | 'APPROVED';
   department?: string;
+  designation?: string;
+  qualifications?: string;
+  bio?: string;
   researchDomains?: string;
+  researchInterests?: string[];
+  officeRoom?: string;
+  officeHours?: string;
+  scholarUrl?: string;
+  orcidUrl?: string;
+  researchGateUrl?: string;
+  facultyLinkedinUrl?: string;
+  websiteUrl?: string;
+  citationsCount?: number;
+  hIndex?: number;
+  i10Index?: number;
+  statsAsOf?: string;
+  acceptingStudents?: boolean;
+  education?: EducationItem[];
+  awards?: string[];
+  facultyProjects?: FacultyProjectItem[];
   skills?: string;
+  skillTags?: string[];
+  interests?: string[];
+  studentProjects?: StudentProjectItem[];
+  githubUrl?: string;
+  linkedinUrl?: string;
+  visibility?: 'ALL_FACULTY' | 'APPLIED_FACULTY_ONLY';
   year?: string;
   createdAt?: string;
+}
+
+export interface EducationItem {
+  degree?: string;
+  institution?: string;
+  year?: string;
+}
+
+export interface FacultyProjectItem {
+  title?: string;
+  fundingAgency?: string;
+  years?: string;
+  role?: string;
+}
+
+export interface StudentProjectItem {
+  title?: string;
+  description?: string;
 }
 
 export interface AuthResponse {
