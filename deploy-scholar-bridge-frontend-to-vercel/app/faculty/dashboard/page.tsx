@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import ProfileCompletenessCard from '@/components/ProfileCompletenessCard';
 import { openingsApi, ResearchOpening } from '@/api/openingsApi';
 import { conferenceApi, Conference, ConferenceSubmission } from '@/api/conferenceApi';
 import {
@@ -89,6 +90,8 @@ export default function FacultyDashboardPage() {
             </div>
           </div>
         </div>
+
+        <ProfileCompletenessCard completeness={user?.profileCompleteness} role="FACULTY" />
 
         {error && (
           <div className="flex items-center justify-between gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">

@@ -115,6 +115,26 @@ export const Navbar = () => {
                     Dashboard
                   </Link>
                   <Link
+                    href="/profile/edit"
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                      isActive('/profile/edit')
+                        ? 'bg-emerald-50 text-emerald-800 font-semibold'
+                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                    }`}
+                  >
+                    My Profile
+                  </Link>
+                  <Link
+                    href="/faculty"
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                      isActive('/faculty')
+                        ? 'bg-emerald-50 text-emerald-800 font-semibold'
+                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                    }`}
+                  >
+                    Faculty
+                  </Link>
+                  <Link
                     href="/student/openings"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/student/openings')
@@ -170,6 +190,26 @@ export const Navbar = () => {
                     }`}
                   >
                     Dashboard
+                  </Link>
+                  <Link
+                    href="/profile/edit"
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                      isActive('/profile/edit')
+                        ? 'bg-indigo-50 text-indigo-800 font-semibold'
+                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                    }`}
+                  >
+                    My Profile
+                  </Link>
+                  <Link
+                    href="/students"
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                      isActive('/students')
+                        ? 'bg-indigo-50 text-indigo-800 font-semibold'
+                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                    }`}
+                  >
+                    Students
                   </Link>
                   <Link
                     href="/faculty/post-opening"
@@ -319,6 +359,20 @@ export const Navbar = () => {
                 Dashboard
               </Link>
               <Link
+                href="/profile/edit"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-emerald-50"
+              >
+                My Profile
+              </Link>
+              <Link
+                href="/faculty"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-emerald-50"
+              >
+                Faculty
+              </Link>
+              <Link
                 href="/student/openings"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-emerald-50"
@@ -360,6 +414,20 @@ export const Navbar = () => {
                 className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-indigo-50"
               >
                 Dashboard
+              </Link>
+              <Link
+                href="/profile/edit"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-indigo-50"
+              >
+                My Profile
+              </Link>
+              <Link
+                href="/students"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-indigo-50"
+              >
+                Students
               </Link>
               <Link
                 href="/faculty/post-opening"
