@@ -45,22 +45,22 @@ export default function PostOpeningPage() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <Link
           href="/faculty/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-neutral-900 transition"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink/70 hover:text-forest transition"
         >
           <ArrowLeft size={14} />
           <span>Back to Faculty Dashboard</span>
         </Link>
 
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Post a Research Opening</h1>
-          <p className="text-xs text-neutral-500 mt-1">
+          <h1 className="text-2xl font-bold text-ink">Post a Research Opening</h1>
+          <p className="text-xs text-ink/70 mt-1">
             Create an undergraduate research opportunity for students at MITS DU.
           </p>
         </div>
 
         {isSuccess && (
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-xs text-emerald-800 font-medium">
-            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+          <div className="p-4 bg-mint/40 border border-sage/40 rounded-xl flex items-center gap-2 text-xs text-forest font-semibold">
+            <CheckCircle2 size={16} className="text-leaf shrink-0" />
             <span>Research opening published successfully! Redirecting to dashboard...</span>
           </div>
         )}
@@ -71,9 +71,9 @@ export default function PostOpeningPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-neutral-200 p-6 sm:p-8 space-y-5 shadow-xs">
+        <form onSubmit={handleSubmit} className="solid-card p-6 sm:p-8 space-y-5">
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-forest uppercase tracking-wider mb-1.5">
               Opening Title *
             </label>
             <input
@@ -82,12 +82,12 @@ export default function PostOpeningPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Scalable Graph Neural Networks for Social Network Analysis"
-              className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3.5 py-2.5 rounded-lg border border-sage/40 bg-white text-ink text-sm focus:border-leaf focus:outline-none focus:ring-3 focus:ring-leaf/40"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-forest uppercase tracking-wider mb-1.5">
               Project Description &amp; Responsibilities *
             </label>
             <textarea
@@ -96,13 +96,13 @@ export default function PostOpeningPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Explain the lab's problem statement, student expectations, and anticipated research deliverables..."
-              className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3.5 py-2.5 rounded-lg border border-sage/40 bg-white text-ink text-sm focus:border-leaf focus:outline-none focus:ring-3 focus:ring-leaf/40"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-forest uppercase tracking-wider mb-1.5">
                 Required Technical Skills (comma-separated) *
               </label>
               <input
@@ -111,12 +111,12 @@ export default function PostOpeningPage() {
                 value={requiredSkills}
                 onChange={(e) => setRequiredSkills(e.target.value)}
                 placeholder="e.g. Python, PyTorch, Graph Theory"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-sage/40 bg-white text-ink text-sm focus:border-leaf focus:outline-none focus:ring-3 focus:ring-leaf/40"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-forest uppercase tracking-wider mb-1.5">
                 Available Student Seats *
               </label>
               <input
@@ -126,22 +126,22 @@ export default function PostOpeningPage() {
                 required
                 value={seats}
                 onChange={(e) => setSeats(Number(e.target.value))}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-sage/40 bg-white text-ink text-sm focus:border-leaf focus:outline-none focus:ring-3 focus:ring-leaf/40"
               />
             </div>
           </div>
 
-          <div className="pt-3 border-t border-neutral-100 flex items-center justify-end gap-3">
+          <div className="pt-3 border-t border-sage/20 flex items-center justify-end gap-3">
             <Link
               href="/faculty/dashboard"
-              className="px-4 py-2 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+              className="btn-secondary px-4 py-2 text-xs"
             >
               Cancel
             </Link>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition flex items-center gap-2 disabled:opacity-50"
+              className="btn-primary px-5 py-2.5 text-xs flex items-center gap-2 disabled:opacity-50"
             >
               <PlusCircle size={15} />
               <span>Publish Opening</span>

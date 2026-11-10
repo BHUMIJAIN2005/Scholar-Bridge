@@ -30,13 +30,13 @@ export const Navbar = () => {
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-neutral-200/80 bg-white/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-sage/20 bg-mist/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo & Brand */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="h-10 w-10 shrink-0 rounded-xl bg-white p-1 shadow-sm ring-1 ring-neutral-200 transition-transform duration-200 group-hover:scale-105">
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-white p-1 shadow-sm ring-1 ring-sage/30 transition-transform duration-200 group-hover:scale-105">
                 <Image
                   src="/mits-gwalior-logo.png"
                   alt="MITS Gwalior emblem"
@@ -47,10 +47,10 @@ export const Navbar = () => {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-lg leading-tight tracking-tight text-neutral-900">
-                  Scholar<span className="text-emerald-600">Bridge</span>
+                <span className="font-bold text-lg leading-tight tracking-tight text-ink">
+                  Scholar<span className="text-leaf">Bridge</span>
                 </span>
-                <span className="text-[10px] text-neutral-500 font-medium tracking-wide">
+                <span className="text-[10px] text-ink/70 font-medium tracking-wide">
                   MITS Gwalior
                 </span>
               </div>
@@ -62,7 +62,7 @@ export const Navbar = () => {
                 <Link
                   href="/login"
                   aria-current="page"
-                  className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-semibold text-neutral-900"
+                  className="rounded-md bg-mint px-3 py-1.5 text-sm font-semibold text-forest"
                 >
                   Sign in
                 </Link>
@@ -73,8 +73,8 @@ export const Navbar = () => {
                 href="/showcase"
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                   isActive('/showcase')
-                    ? 'bg-neutral-100 text-neutral-900 font-semibold'
-                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                    ? 'bg-mint text-forest font-semibold'
+                    : 'text-ink hover:text-forest hover:bg-mint/50'
                 }`}
               >
                 Conference Showcase
@@ -83,8 +83,8 @@ export const Navbar = () => {
                 href="/guidance"
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                   isActive('/guidance')
-                    ? 'bg-neutral-100 text-neutral-900 font-semibold'
-                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                    ? 'bg-mint text-forest font-semibold'
+                    : 'text-ink hover:text-forest hover:bg-mint/50'
                 }`}
               >
                 Research Guidance
@@ -93,8 +93,8 @@ export const Navbar = () => {
                 href="/blog"
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                   isActive('/blog')
-                    ? 'bg-neutral-100 text-neutral-900 font-semibold'
-                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                    ? 'bg-mint text-forest font-semibold'
+                    : 'text-ink hover:text-forest hover:bg-mint/50'
                 }`}
               >
                 Blog
@@ -103,13 +103,13 @@ export const Navbar = () => {
               {/* Student specific links */}
               {isAuthenticated && isStudent && (
                 <>
-                  <div className="h-4 w-px bg-neutral-200 mx-2" />
+                  <div className="h-4 w-px bg-sage/30 mx-2" />
                   <Link
                     href="/student/dashboard"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/student/dashboard')
-                        ? 'bg-emerald-50 text-emerald-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     Dashboard
@@ -118,8 +118,8 @@ export const Navbar = () => {
                     href="/profile/edit"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/profile/edit')
-                        ? 'bg-emerald-50 text-emerald-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     My Profile
@@ -128,8 +128,8 @@ export const Navbar = () => {
                     href="/faculty"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/faculty')
-                        ? 'bg-emerald-50 text-emerald-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     Faculty
@@ -138,8 +138,8 @@ export const Navbar = () => {
                     href="/student/openings"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/student/openings')
-                        ? 'bg-emerald-50 text-emerald-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     Browse Openings
@@ -148,8 +148,8 @@ export const Navbar = () => {
                     href="/student/applications"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/student/applications')
-                        ? 'bg-emerald-50 text-emerald-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     My Applications
@@ -158,8 +158,8 @@ export const Navbar = () => {
                     href="/student/papers"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/student/papers')
-                        ? 'bg-emerald-50 text-emerald-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     My Papers
@@ -168,8 +168,8 @@ export const Navbar = () => {
                     href="/student/conference"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/student/conference')
-                        ? 'bg-emerald-50 text-emerald-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     Conference Submission
@@ -180,13 +180,13 @@ export const Navbar = () => {
               {/* Faculty specific links */}
               {isAuthenticated && isFaculty && (
                 <>
-                  <div className="h-4 w-px bg-neutral-200 mx-2" />
+                  <div className="h-4 w-px bg-sage/30 mx-2" />
                   <Link
                     href="/faculty/dashboard"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/faculty/dashboard')
-                        ? 'bg-indigo-50 text-indigo-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     Dashboard
@@ -195,8 +195,8 @@ export const Navbar = () => {
                     href="/profile/edit"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/profile/edit')
-                        ? 'bg-indigo-50 text-indigo-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     My Profile
@@ -205,8 +205,8 @@ export const Navbar = () => {
                     href="/students"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/students')
-                        ? 'bg-indigo-50 text-indigo-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     Students
@@ -215,8 +215,8 @@ export const Navbar = () => {
                     href="/faculty/post-opening"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/faculty/post-opening')
-                        ? 'bg-indigo-50 text-indigo-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     Post Opening
@@ -225,8 +225,8 @@ export const Navbar = () => {
                     href="/faculty/applicants"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/faculty/applicants')
-                        ? 'bg-indigo-50 text-indigo-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     Applicants
@@ -235,8 +235,8 @@ export const Navbar = () => {
                     href="/faculty/reviews"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/faculty/reviews')
-                        ? 'bg-indigo-50 text-indigo-800 font-semibold'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-ink hover:text-forest hover:bg-mint/50'
                     }`}
                   >
                     Submissions
@@ -253,19 +253,15 @@ export const Navbar = () => {
             <div className="hidden items-center gap-3 md:flex">
               {isAuthenticated && user ? (
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2.5 rounded-full border border-neutral-200 bg-neutral-100/90 px-3 py-1.5">
-                    <div
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white ${
-                        isFaculty ? 'bg-indigo-600' : 'bg-emerald-600'
-                      }`}
-                    >
+                  <div className="flex items-center gap-2.5 rounded-full border border-sage/30 bg-white/90 px-3 py-1.5">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white bg-forest">
                       {user.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
                     </div>
                     <div className="flex flex-col text-left">
-                      <span className="text-xs font-semibold leading-tight text-neutral-800">
+                      <span className="text-xs font-semibold leading-tight text-ink">
                         {user.name}
                       </span>
-                      <span className="text-[10px] font-medium text-neutral-500">
+                      <span className="text-[10px] font-medium text-ink/70">
                         {user.role}
                       </span>
                     </div>
@@ -274,7 +270,7 @@ export const Navbar = () => {
                   <button
                     onClick={logout}
                     title="Sign out"
-                    className="rounded-lg p-2 text-neutral-500 transition hover:bg-rose-50 hover:text-rose-600"
+                    className="rounded-lg p-2 text-ink/70 transition hover:bg-rose-50 hover:text-rose-600"
                   >
                     <LogOut size={18} />
                   </button>
@@ -283,13 +279,13 @@ export const Navbar = () => {
                 <div className="flex items-center gap-2">
                   <Link
                     href="/login"
-                    className="rounded-lg px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-900"
+                    className="btn-secondary px-3.5 py-1.5 text-sm"
                   >
                     Sign in
                   </Link>
                   <Link
                     href="/signup"
-                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+                    className="btn-primary px-4 py-2 text-sm shadow-sm"
                   >
                     Get Started
                   </Link>
@@ -304,14 +300,14 @@ export const Navbar = () => {
               <Link
                 href="/login"
                 aria-current="page"
-                className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-semibold text-neutral-900"
+                className="rounded-md bg-mint px-3 py-1.5 text-sm font-semibold text-forest"
               >
                 Sign in
               </Link>
             ) : (
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-md text-neutral-600 hover:bg-neutral-100"
+                className="p-2 rounded-md text-ink hover:bg-mint/50"
                 aria-label="Toggle navigation menu"
               >
                 {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -323,80 +319,80 @@ export const Navbar = () => {
 
       {/* Mobile dropdown */}
       {mobileMenuOpen && !isLoginPage && (
-        <div className="md:hidden border-t border-neutral-200 bg-white px-4 pt-3 pb-6 space-y-2 shadow-lg">
+        <div className="md:hidden border-t border-sage/20 bg-mist px-4 pt-3 pb-6 space-y-2 shadow-lg">
           <Link
             href="/showcase"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-neutral-700 hover:bg-neutral-50"
+            className="block px-3 py-2 rounded-md text-base font-medium text-ink hover:bg-mint/60"
           >
             Conference Showcase
           </Link>
           <Link
             href="/guidance"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-neutral-700 hover:bg-neutral-50"
+            className="block px-3 py-2 rounded-md text-base font-medium text-ink hover:bg-mint/60"
           >
             Research Guidance
           </Link>
           <Link
             href="/blog"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-neutral-700 hover:bg-neutral-50"
+            className="block px-3 py-2 rounded-md text-base font-medium text-ink hover:bg-mint/60"
           >
             Blog
           </Link>
 
           {isAuthenticated && isStudent && (
-            <div className="pt-2 border-t border-neutral-100 space-y-1">
-              <span className="block px-3 py-1 text-xs font-semibold text-emerald-700 uppercase tracking-wider">
+            <div className="pt-2 border-t border-sage/20 space-y-1">
+              <span className="block px-3 py-1 text-xs font-semibold text-forest uppercase tracking-wider">
                 Student Portal
               </span>
               <Link
                 href="/student/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-emerald-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 Dashboard
               </Link>
               <Link
                 href="/profile/edit"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-emerald-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 My Profile
               </Link>
               <Link
                 href="/faculty"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-emerald-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 Faculty
               </Link>
               <Link
                 href="/student/openings"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-emerald-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 Browse Openings
               </Link>
               <Link
                 href="/student/applications"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-emerald-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 My Applications
               </Link>
               <Link
                 href="/student/papers"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-emerald-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 My Papers
               </Link>
               <Link
                 href="/student/conference"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-emerald-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 Conference Submission
               </Link>
@@ -404,60 +400,60 @@ export const Navbar = () => {
           )}
 
           {isAuthenticated && isFaculty && (
-            <div className="pt-2 border-t border-neutral-100 space-y-1">
-              <span className="block px-3 py-1 text-xs font-semibold text-indigo-700 uppercase tracking-wider">
+            <div className="pt-2 border-t border-sage/20 space-y-1">
+              <span className="block px-3 py-1 text-xs font-semibold text-forest uppercase tracking-wider">
                 Faculty Portal
               </span>
               <Link
                 href="/faculty/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-indigo-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 Dashboard
               </Link>
               <Link
                 href="/profile/edit"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-indigo-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 My Profile
               </Link>
               <Link
                 href="/students"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-indigo-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 Students
               </Link>
               <Link
                 href="/faculty/post-opening"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-indigo-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 Post Opening
               </Link>
               <Link
                 href="/faculty/applicants"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-indigo-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 View Applicants
               </Link>
               <Link
                 href="/faculty/reviews"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-neutral-700 hover:bg-indigo-50"
+                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 Conference Reviews
               </Link>
             </div>
           )}
 
-          <div className="pt-4 border-t border-neutral-200">
+          <div className="pt-4 border-t border-sage/20">
             {isAuthenticated ? (
               <div className="space-y-2">
-                <div className="px-3 py-2 text-sm text-neutral-600">
-                  Signed in as <b className="text-neutral-900">{user?.name}</b> ({user?.role})
+                <div className="px-3 py-2 text-sm text-ink/70">
+                  Signed in as <b className="text-ink">{user?.name}</b> ({user?.role})
                 </div>
                 <button
                   onClick={() => {
@@ -474,14 +470,14 @@ export const Navbar = () => {
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center px-4 py-2 border border-neutral-300 rounded-lg text-neutral-700 font-medium"
+                  className="btn-secondary w-full text-center py-2 text-sm"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/signup"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center px-4 py-2 bg-emerald-600 rounded-lg text-white font-medium shadow-sm"
+                  className="btn-primary w-full text-center py-2 text-sm shadow-sm"
                 >
                   Get Started
                 </Link>

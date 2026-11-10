@@ -129,7 +129,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return receivedUser;
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
+      const msg = err.response?.data?.message
+        || (err.code === 'ERR_NETWORK'
+          ? 'Cannot reach the ScholarBridge API. Start the backend on http://localhost:8080, or set NEXT_PUBLIC_API_BASE_URL to your deployed backend URL and allow this frontend origin in backend CORS.'
+          : err.message)
+        || 'Registration failed. Please try again.';
       setError(msg);
       throw new Error(msg);
     } finally {

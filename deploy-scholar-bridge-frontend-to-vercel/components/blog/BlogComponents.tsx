@@ -25,8 +25,8 @@ import type {
 import type { User } from '@/api/authApi';
 
 const roleStyles = {
-  STUDENT: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  FACULTY: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  STUDENT: 'bg-mint text-forest border-sage/40',
+  FACULTY: 'bg-mint text-forest border-sage/40',
 } as const;
 
 export function RoleBadge({ role }: { role: User['role'] }) {
@@ -39,7 +39,7 @@ export function RoleBadge({ role }: { role: User['role'] }) {
 
 export function MarkdownRenderer({ content }: { content: string }) {
   return (
-    <div className="max-w-none break-words [&_a]:font-medium [&_a]:text-emerald-700 [&_a]:underline [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-emerald-200 [&_blockquote]:pl-4 [&_blockquote]:text-neutral-600 [&_h1]:mb-4 [&_h1]:mt-8 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:mb-3 [&_h2]:mt-7 [&_h2]:text-2xl [&_h2]:font-bold [&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:text-xl [&_h3]:font-semibold [&_hr]:my-6 [&_li]:my-1 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-neutral-900 [&_pre]:p-4 [&_pre]:text-sm [&_pre]:text-white [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6">
+    <div className="max-w-none break-words [&_a]:font-medium [&_a]:text-forest [&_a]:underline [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-sage/40 [&_blockquote]:pl-4 [&_blockquote]:text-ink/80 [&_h1]:mb-4 [&_h1]:mt-8 [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:text-ink [&_h2]:mb-3 [&_h2]:mt-7 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-ink [&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-ink [&_hr]:my-6 [&_li]:my-1 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_p]:text-ink/90 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-night-green [&_pre]:p-4 [&_pre]:text-sm [&_pre]:text-white [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6">
       <ReactMarkdown>{content}</ReactMarkdown>
     </div>
   );
@@ -47,9 +47,9 @@ export function MarkdownRenderer({ content }: { content: string }) {
 
 export function BlogCard({ post }: { post: BlogPostSummary }) {
   return (
-    <article className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm transition hover:border-emerald-200 hover:shadow-md">
-      <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-neutral-500">
-        <span className="font-medium text-neutral-800">{post.authorName}</span>
+    <article className="solid-card p-5">
+      <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-ink/70">
+        <span className="font-semibold text-ink">{post.authorName}</span>
         <RoleBadge role={post.authorRole} />
         <span aria-hidden="true">·</span>
         <time dateTime={post.createdAt}>
@@ -57,24 +57,24 @@ export function BlogCard({ post }: { post: BlogPostSummary }) {
         </time>
       </div>
       <Link href={`/blog/${post.id}`} className="group">
-        <h2 className="text-xl font-bold text-neutral-900 group-hover:text-emerald-700">
+        <h2 className="text-xl font-bold text-ink group-hover:text-forest">
           {post.title}
         </h2>
-        <p className="mt-2 line-clamp-3 text-sm leading-6 text-neutral-600">{post.summary}</p>
+        <p className="mt-2 line-clamp-3 text-sm leading-6 text-ink/80">{post.summary}</p>
       </Link>
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {post.tags.map((tag) => (
           <Link
             key={tag}
             href={`/blog?tag=${encodeURIComponent(tag)}`}
-            className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-600 hover:bg-emerald-50 hover:text-emerald-700"
+            className="rounded-full bg-mint/50 px-2.5 py-1 text-xs font-semibold text-forest hover:bg-mint hover:text-mid-green border border-sage/20"
           >
             #{tag}
           </Link>
         ))}
         {post.linkedPaper && (
-          <span className="ml-auto inline-flex items-center gap-1 text-xs text-neutral-500">
-            <BookOpen size={14} /> {post.linkedPaper.title}
+          <span className="ml-auto inline-flex items-center gap-1 text-xs text-ink/70">
+            <BookOpen size={14} className="text-leaf" /> {post.linkedPaper.title}
           </span>
         )}
       </div>
@@ -85,18 +85,18 @@ export function BlogCard({ post }: { post: BlogPostSummary }) {
 export function MarkdownEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const [preview, setPreview] = useState(false);
   return (
-    <div className="overflow-hidden rounded-lg border border-neutral-300">
-      <div className="flex border-b border-neutral-200 bg-neutral-50">
-        <button type="button" onClick={() => setPreview(false)} className={`px-4 py-2 text-sm font-medium ${!preview ? 'border-b-2 border-emerald-600 text-emerald-700' : 'text-neutral-500'}`}>
+    <div className="overflow-hidden rounded-lg border border-sage/40">
+      <div className="flex border-b border-sage/20 bg-mist">
+        <button type="button" onClick={() => setPreview(false)} className={`px-4 py-2 text-sm font-semibold ${!preview ? 'border-b-2 border-forest text-forest' : 'text-ink/70 hover:text-forest'}`}>
           Write
         </button>
-        <button type="button" onClick={() => setPreview(true)} className={`px-4 py-2 text-sm font-medium ${preview ? 'border-b-2 border-emerald-600 text-emerald-700' : 'text-neutral-500'}`}>
+        <button type="button" onClick={() => setPreview(true)} className={`px-4 py-2 text-sm font-semibold ${preview ? 'border-b-2 border-forest text-forest' : 'text-ink/70 hover:text-forest'}`}>
           Preview
         </button>
       </div>
       {preview ? (
-        <div className="min-h-64 p-4">
-          {value ? <MarkdownRenderer content={value} /> : <p className="text-sm text-neutral-400">Nothing to preview yet.</p>}
+        <div className="min-h-64 p-4 bg-white">
+          {value ? <MarkdownRenderer content={value} /> : <p className="text-sm text-ink/50">Nothing to preview yet.</p>}
         </div>
       ) : (
         <textarea
@@ -106,7 +106,7 @@ export function MarkdownEditor({ value, onChange }: { value: string; onChange: (
           required
           aria-label="Post content in Markdown"
           placeholder="Write your research story in Markdown..."
-          className="block min-h-64 w-full resize-y p-4 font-mono text-sm leading-6 outline-none"
+          className="block min-h-64 w-full resize-y p-4 font-mono text-sm leading-6 outline-none bg-white text-ink"
         />
       )}
     </div>
@@ -156,7 +156,7 @@ export function ReactionBar({
         {reactionOptions.map(({ type, label, icon: Icon }) => {
           const active = post.currentUserReaction === type;
           return (
-            <button key={type} type="button" onClick={() => void react(type)} disabled={!!busy} aria-pressed={active} className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm disabled:opacity-60 ${active ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}>
+            <button key={type} type="button" onClick={() => void react(type)} disabled={!!busy} aria-pressed={active} className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm disabled:opacity-60 ${active ? 'border-forest bg-mint text-forest font-semibold' : 'border-sage/30 text-ink hover:bg-mint/40'}`}>
               {busy === type ? <Loader2 size={16} className="animate-spin" /> : <Icon size={16} />}
               {label} <span>{post.reactionCounts[type] ?? 0}</span>
             </button>
@@ -199,17 +199,17 @@ export function AttachmentList({
   if (!attachments.length) return null;
   return (
     <div>
-      <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200">
+      <ul className="divide-y divide-sage/20 rounded-lg border border-sage/30 bg-white">
         {attachments.map((attachment) => (
           <li key={attachment.id} className="flex items-center justify-between gap-3 p-3">
-            <span className="min-w-0 truncate text-sm text-neutral-700">{attachment.originalFileName}</span>
-            <span className="shrink-0 text-xs text-neutral-400">{(attachment.fileSize / (1024 * 1024)).toFixed(1)} MB</span>
-            <button type="button" onClick={() => void download(attachment)} disabled={downloading === attachment.id} className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700 hover:text-emerald-900 disabled:opacity-50">
+            <span className="min-w-0 truncate text-sm text-ink">{attachment.originalFileName}</span>
+            <span className="shrink-0 text-xs text-ink/60">{(attachment.fileSize / (1024 * 1024)).toFixed(1)} MB</span>
+            <button type="button" onClick={() => void download(attachment)} disabled={downloading === attachment.id} className="inline-flex items-center gap-1 text-sm font-semibold text-forest hover:text-mid-green disabled:opacity-50">
               {downloading === attachment.id ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
               Download
             </button>
             {canDelete && onDelete && (
-              <button type="button" onClick={() => onDelete(attachment.id)} aria-label={`Remove ${attachment.originalFileName}`} className="rounded p-1 text-neutral-400 hover:bg-rose-50 hover:text-rose-600">
+              <button type="button" onClick={() => onDelete(attachment.id)} aria-label={`Remove ${attachment.originalFileName}`} className="rounded p-1 text-ink/50 hover:bg-rose-50 hover:text-rose-600">
                 <Trash2 size={16} />
               </button>
             )}
@@ -304,42 +304,42 @@ function CommentItem({
   };
 
   return (
-    <article className="rounded-lg border border-neutral-200 bg-white p-4">
+    <article className="solid-card p-4">
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="font-semibold text-neutral-800">{comment.authorName}</span>
+        <span className="font-semibold text-ink">{comment.authorName}</span>
         <RoleBadge role={comment.authorRole} />
-        <time className="text-xs text-neutral-400" dateTime={comment.createdAt}>{new Date(comment.createdAt).toLocaleString()}</time>
+        <time className="text-xs text-ink/60" dateTime={comment.createdAt}>{new Date(comment.createdAt).toLocaleString()}</time>
       </div>
       {editing ? (
         <form onSubmit={(event) => void saveEdit(event)} className="mt-3 space-y-2">
-          <textarea value={editText} onChange={(event) => setEditText(event.target.value)} maxLength={1000} required className="w-full rounded-lg border border-neutral-300 p-2 text-sm" />
-          <button disabled={busy || !editText.trim()} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">Save</button>
-          <button type="button" onClick={() => setEditing(false)} className="ml-2 text-sm text-neutral-500">Cancel</button>
+          <textarea value={editText} onChange={(event) => setEditText(event.target.value)} maxLength={1000} required className="w-full rounded-lg border border-sage/40 bg-white p-2 text-sm text-ink focus:border-leaf focus:outline-none focus:ring-3 focus:ring-leaf/40" />
+          <button disabled={busy || !editText.trim()} className="btn-primary px-3 py-1.5 text-sm disabled:opacity-50">Save</button>
+          <button type="button" onClick={() => setEditing(false)} className="ml-2 text-sm text-ink/70 hover:text-ink">Cancel</button>
         </form>
       ) : (
-        <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-neutral-700">{comment.content}</p>
+        <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-ink/90">{comment.content}</p>
       )}
       <div className="mt-3 flex flex-wrap items-center gap-4">
-        <button type="button" disabled={busy} onClick={() => void toggleLike()} aria-pressed={comment.likedByCurrentUser} className={`inline-flex items-center gap-1 text-xs ${comment.likedByCurrentUser ? 'text-rose-600' : 'text-neutral-500'} disabled:opacity-50`}>
+        <button type="button" disabled={busy} onClick={() => void toggleLike()} aria-pressed={comment.likedByCurrentUser} className={`inline-flex items-center gap-1 text-xs ${comment.likedByCurrentUser ? 'text-rose-600' : 'text-ink/70 hover:text-rose-600'} disabled:opacity-50`}>
           <Heart size={14} fill={comment.likedByCurrentUser ? 'currentColor' : 'none'} /> {comment.likeCount}
         </button>
         {!isReply && (
-          <button type="button" onClick={() => setReply((value) => !value)} className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-emerald-700">
+          <button type="button" onClick={() => setReply((value) => !value)} className="inline-flex items-center gap-1 text-xs text-ink/70 hover:text-forest">
             <MessageCircle size={14} /> Reply
           </button>
         )}
-        {isAuthor && !editing && <button type="button" onClick={() => setEditing(true)} className="text-xs text-neutral-500 hover:text-emerald-700">Edit</button>}
+        {isAuthor && !editing && <button type="button" onClick={() => setEditing(true)} className="text-xs text-ink/70 hover:text-forest">Edit</button>}
         {mayDelete && <button type="button" onClick={() => void deleteComment()} disabled={busy} className="text-xs text-rose-600 hover:text-rose-800">Delete</button>}
       </div>
       {reply && (
         <form onSubmit={(event) => void submitReply(event)} className="mt-3 flex gap-2">
-          <input value={replyText} onChange={(event) => setReplyText(event.target.value)} maxLength={1000} required placeholder="Write a reply..." className="min-w-0 flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm" />
-          <button disabled={busy || !replyText.trim()} className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">Reply</button>
+          <input value={replyText} onChange={(event) => setReplyText(event.target.value)} maxLength={1000} required placeholder="Write a reply..." className="min-w-0 flex-1 rounded-lg border border-sage/40 bg-white px-3 py-2 text-sm text-ink focus:border-leaf focus:outline-none focus:ring-3 focus:ring-leaf/40" />
+          <button disabled={busy || !replyText.trim()} className="btn-primary px-3 py-2 text-sm disabled:opacity-50">Reply</button>
         </form>
       )}
       {error && <p role="alert" className="mt-2 text-xs text-rose-600">{error}</p>}
       {comment.replies.length > 0 && (
-        <div className="mt-4 space-y-3 border-l-2 border-neutral-100 pl-4">
+        <div className="mt-4 space-y-3 border-l-2 border-sage/20 pl-4">
           {comment.replies.map((child) => (
             <CommentItem key={child.id} comment={child} postId={postId} user={user} isPostAuthor={isPostAuthor} isReply onChange={onChange} />
           ))}
@@ -395,17 +395,17 @@ export function CommentSection({
 
   return (
     <section className="space-y-5">
-      <h2 className="flex items-center gap-2 text-xl font-bold text-neutral-900"><MessageCircle size={20} /> Discussion</h2>
+      <h2 className="flex items-center gap-2 text-xl font-bold text-ink"><MessageCircle size={20} className="text-leaf" /> Discussion</h2>
       <form onSubmit={(event) => void submit(event)} className="space-y-2">
-        <textarea value={content} onChange={(event) => setContent(event.target.value)} maxLength={1000} required rows={3} placeholder="Share a thoughtful comment..." className="w-full rounded-lg border border-neutral-300 p-3 text-sm focus:border-emerald-500 focus:outline-none" />
+        <textarea value={content} onChange={(event) => setContent(event.target.value)} maxLength={1000} required rows={3} placeholder="Share a thoughtful comment..." className="w-full rounded-lg border border-sage/40 bg-white p-3 text-sm text-ink focus:border-leaf focus:outline-none focus:ring-3 focus:ring-leaf/40" />
         <div className="flex items-center justify-between">
-          <span className="text-xs text-neutral-400">{content.length}/1000</span>
-          <button disabled={submitting || !content.trim()} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">{submitting ? 'Posting...' : 'Post comment'}</button>
+          <span className="text-xs text-ink/60">{content.length}/1000</span>
+          <button disabled={submitting || !content.trim()} className="btn-primary px-4 py-2 text-sm disabled:opacity-50">{submitting ? 'Posting...' : 'Post comment'}</button>
         </div>
       </form>
       {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
       {loading ? (
-        <div className="flex items-center gap-2 text-sm text-neutral-500"><Loader2 size={17} className="animate-spin" /> Loading comments...</div>
+        <div className="flex items-center gap-2 text-sm text-ink/70"><Loader2 size={17} className="animate-spin text-leaf" /> Loading comments...</div>
       ) : comments.length ? (
         <div className="space-y-3">
           {comments.map((comment) => (
@@ -413,7 +413,7 @@ export function CommentSection({
           ))}
         </div>
       ) : (
-        <p className="rounded-lg bg-neutral-50 px-4 py-6 text-center text-sm text-neutral-500">No comments yet. Start the discussion.</p>
+        <p className="rounded-lg bg-mint/30 border border-sage/20 px-4 py-6 text-center text-sm text-ink/70">No comments yet. Start the discussion.</p>
       )}
     </section>
   );

@@ -306,8 +306,8 @@ function ProfileEditForm() {
     }
   };
 
-  const inputClass = 'mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100';
-  const labelClass = 'block text-sm font-medium text-neutral-700';
+  const inputClass = 'mt-1 w-full rounded-lg border border-sage/40 bg-white px-3 py-2 text-sm text-ink outline-none focus:border-leaf focus:ring-3 focus:ring-leaf/40';
+  const labelClass = 'block text-sm font-medium text-ink';
   const input = (label: string, key: keyof ProfileDraft, options: { type?: string; max?: number } = {}) => (
     <label className={labelClass} key={key}>
       {label}
@@ -328,36 +328,36 @@ function ProfileEditForm() {
     </label>
   );
   const section = (title: string, children: ReactNode) => (
-    <section className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5 sm:p-6">
-      <h2 className="text-lg font-bold text-neutral-900">{title}</h2>
+    <section className="solid-card space-y-4 p-5 sm:p-6">
+      <h2 className="text-lg font-bold text-ink">{title}</h2>
       {children}
     </section>
   );
 
   if (loading) {
-    return <div className="flex min-h-[50vh] items-center justify-center gap-2 text-sm text-neutral-600"><Loader2 size={18} className="animate-spin" />Loading profile...</div>;
+    return <div className="flex min-h-[50vh] items-center justify-center gap-2 text-sm text-ink/70"><Loader2 size={18} className="animate-spin text-forest" />Loading profile...</div>;
   }
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
       <header>
-        <p className="text-sm font-semibold text-emerald-700">My Profile</p>
-        <h1 className="mt-1 text-2xl font-bold text-neutral-900">Edit your profile</h1>
-        <p className="mt-1 text-sm text-neutral-600">Share your experience and interests with the ScholarBridge community.</p>
+        <p className="text-sm font-semibold text-forest">My Profile</p>
+        <h1 className="mt-1 text-2xl font-bold text-ink">Edit your profile</h1>
+        <p className="mt-1 text-sm text-ink/70">Share your experience and interests with the ScholarBridge community.</p>
       </header>
 
-      <section className="rounded-xl border border-neutral-200 bg-white p-5 sm:p-6" aria-label="Profile completeness">
+      <section className="solid-card p-5 sm:p-6" aria-label="Profile completeness">
         <div className="mb-2 flex items-center justify-between gap-4">
-          <h2 className="text-sm font-semibold text-neutral-800">Profile completeness</h2>
-          <span className="text-sm font-bold text-emerald-700">{completeness ?? 0}%</span>
+          <h2 className="text-sm font-semibold text-ink">Profile completeness</h2>
+          <span className="text-sm font-bold text-forest">{completeness ?? 0}%</span>
         </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-neutral-100">
-          <div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${Math.min(100, Math.max(0, completeness ?? 0))}%` }} />
+        <div className="h-2.5 overflow-hidden rounded-full bg-mist">
+          <div className="h-full rounded-full bg-forest transition-all" style={{ width: `${Math.min(100, Math.max(0, completeness ?? 0))}%` }} />
         </div>
       </section>
 
       {error && <div role="alert" className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"><AlertCircle size={17} className="mt-0.5 shrink-0" />{error}</div>}
-      {saved && <div role="status" className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"><CheckCircle2 size={17} />Profile saved successfully.</div>}
+      {saved && <div role="status" className="flex items-center gap-2 rounded-lg border border-leaf/40 bg-mint/50 px-4 py-3 text-sm font-semibold text-forest"><CheckCircle2 size={17} />Profile saved successfully.</div>}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {section('Basic information', <div className="grid gap-4 sm:grid-cols-2">{input('Name', 'name', { max: 120 })}{input('Photo URL', 'photoUrl', { type: 'url', max: 500 })}</div>)}
@@ -372,8 +372,8 @@ function ProfileEditForm() {
               <label className={`${labelClass} sm:col-span-2`}>Research interests (comma-separated)
                 <input className={inputClass} value={draft.researchInterests} onChange={(event) => setField('researchInterests', event.target.value)} />
               </label>
-              <label className="flex items-center gap-2 text-sm font-medium text-neutral-700 sm:col-span-2">
-                <input type="checkbox" checked={draft.acceptingStudents} onChange={(event) => setField('acceptingStudents', event.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500" />
+              <label className="flex items-center gap-2 text-sm font-medium text-ink sm:col-span-2">
+                <input type="checkbox" checked={draft.acceptingStudents} onChange={(event) => setField('acceptingStudents', event.target.checked)} className="h-4 w-4 rounded border-sage/40 text-forest focus:ring-leaf/40" />
                 Accepting student researchers
               </label>
             </div>)}
@@ -384,42 +384,42 @@ function ProfileEditForm() {
               {input('Citations', 'citationsCount', { type: 'number' })}{input('h-index', 'hIndex', { type: 'number' })}{input('i10-index', 'i10Index', { type: 'number' })}
             </div>)}
             {section('Education', <>
-              {draft.education.map((item, index) => <div key={index} className="grid gap-3 rounded-lg bg-neutral-50 p-3 sm:grid-cols-[1fr_1fr_120px_auto]">
+              {draft.education.map((item, index) => <div key={index} className="grid gap-3 rounded-lg bg-mist p-3 border border-sage/20 sm:grid-cols-[1fr_1fr_120px_auto]">
                 <input aria-label="Degree" placeholder="Degree" className={inputClass} value={item.degree ?? ''} onChange={(event) => updateRow('education', draft.education, index, 'degree', event.target.value)} />
                 <input aria-label="Institution" placeholder="Institution" className={inputClass} value={item.institution ?? ''} onChange={(event) => updateRow('education', draft.education, index, 'institution', event.target.value)} />
                 <input aria-label="Year" placeholder="Year" className={inputClass} value={item.year ?? ''} onChange={(event) => updateRow('education', draft.education, index, 'year', event.target.value)} />
-                <button type="button" onClick={() => setField('education', draft.education.filter((_, rowIndex) => rowIndex !== index))} aria-label="Remove education" className="justify-self-end p-2 text-rose-600"><Trash2 size={17} /></button>
+                <button type="button" onClick={() => setField('education', draft.education.filter((_, rowIndex) => rowIndex !== index))} aria-label="Remove education" className="justify-self-end p-2 text-rose-600 hover:text-rose-800"><Trash2 size={17} /></button>
               </div>)}
-              <button type="button" onClick={() => setField('education', [...draft.education, {}])} className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-700"><Plus size={16} />Add education</button>
+              <button type="button" onClick={() => setField('education', [...draft.education, {}])} className="inline-flex items-center gap-1 text-sm font-semibold text-forest hover:text-mid-green"><Plus size={16} />Add education</button>
             </>)}
             {section('Awards and projects', <>
               <label className={labelClass}>Awards (comma-separated)<input className={inputClass} value={draft.awards} onChange={(event) => setField('awards', event.target.value)} /></label>
-              {draft.facultyProjects.map((item, index) => <div key={index} className="grid gap-3 rounded-lg bg-neutral-50 p-3 sm:grid-cols-2">
+              {draft.facultyProjects.map((item, index) => <div key={index} className="grid gap-3 rounded-lg bg-mist p-3 border border-sage/20 sm:grid-cols-2">
                 <input aria-label="Project title" placeholder="Project title" className={inputClass} value={item.title ?? ''} onChange={(event) => updateRow('facultyProjects', draft.facultyProjects, index, 'title', event.target.value)} />
                 <input aria-label="Funding agency" placeholder="Funding agency" className={inputClass} value={item.fundingAgency ?? ''} onChange={(event) => updateRow('facultyProjects', draft.facultyProjects, index, 'fundingAgency', event.target.value)} />
                 <input aria-label="Years" placeholder="Years" className={inputClass} value={item.years ?? ''} onChange={(event) => updateRow('facultyProjects', draft.facultyProjects, index, 'years', event.target.value)} />
-                <div className="flex gap-2"><input aria-label="Role" placeholder="Role" className={inputClass} value={item.role ?? ''} onChange={(event) => updateRow('facultyProjects', draft.facultyProjects, index, 'role', event.target.value)} /><button type="button" onClick={() => setField('facultyProjects', draft.facultyProjects.filter((_, rowIndex) => rowIndex !== index))} aria-label="Remove project" className="p-2 text-rose-600"><Trash2 size={17} /></button></div>
+                <div className="flex gap-2"><input aria-label="Role" placeholder="Role" className={inputClass} value={item.role ?? ''} onChange={(event) => updateRow('facultyProjects', draft.facultyProjects, index, 'role', event.target.value)} /><button type="button" onClick={() => setField('facultyProjects', draft.facultyProjects.filter((_, rowIndex) => rowIndex !== index))} aria-label="Remove project" className="p-2 text-rose-600 hover:text-rose-800"><Trash2 size={17} /></button></div>
               </div>)}
-              <button type="button" onClick={() => setField('facultyProjects', [...draft.facultyProjects, {}])} className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-700"><Plus size={16} />Add project</button>
+              <button type="button" onClick={() => setField('facultyProjects', [...draft.facultyProjects, {}])} className="inline-flex items-center gap-1 text-sm font-semibold text-forest hover:text-mid-green"><Plus size={16} />Add project</button>
             </>)}
             {section('Publications', <>
-              <p className="text-sm text-neutral-600">Manage the publications shown on your faculty profile.</p>
+              <p className="text-sm text-ink/70">Manage the publications shown on your faculty profile.</p>
               {publicationError && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{publicationError}</p>}
-              {publicationNotice && <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{publicationNotice}</p>}
-              {publications.length ? <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200">
+              {publicationNotice && <p role="status" className="rounded-lg border border-leaf/40 bg-mint/50 px-3 py-2 text-sm font-semibold text-forest">{publicationNotice}</p>}
+              {publications.length ? <ul className="divide-y divide-forest/10 rounded-lg border border-sage/30">
                 {publications.map((publication) => <li key={publication.id} className="flex flex-col gap-3 p-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <p className="font-semibold text-neutral-900">{publication.title}</p>
-                    <p className="mt-1 text-sm text-neutral-600">{publication.authors}{publication.venue && ` · ${publication.venue}`}{publication.year != null && ` · ${publication.year}`}</p>
+                    <p className="font-semibold text-ink">{publication.title}</p>
+                    <p className="mt-1 text-sm text-ink/70">{publication.authors}{publication.venue && ` · ${publication.venue}`}{publication.year != null && ` · ${publication.year}`}</p>
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    <button type="button" onClick={() => editPublication(publication)} className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50">Edit</button>
-                    <button type="button" disabled={publicationDeletingId === publication.id} onClick={() => void deletePublication(publication)} className="rounded-md border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50">{publicationDeletingId === publication.id ? 'Deleting...' : 'Delete'}</button>
+                    <button type="button" onClick={() => editPublication(publication)} className="btn-secondary px-3 py-1.5 text-xs font-semibold">Edit</button>
+                    <button type="button" disabled={publicationDeletingId === publication.id} onClick={() => void deletePublication(publication)} className="inline-flex items-center gap-1 rounded-[12px] border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50 transition">{publicationDeletingId === publication.id ? 'Deleting...' : 'Delete'}</button>
                   </div>
                 </li>)}
-              </ul> : <p className="rounded-lg bg-neutral-50 px-3 py-4 text-sm text-neutral-500">No publications added yet.</p>}
+              </ul> : <p className="rounded-lg bg-mist p-4 text-sm text-ink/60 border border-sage/20">No publications added yet.</p>}
 
-              <div className="grid gap-4 rounded-lg bg-neutral-50 p-4 sm:grid-cols-2">
+              <div className="grid gap-4 rounded-lg bg-mist p-4 border border-sage/20 sm:grid-cols-2">
                 <label className={labelClass}>Title *
                   <input aria-required="true" maxLength={300} className={inputClass} value={publicationDraft.title} onChange={(event) => setPublicationDraft((current) => ({ ...current, title: event.target.value }))} />
                 </label>
@@ -439,11 +439,11 @@ function ProfileEditForm() {
                   <input type="text" inputMode="url" maxLength={500} className={inputClass} value={publicationDraft.url} onChange={(event) => setPublicationDraft((current) => ({ ...current, url: event.target.value }))} />
                 </label>
                 <div className="flex flex-wrap gap-2 sm:col-span-2">
-                  <button type="button" disabled={publicationLoading} onClick={() => void savePublication()} className="inline-flex items-center gap-2 rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-50">
+                  <button type="button" disabled={publicationLoading} onClick={() => void savePublication()} className="btn-primary inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold disabled:opacity-50">
                     {publicationLoading && <Loader2 size={15} className="animate-spin" />}
                     {editingPublicationId == null ? 'Add publication' : 'Save publication'}
                   </button>
-                  {editingPublicationId != null && <button type="button" onClick={resetPublicationDraft} className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-white">Cancel edit</button>}
+                  {editingPublicationId != null && <button type="button" onClick={resetPublicationDraft} className="btn-secondary px-4 py-2 text-sm font-semibold">Cancel edit</button>}
                 </div>
               </div>
             </>)}
@@ -463,19 +463,19 @@ function ProfileEditForm() {
               </label>
             </div>)}
             {section('Projects', <>
-              {draft.studentProjects.map((item, index) => <div key={index} className="grid gap-3 rounded-lg bg-neutral-50 p-3 sm:grid-cols-[1fr_2fr_auto]">
+              {draft.studentProjects.map((item, index) => <div key={index} className="grid gap-3 rounded-lg bg-mist p-3 border border-sage/20 sm:grid-cols-[1fr_2fr_auto]">
                 <input aria-label="Project title" placeholder="Project title" className={inputClass} value={item.title ?? ''} onChange={(event) => updateRow('studentProjects', draft.studentProjects, index, 'title', event.target.value)} />
                 <input aria-label="Project description" placeholder="Description" className={inputClass} value={item.description ?? ''} onChange={(event) => updateRow('studentProjects', draft.studentProjects, index, 'description', event.target.value)} />
-                <button type="button" onClick={() => setField('studentProjects', draft.studentProjects.filter((_, rowIndex) => rowIndex !== index))} aria-label="Remove project" className="justify-self-end p-2 text-rose-600"><Trash2 size={17} /></button>
+                <button type="button" onClick={() => setField('studentProjects', draft.studentProjects.filter((_, rowIndex) => rowIndex !== index))} aria-label="Remove project" className="justify-self-end p-2 text-rose-600 hover:text-rose-800"><Trash2 size={17} /></button>
               </div>)}
-              <button type="button" onClick={() => setField('studentProjects', [...draft.studentProjects, {}])} className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700"><Plus size={16} />Add project</button>
+              <button type="button" onClick={() => setField('studentProjects', [...draft.studentProjects, {}])} className="inline-flex items-center gap-1 text-sm font-semibold text-forest hover:text-mid-green"><Plus size={16} />Add project</button>
             </>)}
           </>
         )}
 
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <button type="button" onClick={() => router.back()} className="rounded-lg border border-neutral-300 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50">Cancel</button>
-          <button type="submit" disabled={saving} className={`inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 ${isFaculty ? 'bg-indigo-700 hover:bg-indigo-800' : 'bg-emerald-700 hover:bg-emerald-800'}`}>
+          <button type="button" onClick={() => router.back()} className="btn-secondary px-5 py-2.5 text-sm font-semibold">Cancel</button>
+          <button type="submit" disabled={saving} className="btn-primary inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60">
             {saving && <Loader2 size={16} className="animate-spin" />}
             {saving ? 'Saving...' : 'Save profile'}
           </button>

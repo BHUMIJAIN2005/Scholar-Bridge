@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { CheckCircle2, XCircle, Clock, Info } from 'lucide-react';
 
 export type StatusType =
   | 'PENDING'
@@ -25,21 +26,42 @@ export const ApplicationStatusBadge: React.FC<StatusBadgeProps> = ({ status, cla
 
   const getStyle = () => {
     switch (normalized) {
+      case 'UNDER_REVIEW':
+        return 'bg-slate-50 text-slate-700 border-slate-200';
       case 'ACCEPTED':
       case 'DONE':
       case 'OPEN':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        return 'bg-mint text-forest border-sage/40';
       case 'PENDING':
       case 'PROCESSING':
       case 'SUBMITTED':
-      case 'UNDER_REVIEW':
-        return 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse';
+        return 'bg-amber-50 text-amber-800 border-amber-200';
       case 'REJECTED':
       case 'FAILED':
       case 'CLOSED':
         return 'bg-rose-50 text-rose-700 border-rose-200';
       default:
-        return 'bg-neutral-100 text-neutral-700 border-neutral-200';
+        return 'bg-slate-50 text-slate-700 border-slate-200';
+    }
+  };
+
+  const getIcon = () => {
+    switch (normalized) {
+      case 'UNDER_REVIEW':
+        return <Info size={13} className="mr-1 text-slate-600 shrink-0" />;
+      case 'ACCEPTED':
+      case 'DONE':
+      case 'OPEN':
+        return <CheckCircle2 size={13} className="mr-1 text-leaf shrink-0" />;
+      case 'REJECTED':
+      case 'FAILED':
+      case 'CLOSED':
+        return <XCircle size={13} className="mr-1 text-rose-600 shrink-0" />;
+      case 'PENDING':
+      case 'PROCESSING':
+      case 'SUBMITTED':
+      default:
+        return <Clock size={13} className="mr-1 text-amber-600 shrink-0" />;
     }
   };
 
@@ -62,7 +84,7 @@ export const ApplicationStatusBadge: React.FC<StatusBadgeProps> = ({ status, cla
     <span
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStyle()} ${className}`}
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-80" />
+      {getIcon()}
       {getLabel()}
     </span>
   );

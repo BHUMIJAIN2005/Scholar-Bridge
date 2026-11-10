@@ -91,7 +91,7 @@ public final class ApiDtos {
         @Size(max = 1000) String researchDomains,
         @Size(max = 1000) String skills,
         @Size(max = 120) String year,
-        @Pattern(regexp = "(?i)^https?://\\S+$") @Size(max = 500) String photoUrl,
+        @Pattern(regexp = "(?i)^(https?://\\S+|/api/files/profile-photos/\\S+)$") @Size(max = 500) String photoUrl,
         @Size(max = 160) String designation,
         @Size(max = 2000) String qualifications,
         @Size(max = 5000) String bio,

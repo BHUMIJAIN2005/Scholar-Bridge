@@ -41,49 +41,49 @@ export default function BrowseOpeningsPage() {
     <ProtectedRoute allowedRoles={['STUDENT']}>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Browse Research Openings</h1>
-          <p className="text-xs text-neutral-500 mt-1">
+          <h1 className="text-2xl font-bold text-ink">Browse Research Openings</h1>
+          <p className="text-xs text-ink/70 mt-1">
             Research openings posted by MITS DU faculty. Filter by skill or research domain.
           </p>
         </div>
 
         <div className="relative max-w-md">
-          <Search size={16} className="absolute left-3.5 top-3 text-neutral-400" />
+          <Search size={16} className="absolute left-3.5 top-3 text-sage" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Filter by skill (e.g. Python, NLP, PyTorch)..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white shadow-xs"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-sage/40 text-sm text-ink bg-white shadow-xs focus:border-leaf focus:outline-none focus:ring-3 focus:ring-leaf/40"
           />
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center gap-3 py-20 text-sm text-neutral-500" role="status">
-            <Loader2 size={20} className="animate-spin text-emerald-600" />
+          <div className="flex items-center justify-center gap-3 py-20 text-sm text-ink/70" role="status">
+            <Loader2 size={20} className="animate-spin text-leaf" />
             Loading openings...
           </div>
         ) : error ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center" role="alert">
             <AlertCircle size={28} className="text-rose-500" />
-            <p className="text-sm text-neutral-700">{error}</p>
-            <button onClick={loadOpenings} className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
+            <p className="text-sm text-ink/80">{error}</p>
+            <button onClick={loadOpenings} className="btn-secondary inline-flex items-center gap-2 text-sm px-4 py-2 font-semibold">
               <RefreshCw size={15} /> Retry
             </button>
           </div>
         ) : filtered.length === 0 ? (
-          <p className="py-16 text-center text-sm text-neutral-500">
+          <div className="solid-card border-dashed border-sage/40 py-16 text-center text-sm text-ink/70">
             {search ? 'No openings match your search.' : 'There are no research openings available yet.'}
-          </p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((opening) => (
-            <OpeningCard
-              key={opening.id}
-              opening={opening}
-              actionHref={`/student/openings/${opening.id}`}
-              actionLabel="View Details & Apply"
-            />
+              <OpeningCard
+                key={opening.id}
+                opening={opening}
+                actionHref={`/student/openings/${opening.id}`}
+                actionLabel="View Details & Apply"
+              />
             ))}
           </div>
         )}

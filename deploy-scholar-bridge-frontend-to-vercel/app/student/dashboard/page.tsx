@@ -75,11 +75,11 @@ export default function StudentDashboardPage() {
   return (
     <ProtectedRoute allowedRoles={['STUDENT']}>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Welcome Header */}
-        <div className="bg-gradient-to-r from-emerald-800 to-teal-700 text-white rounded-2xl p-6 sm:p-8 shadow-sm">
+        {/* Welcome Header with .gradient-hero band */}
+        <div className="gradient-hero text-white rounded-2xl p-6 sm:p-8 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-700/60 text-emerald-100 text-xs font-medium mb-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-semibold mb-3">
                 <Image
                   src="/mits-gwalior-logo.png"
                   alt=""
@@ -89,17 +89,17 @@ export default function StudentDashboardPage() {
                 />
                 <span>MITS Gwalior · Student Portal</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                 Welcome, {user?.name}!
               </h1>
-              <p className="text-emerald-100 text-sm mt-1 max-w-xl">
+              <p className="text-white/85 text-sm mt-1 max-w-xl">
                 {user?.year ? `${user.year} • ` : ''}Explore opportunities, share your research, and submit your work to conferences.
               </p>
             </div>
             <div className="shrink-0 flex items-center gap-3">
               <Link
                 href="/student/openings"
-                className="px-4 py-2.5 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 text-sm font-semibold shadow-xs transition flex items-center gap-2"
+                className="btn-secondary border-white text-white hover:bg-white/15 px-4 py-2.5 rounded-[12px] text-sm font-semibold shadow-xs transition flex items-center gap-2"
               >
                 <span>Browse Openings</span>
                 <ArrowRight size={15} />
@@ -111,68 +111,68 @@ export default function StudentDashboardPage() {
         <ProfileCompletenessCard completeness={user?.profileCompleteness} role="STUDENT" />
 
         {error && (
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">
             <span className="inline-flex items-center gap-2"><AlertCircle size={16} />{error}</span>
-            <button onClick={loadDashboard} className="inline-flex shrink-0 items-center gap-1.5 font-semibold"><RefreshCw size={14} />Retry</button>
+            <button onClick={loadDashboard} className="btn-secondary px-3 py-1 text-xs inline-flex shrink-0 items-center gap-1.5 font-semibold"><RefreshCw size={14} />Retry</button>
           </div>
         )}
 
         {/* Dashboard Overview Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <div className="bg-white rounded-xl border border-neutral-200 p-5 shadow-xs">
+          <div className="solid-card p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-ink/70 uppercase tracking-wider">
                 My Applications
               </span>
-              <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-lg bg-mint text-forest flex items-center justify-center">
                 <Briefcase size={16} />
               </div>
             </div>
-            <div className="text-2xl font-bold text-neutral-900 mb-1">{isLoading ? <Loader2 size={20} className="animate-spin" /> : `${activeApplications} Active`}</div>
-            <p className="text-xs text-neutral-500 mb-3">Applications submitted to faculty research openings.</p>
+            <div className="text-2xl font-bold text-ink mb-1">{isLoading ? <Loader2 size={20} className="animate-spin text-leaf" /> : `${activeApplications} Active`}</div>
+            <p className="text-xs text-ink/70 mb-3">Applications submitted to faculty research openings.</p>
             <Link
               href="/student/applications"
-              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+              className="text-xs font-semibold text-forest hover:text-mid-green flex items-center gap-1"
             >
               <span>View applications</span>
               <ArrowRight size={13} />
             </Link>
           </div>
 
-          <div className="bg-white rounded-xl border border-neutral-200 p-5 shadow-xs">
+          <div className="solid-card p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-ink/70 uppercase tracking-wider">
                 My Research Papers
               </span>
-              <div className="h-8 w-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-lg bg-mint text-forest flex items-center justify-center">
                 <FileText size={16} />
               </div>
             </div>
-            <div className="text-2xl font-bold text-neutral-900 mb-1">{isLoading ? <Loader2 size={20} className="animate-spin" /> : `${papers.length} Papers`}</div>
-            <p className="text-xs text-neutral-500 mb-3">Your papers and suggested research areas.</p>
+            <div className="text-2xl font-bold text-ink mb-1">{isLoading ? <Loader2 size={20} className="animate-spin text-leaf" /> : `${papers.length} Papers`}</div>
+            <p className="text-xs text-ink/70 mb-3">Your papers and suggested research areas.</p>
             <Link
               href="/student/papers"
-              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+              className="text-xs font-semibold text-forest hover:text-mid-green flex items-center gap-1"
             >
               <span>Upload new paper</span>
               <ArrowRight size={13} />
             </Link>
           </div>
 
-          <div className="bg-white rounded-xl border border-neutral-200 p-5 shadow-xs">
+          <div className="solid-card p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-ink/70 uppercase tracking-wider">
                 Matched Openings
               </span>
-              <div className="h-8 w-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-lg bg-mint text-forest flex items-center justify-center">
                 <BookOpen size={16} />
               </div>
             </div>
-            <div className="text-2xl font-bold text-neutral-900 mb-1">{isLoading ? <Loader2 size={20} className="animate-spin" /> : `${openings.length} Open`}</div>
-            <p className="text-xs text-neutral-500 mb-3">Research openings currently accepting applications.</p>
+            <div className="text-2xl font-bold text-ink mb-1">{isLoading ? <Loader2 size={20} className="animate-spin text-leaf" /> : `${openings.length} Open`}</div>
+            <p className="text-xs text-ink/70 mb-3">Research openings currently accepting applications.</p>
             <Link
               href="/student/openings"
-              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+              className="text-xs font-semibold text-forest hover:text-mid-green flex items-center gap-1"
             >
               <span>Find openings</span>
               <ArrowRight size={13} />
@@ -182,21 +182,21 @@ export default function StudentDashboardPage() {
 
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-neutral-900">Recent activity</h2>
-            <Link href="/student/applications" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700">Applications <ArrowRight size={14} /></Link>
+            <h2 className="text-lg font-bold text-ink">Recent activity</h2>
+            <Link href="/student/applications" className="inline-flex items-center gap-1 text-sm font-semibold text-forest hover:text-mid-green">Applications <ArrowRight size={14} /></Link>
           </div>
           {isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-neutral-500"><Loader2 size={18} className="animate-spin" />Loading activity...</div>
+            <div className="flex items-center justify-center gap-2 py-10 text-sm text-ink/70"><Loader2 size={18} className="animate-spin text-leaf" />Loading activity...</div>
           ) : recentActivity.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-neutral-300 px-5 py-10 text-center text-sm text-neutral-500">Your applications and uploaded papers will appear here.</div>
+            <div className="solid-card border-dashed border-sage/40 px-5 py-10 text-center text-sm text-ink/70">Your applications and uploaded papers will appear here.</div>
           ) : (
-            <ul className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white">
+            <ul className="divide-y divide-sage/20 solid-card overflow-hidden">
               {recentActivity.map((activity) => {
                 const Icon = activity.icon;
-                return <li key={activity.key}><Link href={activity.href} className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50">
-                  <Icon size={17} className="shrink-0 text-emerald-700" />
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-800">{activity.label}</span>
-                  <span className="shrink-0 text-xs text-neutral-500">{activity.status}</span>
+                return <li key={activity.key}><Link href={activity.href} className="flex items-center gap-3 px-4 py-3 hover:bg-mint/40 transition">
+                  <Icon size={17} className="shrink-0 text-forest" />
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{activity.label}</span>
+                  <span className="shrink-0 text-xs text-ink/60">{activity.status}</span>
                 </Link></li>;
               })}
             </ul>

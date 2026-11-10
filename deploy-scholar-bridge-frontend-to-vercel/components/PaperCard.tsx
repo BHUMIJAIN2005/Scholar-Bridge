@@ -60,15 +60,15 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper, onRefresh }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-neutral-200 p-5 shadow-sm hover:shadow-md transition">
+    <div className="solid-card p-5">
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex items-start gap-3">
-          <div className="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 rounded-lg bg-mint text-forest flex items-center justify-center shrink-0">
             <FileText size={20} />
           </div>
           <div>
-            <h3 className="font-semibold text-neutral-900 text-base leading-snug">{paper.title}</h3>
-            <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500">
+            <h3 className="font-semibold text-ink text-base leading-snug">{paper.title}</h3>
+            <div className="flex items-center gap-2 mt-1 text-xs text-ink/70">
               <Calendar size={13} />
               <span>{paper.uploadedAt ? new Date(paper.uploadedAt).toLocaleDateString() : 'Recently'}</span>
             </div>
@@ -77,16 +77,16 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper, onRefresh }) => {
         <ApplicationStatusBadge status={paper.status} />
       </div>
 
-      <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between flex-wrap gap-2">
+      <div className="mt-4 pt-3 border-t border-sage/20 flex items-center justify-between flex-wrap gap-2">
         <div>
           {paper.category ? (
             <CategoryChip category={paper.category} confidenceScore={paper.confidenceScore} />
           ) : paper.status === 'PROCESSING' ? (
-            <span className="text-xs text-amber-600 font-medium flex items-center gap-1.5">
+            <span className="text-xs text-amber-700 font-medium flex items-center gap-1.5">
               <RefreshCw size={12} className="animate-spin" /> Finding a research area...
             </span>
           ) : (
-            <span className="text-xs text-neutral-400">No research area suggested yet</span>
+            <span className="text-xs text-ink/50">No research area suggested yet</span>
           )}
         </div>
 
@@ -95,7 +95,7 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper, onRefresh }) => {
             type="button"
             onClick={() => void handleViewPdf()}
             disabled={isOpeningPdf}
-            className="text-xs font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1 hover:underline disabled:opacity-50"
+            className="text-xs font-semibold text-forest hover:text-mid-green flex items-center gap-1 hover:underline disabled:opacity-50"
           >
             <span>View PDF</span>
             <ExternalLink size={12} />
@@ -106,7 +106,7 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper, onRefresh }) => {
             type="button"
             onClick={() => void handleReclassify()}
             disabled={isRetrying}
-            className="text-xs font-medium text-rose-600 hover:text-rose-700 disabled:opacity-50"
+            className="text-xs font-semibold text-rose-600 hover:text-rose-700 disabled:opacity-50"
           >
             {isRetrying ? 'Trying again...' : 'Try again'}
           </button>

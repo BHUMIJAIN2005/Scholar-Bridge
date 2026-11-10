@@ -1,4 +1,4 @@
-﻿# Environment files and secrets
+# Environment files and secrets
 .env
 .env.*
 !.env.example
@@ -39,8 +39,8 @@ __pycache__/
 # macOS
 .DS_Store
 
-
 # Local uploads and OS files
+uploads/
 backend/uploads/
 .DS_Store
 desktop.ini

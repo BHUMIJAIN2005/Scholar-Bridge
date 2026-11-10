@@ -36,6 +36,7 @@ public class Publication {
     @Column(length = 300)
     private String venue;
 
+    @Column(name = "publication_year")
     private Integer year;
 
     @Column(length = 200)

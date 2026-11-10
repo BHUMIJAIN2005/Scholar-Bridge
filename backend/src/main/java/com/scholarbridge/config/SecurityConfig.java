@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**", "/error").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/conferences", "/api/conferences/*/showcase",
                     "/api/public/conference-submissions/*/paper").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/files/profile-photos/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/files/**").authenticated()
                 .anyRequest().authenticated())
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

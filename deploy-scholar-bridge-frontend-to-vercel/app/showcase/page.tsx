@@ -63,20 +63,20 @@ export default function ShowcasePage() {
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <div className="text-center max-w-2xl mx-auto">
-        <div className="inline-flex h-12 w-12 rounded-xl bg-amber-100 text-amber-700 items-center justify-center mb-3">
+        <div className="inline-flex h-12 w-12 rounded-xl bg-mint text-forest items-center justify-center mb-3 border border-sage/30">
           <Award size={26} />
         </div>
-        <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">
+        <h1 className="text-3xl font-extrabold text-ink tracking-tight">
           Conference Research Showcase
         </h1>
-        <p className="text-neutral-500 mt-2 text-sm sm:text-base">
+        <p className="text-ink/70 mt-2 text-sm sm:text-base">
           Public gallery of accepted undergraduate and faculty research papers presented at departmental conferences.
         </p>
       </div>
 
       <div className="flex flex-col items-center justify-center gap-3">
         <div className="relative w-full max-w-md">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40" />
           <label className="sr-only" htmlFor="showcase-search">Search papers by title or author</label>
           <input
             id="showcase-search"
@@ -84,14 +84,14 @@ export default function ShowcasePage() {
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}
             placeholder="Search by paper title or student author"
-            className="w-full rounded-md border border-neutral-300 bg-white py-2 pl-9 pr-3 text-sm"
+            className="w-full rounded-lg border border-sage/40 bg-white py-2 pl-9 pr-3 text-sm text-ink placeholder:text-ink/40 focus:border-leaf focus:outline-none focus:ring-3 focus:ring-leaf/40"
           />
         </div>
         {conferences.length > 1 && (
           <label className="sr-only" htmlFor="conference-filter">Filter by conference</label>
         )}
         {conferences.length > 1 && (
-          <select id="conference-filter" value={selectedConference} onChange={(event) => { setSelectedConference(event.target.value); setSelectedTrack('ALL'); }} className="max-w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm">
+          <select id="conference-filter" value={selectedConference} onChange={(event) => { setSelectedConference(event.target.value); setSelectedTrack('ALL'); }} className="max-w-full rounded-lg border border-sage/40 bg-white px-3 py-2 text-sm text-ink focus:border-leaf focus:outline-none focus:ring-3 focus:ring-leaf/40">
             <option value="ALL">All conferences</option>
             {conferences.map((conference) => <option key={conference.id} value={conference.id}>{conference.name}</option>)}
           </select>
@@ -101,10 +101,10 @@ export default function ShowcasePage() {
           <button
             key={track}
             onClick={() => setSelectedTrack(track)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${
+            className={`px-3.5 py-1 text-xs font-semibold rounded-full transition ${
               selectedTrack === track
-                ? 'bg-neutral-900 text-white shadow-xs'
-                : 'bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+                ? 'btn-primary'
+                : 'btn-secondary'
             }`}
           >
             {track}
@@ -114,56 +114,56 @@ export default function ShowcasePage() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-3 py-20 text-sm text-neutral-500" role="status">
-          <Loader2 size={20} className="animate-spin text-emerald-600" /> Loading accepted papers...
+        <div className="flex items-center justify-center gap-3 py-20 text-sm text-ink/70" role="status">
+          <Loader2 size={20} className="animate-spin text-forest" /> Loading accepted papers...
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center" role="alert">
+        <div className="solid-card flex flex-col items-center gap-3 py-16 text-center" role="alert">
           <AlertCircle size={28} className="text-rose-500" />
-          <p className="text-sm text-neutral-700">{error}</p>
-          <button onClick={loadShowcase} className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700"><RefreshCw size={15} /> Retry</button>
+          <p className="text-sm text-ink/80">{error}</p>
+          <button onClick={loadShowcase} className="btn-secondary px-4 py-2 text-xs font-semibold inline-flex items-center gap-2"><RefreshCw size={15} /> Retry</button>
         </div>
       ) : filteredPapers.length === 0 ? (
-        <p className="py-16 text-center text-sm text-neutral-500">
+        <div className="solid-card border-dashed border-sage/40 py-16 text-center text-sm text-ink/70">
           {papers.length === 0
             ? 'Accepted research papers will appear here once they are approved for the showcase.'
             : 'No papers match your search and filters. Try changing or clearing them.'}
-        </p>
+        </div>
       ) : <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {filteredPapers.map((paper) => (
           <div
             key={paper.id}
-            className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-xs hover:shadow-md transition flex flex-col justify-between"
+            className="solid-card p-6 flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                <span className="text-xs font-semibold text-forest bg-mint px-2.5 py-0.5 rounded-full border border-sage/30">
                   {paper.track}
                 </span>
-                <span className="text-xs text-neutral-500">{paper.conferenceName}</span>
+                <span className="text-xs text-ink/60">{paper.conferenceName}</span>
               </div>
 
-              <h2 className="text-lg font-bold text-neutral-900 mb-2 leading-snug">
+              <h2 className="text-lg font-bold text-ink mb-2 leading-snug">
                   {paper.paperTitle ?? `Paper #${paper.paperId}`}
               </h2>
 
-              <p className="text-xs text-neutral-600 mb-4 flex items-center gap-1.5">
-                <User size={13} className="text-neutral-400" />
+              <p className="text-xs text-ink/70 mb-4 flex items-center gap-1.5">
+                <User size={13} className="text-leaf" />
                 <span>{paper.studentName ?? 'Student author'}</span>
               </p>
               {paper.abstractText && (
-                <p className="mb-4 text-sm leading-relaxed text-neutral-600">{paper.abstractText}</p>
+                <p className="mb-4 text-sm leading-relaxed text-ink/80">{paper.abstractText}</p>
               )}
             </div>
 
-            <div className="pt-4 border-t border-neutral-100 flex items-center justify-between">
+            <div className="pt-4 border-t border-forest/10 flex items-center justify-between">
               {paper.category && <CategoryChip category={paper.category} confidenceScore={paper.confidenceScore} />}
               {paper.publicPdfUrl && (
                 <a
                   href={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}${paper.publicPdfUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-forest hover:text-mid-green"
                 >
                   <Download size={14} /> View PDF
                 </a>
@@ -173,10 +173,10 @@ export default function ShowcasePage() {
         ))}
       </div>}
 
-      <div className="p-6 rounded-2xl bg-neutral-100 text-center text-xs text-neutral-600">
+      <div className="solid-card p-6 text-center text-xs text-ink/70">
         <p>
           Students with accepted papers can submit directly through the{' '}
-          <Link href="/login" className="font-semibold text-emerald-700 underline">
+          <Link href="/login" className="font-semibold text-forest underline">
             Student Portal
           </Link>
           .

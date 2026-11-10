@@ -82,38 +82,38 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-xl w-full space-y-6 bg-white p-8 sm:p-10 rounded-2xl border border-neutral-200/80 shadow-xl shadow-neutral-100">
+    <div className="gradient-hero min-h-[90vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-xl w-full space-y-6 glass-card p-8 sm:p-10">
         <div className="text-center">
-          <div className="inline-flex h-12 w-12 rounded-xl bg-emerald-100 text-emerald-700 items-center justify-center mb-3">
+          <div className="inline-flex h-12 w-12 rounded-xl bg-white/20 text-white items-center justify-center mb-3 shadow-inner">
             <GraduationCap size={28} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
+          <h1 className="text-2xl font-bold tracking-tight text-white">
             Create your ScholarBridge Account
           </h1>
-          <p className="text-sm text-neutral-500 mt-1">
+          <p className="text-sm text-white/80 mt-1">
             Join the research collaboration network at MITS DU
           </p>
         </div>
 
         {/* Role Toggle Selector */}
         <div>
-          <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-2 text-center">
+          <label className="block text-xs font-semibold text-white/90 uppercase tracking-wider mb-2 text-center">
             Select Your Role
           </label>
-          <div className="grid grid-cols-2 gap-3 p-1 bg-neutral-100 rounded-xl">
+          <div className="grid grid-cols-2 gap-3 p-1 bg-white/10 rounded-xl border border-white/20">
             <button
               type="button"
               onClick={() => setRole('STUDENT')}
               className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition ${
                 role === 'STUDENT'
-                  ? 'bg-white text-emerald-700 shadow-sm'
-                  : 'text-neutral-600 hover:text-neutral-900'
+                  ? 'bg-white text-forest shadow-sm'
+                  : 'text-white/80 hover:text-white'
               }`}
             >
               <BookOpen size={16} />
               <span>Student</span>
-              {role === 'STUDENT' && <CheckCircle2 size={15} className="text-emerald-600" />}
+              {role === 'STUDENT' && <CheckCircle2 size={15} className="text-leaf" />}
             </button>
 
             <button
@@ -121,23 +121,23 @@ export default function SignupPage() {
               onClick={() => setRole('FACULTY')}
               className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition ${
                 role === 'FACULTY'
-                  ? 'bg-white text-indigo-700 shadow-sm'
-                  : 'text-neutral-600 hover:text-neutral-900'
+                  ? 'bg-white text-forest shadow-sm'
+                  : 'text-white/80 hover:text-white'
               }`}
             >
               <Briefcase size={16} />
               <span>Faculty</span>
-              {role === 'FACULTY' && <CheckCircle2 size={15} className="text-indigo-600" />}
+              {role === 'FACULTY' && <CheckCircle2 size={15} className="text-leaf" />}
             </button>
           </div>
         </div>
 
         {(formError || authError) && (
-          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2.5 text-xs text-rose-800">
-            <AlertCircle size={16} className="shrink-0 text-rose-600 mt-0.5" />
+          <div className="p-3.5 bg-rose-500/20 border border-rose-300 rounded-lg flex items-start gap-2.5 text-xs text-white">
+            <AlertCircle size={16} className="shrink-0 text-rose-300 mt-0.5" />
             <div>
-              <p className="font-semibold">Registration Notice</p>
-              <p>{formError || authError}</p>
+              <p className="font-semibold text-white">Registration Notice</p>
+              <p className="text-white/90">{formError || authError}</p>
             </div>
           </div>
         )}
@@ -145,7 +145,7 @@ export default function SignupPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-white/90 uppercase tracking-wider mb-1.5">
                 Full Name *
               </label>
               <input
@@ -154,12 +154,12 @@ export default function SignupPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={role === 'STUDENT' ? 'e.g. Priya Sharma' : 'e.g. Dr. Rajesh Verma'}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-neutral-50/50"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-white/30 bg-white text-ink text-sm placeholder:text-ink/40 focus:outline-none focus:ring-3 focus:ring-leaf/40"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-white/90 uppercase tracking-wider mb-1.5">
                 Email Address *
               </label>
               <input
@@ -168,14 +168,14 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@university.edu"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-neutral-50/50"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-white/30 bg-white text-ink text-sm placeholder:text-ink/40 focus:outline-none focus:ring-3 focus:ring-leaf/40"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-white/90 uppercase tracking-wider mb-1.5">
                 Password *
               </label>
               <input
@@ -184,12 +184,12 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 6 characters"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-neutral-50/50"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-white/30 bg-white text-ink text-sm placeholder:text-ink/40 focus:outline-none focus:ring-3 focus:ring-leaf/40"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-white/90 uppercase tracking-wider mb-1.5">
                 Confirm Password *
               </label>
               <input
@@ -198,19 +198,19 @@ export default function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm password"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-neutral-50/50"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-white/30 bg-white text-ink text-sm placeholder:text-ink/40 focus:outline-none focus:ring-3 focus:ring-leaf/40"
               />
             </div>
           </div>
 
           {/* Role specific profile fields */}
           {role === 'STUDENT' ? (
-            <div className="p-4 bg-emerald-50/50 border border-emerald-200/70 rounded-xl space-y-3">
-              <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider block">
+            <div className="p-4 bg-white/10 border border-white/20 rounded-xl space-y-3">
+              <span className="text-xs font-bold text-mint uppercase tracking-wider block">
                 Student Academic Profile
               </span>
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                <label className="block text-xs font-semibold text-white/90 mb-1">
                   Skills & Research Interests (comma-separated)
                 </label>
                 <input
@@ -218,11 +218,11 @@ export default function SignupPage() {
                   value={skills}
                   onChange={(e) => setSkills(e.target.value)}
                   placeholder="e.g. data analysis, programming, research writing"
-                  className="w-full px-3.5 py-2 rounded-lg border border-neutral-300 text-sm bg-white"
+                  className="w-full px-3.5 py-2 rounded-lg border border-white/30 bg-white text-ink text-sm placeholder:text-ink/40 focus:outline-none focus:ring-3 focus:ring-leaf/40"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                <label className="block text-xs font-semibold text-white/90 mb-1">
                   Academic Program & Year
                 </label>
                 <input
@@ -230,17 +230,17 @@ export default function SignupPage() {
                   value={year}
                   onChange={(e) => setYear(e.target.value)}
                   placeholder="e.g. 3rd Year B.Tech CSE"
-                  className="w-full px-3.5 py-2 rounded-lg border border-neutral-300 text-sm bg-white"
+                  className="w-full px-3.5 py-2 rounded-lg border border-white/30 bg-white text-ink text-sm placeholder:text-ink/40 focus:outline-none focus:ring-3 focus:ring-leaf/40"
                 />
               </div>
             </div>
           ) : (
-            <div className="p-4 bg-indigo-50/50 border border-indigo-200/70 rounded-xl space-y-3">
-              <span className="text-xs font-bold text-indigo-800 uppercase tracking-wider block">
+            <div className="p-4 bg-white/10 border border-white/20 rounded-xl space-y-3">
+              <span className="text-xs font-bold text-mint uppercase tracking-wider block">
                 Faculty Academic Profile
               </span>
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                <label className="block text-xs font-semibold text-white/90 mb-1">
                   Department
                 </label>
                 <input
@@ -248,11 +248,11 @@ export default function SignupPage() {
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   placeholder="e.g. Department of Computer Science & Engineering"
-                  className="w-full px-3.5 py-2 rounded-lg border border-neutral-300 text-sm bg-white"
+                  className="w-full px-3.5 py-2 rounded-lg border border-white/30 bg-white text-ink text-sm placeholder:text-ink/40 focus:outline-none focus:ring-3 focus:ring-leaf/40"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                <label className="block text-xs font-semibold text-white/90 mb-1">
                   Research Domains & Topics
                 </label>
                 <input
@@ -260,7 +260,7 @@ export default function SignupPage() {
                   value={researchDomains}
                   onChange={(e) => setResearchDomains(e.target.value)}
                   placeholder="e.g. Natural Language Processing, Computer Vision, Distributed Systems"
-                  className="w-full px-3.5 py-2 rounded-lg border border-neutral-300 text-sm bg-white"
+                  className="w-full px-3.5 py-2 rounded-lg border border-white/30 bg-white text-ink text-sm placeholder:text-ink/40 focus:outline-none focus:ring-3 focus:ring-leaf/40"
                 />
               </div>
             </div>
@@ -269,15 +269,11 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full py-2.5 px-4 rounded-lg font-medium text-sm text-white flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-50 ${
-              role === 'STUDENT'
-                ? 'bg-emerald-600 hover:bg-emerald-700'
-                : 'bg-indigo-600 hover:bg-indigo-700'
-            }`}
+            className="w-full py-3 px-4 rounded-[12px] font-semibold text-sm bg-mint text-forest hover:bg-mint/90 flex items-center justify-center gap-2 shadow-md transition hover:-translate-y-0.5 active:scale-98 disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={16} className="animate-spin text-forest" />
                 <span>Creating your account...</span>
               </>
             ) : (
@@ -289,10 +285,10 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <div className="pt-4 border-t border-neutral-100 text-center">
-          <p className="text-xs text-neutral-600">
+        <div className="pt-4 border-t border-white/15 text-center">
+          <p className="text-xs text-white/80">
             Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-emerald-600 hover:text-emerald-700 hover:underline">
+            <Link href="/login" className="font-semibold text-mint hover:text-white underline">
               Sign in
             </Link>
           </p>

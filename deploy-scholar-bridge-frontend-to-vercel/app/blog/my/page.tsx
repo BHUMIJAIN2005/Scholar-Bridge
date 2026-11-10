@@ -49,47 +49,47 @@ function MyBlogPosts() {
     <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Research Blog</p>
-          <h1 className="mt-1 text-3xl font-bold text-neutral-900">My posts</h1>
-          <p className="mt-2 text-sm text-neutral-600">{user?.name} · manage drafts and published posts</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-forest">Research Blog</p>
+          <h1 className="mt-1 text-3xl font-bold text-ink">My posts</h1>
+          <p className="mt-2 text-sm text-ink/70">{user?.name} · manage drafts and published posts</p>
         </div>
-        <Link href="/blog/new" className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"><PenLine size={16} /> New post</Link>
+        <Link href="/blog/new" className="btn-primary inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold"><PenLine size={16} /> New post</Link>
       </header>
-      <div className="mb-5 flex border-b border-neutral-200">
+      <div className="mb-5 flex border-b border-forest/10">
         {(['DRAFT', 'PUBLISHED'] as const).map((value) => (
-          <button key={value} type="button" onClick={() => setTab(value)} aria-pressed={tab === value} className={`border-b-2 px-4 py-3 text-sm font-semibold ${tab === value ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-neutral-500 hover:text-neutral-800'}`}>
+          <button key={value} type="button" onClick={() => setTab(value)} aria-pressed={tab === value} className={`border-b-2 px-4 py-3 text-sm font-semibold transition ${tab === value ? 'border-forest text-forest' : 'border-transparent text-ink/60 hover:text-ink'}`}>
             {value === 'DRAFT' ? 'Drafts' : 'Published'} <span className="ml-1 text-xs">({posts.filter((post) => post.status === value).length})</span>
           </button>
         ))}
       </div>
-      {error && <div role="alert" className="mb-4 flex items-center gap-2 rounded-lg bg-rose-50 p-3 text-sm text-rose-700"><AlertCircle size={17} />{error}<button onClick={() => void loadPosts()} className="ml-auto underline">Retry</button></div>}
+      {error && <div role="alert" className="mb-4 flex items-center gap-2 rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700"><AlertCircle size={17} />{error}<button onClick={() => void loadPosts()} className="ml-auto underline">Retry</button></div>}
       {loading ? (
-        <div className="flex min-h-48 items-center justify-center gap-3 text-neutral-500"><Loader2 className="animate-spin text-emerald-600" /> Loading your posts...</div>
+        <div className="flex min-h-48 items-center justify-center gap-3 text-ink/70"><Loader2 className="animate-spin text-forest" /> Loading your posts...</div>
       ) : visible.length ? (
         <div className="space-y-3">
           {visible.map((post) => (
-            <article key={post.id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <article key={post.id} className="solid-card flex flex-wrap items-center justify-between gap-4 p-5">
               <div className="min-w-0 flex-1">
-                <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-ink/60">
                   <RoleBadge role={post.authorRole} />
                   <time dateTime={post.updatedAt}>Updated {new Date(post.updatedAt).toLocaleDateString()}</time>
                 </div>
-                <Link href={`/blog/${post.id}`} className="text-lg font-bold text-neutral-900 hover:text-emerald-700">{post.title}</Link>
-                <p className="mt-1 line-clamp-2 text-sm text-neutral-600">{post.summary}</p>
-                <div className="mt-2 flex flex-wrap gap-1.5">{post.tags.map((tag) => <span key={tag} className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600">#{tag}</span>)}</div>
+                <Link href={`/blog/${post.id}`} className="text-lg font-bold text-ink hover:text-forest">{post.title}</Link>
+                <p className="mt-1 line-clamp-2 text-sm text-ink/80">{post.summary}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">{post.tags.map((tag) => <span key={tag} className="rounded-full bg-mint/50 border border-sage/20 px-2 py-0.5 text-xs font-semibold text-forest">#{tag}</span>)}</div>
               </div>
               <div className="flex shrink-0 gap-2">
-                <Link href={`/blog/${post.id}/edit`} className="rounded-lg border border-neutral-300 px-3 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50">Edit</Link>
-                <button type="button" onClick={() => void remove(post)} disabled={deleting === post.id} className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"><Trash2 size={15} /> Delete</button>
+                <Link href={`/blog/${post.id}/edit`} className="btn-secondary px-3 py-1.5 text-xs font-semibold">Edit</Link>
+                <button type="button" onClick={() => void remove(post)} disabled={deleting === post.id} className="inline-flex items-center gap-1 rounded-[12px] border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50 transition"><Trash2 size={15} /> Delete</button>
               </div>
             </article>
           ))}
         </div>
       ) : (
-        !error && <div className="rounded-xl border border-dashed border-neutral-300 bg-white px-6 py-14 text-center">
-          <h2 className="text-lg font-semibold text-neutral-800">No {tab === 'DRAFT' ? 'drafts' : 'published posts'} yet</h2>
-          <p className="mt-2 text-sm text-neutral-500">Create a post to share your research with the community.</p>
-          <Link href="/blog/new" className="mt-4 inline-flex rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Write a post</Link>
+        !error && <div className="solid-card border-dashed border-sage/40 px-6 py-14 text-center">
+          <h2 className="text-lg font-semibold text-ink">No {tab === 'DRAFT' ? 'drafts' : 'published posts'} yet</h2>
+          <p className="mt-2 text-sm text-ink/70">Create a post to share your research with the community.</p>
+          <Link href="/blog/new" className="mt-4 btn-primary inline-flex px-4 py-2 text-sm font-semibold">Write a post</Link>
         </div>
       )}
     </main>
