@@ -7,6 +7,8 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  photoUrl?: string;
+  approvalStatus?: 'PENDING' | 'APPROVED';
   department?: string;
   researchDomains?: string;
   skills?: string;
@@ -19,6 +21,8 @@ export interface AuthResponse {
   user: User;
   message?: string;
 }
+
+export type GoogleLoginResponse = AuthResponse | { needsRole: true };
 
 export interface LoginRequest {
   email: string;
@@ -43,6 +47,11 @@ export const authApi = {
    */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     const response = await axiosClient.post<AuthResponse>('/api/auth/login', credentials);
+    return response.data;
+  },
+
+  async loginWithGoogle(idToken: string, role?: UserRole): Promise<GoogleLoginResponse> {
+    const response = await axiosClient.post<GoogleLoginResponse>('/api/auth/google', { idToken, role });
     return response.data;
   },
 

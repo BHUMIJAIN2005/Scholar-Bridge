@@ -12,6 +12,7 @@ import com.scholarbridge.dto.ApiDtos.UserResponse;
 import com.scholarbridge.entity.Application;
 import com.scholarbridge.entity.Conference;
 import com.scholarbridge.entity.ConferenceSubmission;
+import com.scholarbridge.entity.FacultyApprovalStatus;
 import com.scholarbridge.entity.PaperSubmission;
 import com.scholarbridge.entity.SubmissionStatus;
 import com.scholarbridge.entity.ResearchOpening;
@@ -23,7 +24,10 @@ import org.springframework.stereotype.Component;
 public class ApiMapper {
     public UserResponse user(User user) {
         return new UserResponse(
-            user.getId(), user.getName(), user.getEmail(), user.getRole(),
+            user.getId(), user.getName(), user.getEmail(), user.getPhotoUrl(), user.getRole(),
+            user.getRole() == com.scholarbridge.entity.UserRole.FACULTY
+                ? (user.getApprovalStatus() == null ? FacultyApprovalStatus.APPROVED : user.getApprovalStatus())
+                : null,
             user.getFacultyProfile() == null ? null : user.getFacultyProfile().getDepartment(),
             user.getFacultyProfile() == null ? null : user.getFacultyProfile().getResearchDomains(),
             user.getStudentProfile() == null ? null : user.getStudentProfile().getSkills(),

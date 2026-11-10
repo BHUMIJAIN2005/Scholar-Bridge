@@ -1,22 +1,105 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Image from 'next/image';
+import Script from 'next/script';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { AlertCircle, Award, BookOpen, KeyRound, Loader2, Users } from 'lucide-react';
+import type { UserRole } from '@/api/authApi';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (options: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+          }) => void;
+          renderButton: (element: HTMLElement, options: {
+            theme: 'outline';
+            size: 'large';
+            shape: 'rectangular';
+            text: 'signin_with';
+            width: number;
+          }) => void;
+        };
+      };
+    };
+  }
+}
 
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, isAuthenticated, user, error: authError, clearError } = useAuth();
+  const { login, loginWithGoogle, isAuthenticated, user, error: authError, clearError } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expiredNotice, setExpiredNotice] = useState(false);
+  const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
+  const [googleNeedsRole, setGoogleNeedsRole] = useState(false);
+  const [googleIdToken, setGoogleIdToken] = useState<string | null>(null);
+  const [pendingApproval, setPendingApproval] = useState(false);
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const googleCallbackRef = useRef<(credential: string) => void>(() => undefined);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const passwordLoginEnabled = process.env.NEXT_PUBLIC_PASSWORD_LOGIN_ENABLED !== 'false';
+
+  const handleGoogleCredential = async (idToken: string, role?: UserRole) => {
+    setFormError(null);
+    clearError();
+    try {
+      setIsSubmitting(true);
+      const result = await loginWithGoogle(idToken, role);
+      if (result.needsRole) {
+        setGoogleIdToken(idToken);
+        setGoogleNeedsRole(true);
+        return;
+      }
+      setGoogleNeedsRole(false);
+      setGoogleIdToken(null);
+      if (result.user.role === 'FACULTY' && result.user.approvalStatus === 'PENDING') {
+        setPendingApproval(true);
+        return;
+      }
+      router.push(result.user.role === 'STUDENT' ? '/student/dashboard' : '/faculty/dashboard');
+    } catch (err: any) {
+      setFormError(err.message || 'Google sign-in failed. Please try again.');
+      if (role) {
+        setGoogleNeedsRole(false);
+        setGoogleIdToken(null);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  googleCallbackRef.current = (credential) => {
+    void handleGoogleCredential(credential);
+  };
+
+  useEffect(() => {
+    if (!googleScriptLoaded || !googleClientId || !googleButtonRef.current || !window.google) {
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: (response) => googleCallbackRef.current(response.credential),
+    });
+    window.google.accounts.id.renderButton(googleButtonRef.current, {
+      theme: 'outline',
+      size: 'large',
+      shape: 'rectangular',
+      text: 'signin_with',
+      width: Math.min(360, googleButtonRef.current.clientWidth || 320),
+    });
+  }, [googleScriptLoaded, googleClientId]);
 
   useEffect(() => {
     if (searchParams.get('expired') === 'true') {
@@ -27,6 +110,10 @@ function LoginFormContent() {
   // If already logged in, redirect to proper dashboard
   useEffect(() => {
     if (isAuthenticated && user) {
+      if (user.role === 'FACULTY' && user.approvalStatus === 'PENDING') {
+        setPendingApproval(true);
+        return;
+      }
       if (user.role === 'STUDENT') {
         router.push('/student/dashboard');
       } else {
@@ -48,6 +135,10 @@ function LoginFormContent() {
     try {
       setIsSubmitting(true);
       const loggedUser = await login({ email, password });
+      if (loggedUser.role === 'FACULTY' && loggedUser.approvalStatus === 'PENDING') {
+        setPendingApproval(true);
+        return;
+      }
       if (loggedUser.role === 'STUDENT') {
         router.push('/student/dashboard');
       } else {
@@ -62,6 +153,13 @@ function LoginFormContent() {
 
   return (
     <div className="mx-auto grid w-full max-w-6xl items-center gap-4 px-4 py-3 sm:px-6 md:grid-cols-[1.05fr_0.95fr] lg:px-8">
+      {googleClientId && (
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+          onLoad={() => setGoogleScriptLoaded(true)}
+        />
+      )}
       <section className="relative isolate hidden overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 px-6 py-8 text-white shadow-xl shadow-emerald-950/10 sm:px-9 sm:py-10 md:block">
         <div className="pointer-events-none absolute -right-20 -top-20 -z-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-20 -z-10 h-64 w-64 rounded-full bg-teal-300/10 blur-3xl" />
@@ -156,7 +254,58 @@ function LoginFormContent() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {pendingApproval && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3.5 text-sm font-medium text-amber-800" role="status">
+            Your account is waiting for approval.
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {googleClientId ? (
+            <div className="flex min-h-10 justify-center" ref={googleButtonRef} />
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm font-semibold text-neutral-500"
+            >
+              Google sign-in is not configured
+            </button>
+          )}
+          {googleNeedsRole && (
+            <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+              <p className="text-center text-sm font-medium text-neutral-700">I am a...</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => googleIdToken && void handleGoogleCredential(googleIdToken, 'STUDENT')}
+                  className="rounded-lg bg-emerald-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  Student
+                </button>
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => googleIdToken && void handleGoogleCredential(googleIdToken, 'FACULTY')}
+                  className="rounded-lg bg-emerald-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  Faculty member
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {passwordLoginEnabled && (
+          <>
+            <div className="flex items-center gap-3 text-xs text-neutral-400">
+              <span className="h-px flex-1 bg-neutral-200" />
+              <span>or sign in with email</span>
+              <span className="h-px flex-1 bg-neutral-200" />
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="login-email" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-neutral-700">
               Email Address
@@ -206,7 +355,9 @@ function LoginFormContent() {
               </>
             )}
           </button>
-        </form>
+            </form>
+          </>
+        )}
 
         <div className="border-t border-neutral-100 pt-4 text-center">
           <p className="text-xs text-neutral-600">

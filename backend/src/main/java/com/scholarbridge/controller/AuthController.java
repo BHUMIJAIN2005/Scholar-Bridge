@@ -1,10 +1,13 @@
 package com.scholarbridge.controller;
 
 import com.scholarbridge.dto.ApiDtos.AuthResponse;
+import com.scholarbridge.dto.ApiDtos.GoogleLoginRequest;
 import com.scholarbridge.dto.ApiDtos.LoginRequest;
 import com.scholarbridge.dto.ApiDtos.SignupRequest;
 import com.scholarbridge.service.AuthService;
 import jakarta.validation.Valid;
+import java.util.Map;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,5 +30,14 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> google(@Valid @RequestBody GoogleLoginRequest request) {
+        var result = authService.googleLogin(request);
+        if (result.needsRole()) {
+            return ResponseEntity.ok(Map.of("needsRole", true));
+        }
+        return ResponseEntity.ok(result.response());
     }
 }

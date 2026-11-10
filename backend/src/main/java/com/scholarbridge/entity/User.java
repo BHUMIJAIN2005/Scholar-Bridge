@@ -34,9 +34,14 @@ public class User implements UserDetails {
     private String name;
     private String email;
     private String passwordHash;
+    private String googleSubject;
+    private String photoUrl;
 
     @Enumerated(EnumType.STRING)
     private UserRole role;
+
+    @Enumerated(EnumType.STRING)
+    private FacultyApprovalStatus approvalStatus = FacultyApprovalStatus.APPROVED;
 
     private Instant createdAt = Instant.now();
 

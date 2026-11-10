@@ -3,6 +3,7 @@ package com.scholarbridge.dto;
 import com.scholarbridge.entity.ApplicationStatus;
 import com.scholarbridge.entity.BlogPostStatus;
 import com.scholarbridge.entity.BlogReactionType;
+import com.scholarbridge.entity.FacultyApprovalStatus;
 import com.scholarbridge.entity.OpeningStatus;
 import com.scholarbridge.entity.PaperStatus;
 import com.scholarbridge.entity.SubmissionStatus;
@@ -33,11 +34,17 @@ public final class ApiDtos {
 
     public record LoginRequest(@NotBlank @Email String email, @NotBlank String password) {}
 
+    public record GoogleLoginRequest(@NotBlank String idToken, UserRole role) {}
+
+    public record GoogleLoginOutcome(boolean needsRole, AuthResponse response) {}
+
     public record UserResponse(
         Long id,
         String name,
         String email,
+        String photoUrl,
         UserRole role,
+        FacultyApprovalStatus approvalStatus,
         String department,
         String researchDomains,
         String skills,

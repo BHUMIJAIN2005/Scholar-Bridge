@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, User, UserRole, LoginRequest, SignupRequest } from '@/api/authApi';
+import { authApi, User, UserRole, LoginRequest, SignupRequest, AuthResponse } from '@/api/authApi';
 import { axiosClient } from '@/api/axiosClient';
 
 interface AuthContextType {
@@ -11,6 +11,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   login: (credentials: LoginRequest) => Promise<User>;
+  loginWithGoogle: (idToken: string, role?: UserRole) => Promise<{ needsRole: true } | { needsRole: false; user: User }>;
   signup: (data: SignupRequest) => Promise<User>;
   logout: () => void;
   clearError: () => void;
@@ -23,6 +24,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const TOKEN_KEY = 'scholarbridge_token';
 const USER_KEY = 'scholarbridge_user';
+
+const storeAuthResponse = (response: AuthResponse, setToken: (token: string) => void, setUser: (user: User) => void) => {
+  const { token: receivedToken, user: receivedUser } = response;
+  setToken(receivedToken);
+  setUser(receivedUser);
+  localStorage.setItem(TOKEN_KEY, receivedToken);
+  localStorage.setItem(USER_KEY, JSON.stringify(receivedUser));
+  axiosClient.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`;
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -71,6 +81,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return receivedUser;
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async (idToken: string, role?: UserRole) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await authApi.loginWithGoogle(idToken, role);
+      if ('needsRole' in response) {
+        return { needsRole: true as const };
+      }
+
+      storeAuthResponse(response, setToken, setUser);
+      return { needsRole: false as const, user: response.user };
+    } catch (err: any) {
+      const msg = err.response?.data?.message
+        || (err.response?.status === 401
+          ? 'Google sign-in failed or expired. Please sign in again.'
+          : err.message)
+        || 'Google sign-in failed. Please try again.';
       setError(msg);
       throw new Error(msg);
     } finally {
@@ -133,6 +167,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isLoading,
     error,
     login,
+    loginWithGoogle,
     signup,
     logout,
     clearError,
