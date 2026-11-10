@@ -12,6 +12,7 @@ import com.scholarbridge.entity.UserRole;
 import com.scholarbridge.exception.ResourceNotFoundException;
 import com.scholarbridge.repository.ApplicationRepository;
 import com.scholarbridge.repository.PaperSubmissionRepository;
+import com.scholarbridge.repository.PublicationRepository;
 import com.scholarbridge.repository.ResearchOpeningRepository;
 import com.scholarbridge.repository.UserRepository;
 import com.scholarbridge.security.CurrentUserService;
@@ -31,6 +32,7 @@ public class DirectoryService {
     private final UserRepository users;
     private final ApplicationRepository applications;
     private final PaperSubmissionRepository papers;
+    private final PublicationRepository publications;
     private final ResearchOpeningRepository openings;
     private final BlogService blogs;
     private final ApiMapper mapper;
@@ -40,6 +42,7 @@ public class DirectoryService {
         UserRepository users,
         ApplicationRepository applications,
         PaperSubmissionRepository papers,
+        PublicationRepository publications,
         ResearchOpeningRepository openings,
         BlogService blogs,
         ApiMapper mapper
@@ -48,6 +51,7 @@ public class DirectoryService {
         this.users = users;
         this.applications = applications;
         this.papers = papers;
+        this.publications = publications;
         this.openings = openings;
         this.blogs = blogs;
         this.mapper = mapper;
@@ -81,7 +85,8 @@ public class DirectoryService {
             faculty,
             openings.findByFacultyIdAndStatusOrderByCreatedAtDesc(faculty.getId(), OpeningStatus.OPEN)
                 .stream().map(mapper::opening).toList(),
-            blogs.getPublishedPostsForAuthor(faculty.getId())
+            blogs.getPublishedPostsForAuthor(faculty.getId()),
+            publications.findByFacultyIdNewestFirst(faculty.getId()).stream().map(mapper::publication).toList()
         );
     }
 

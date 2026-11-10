@@ -11,13 +11,11 @@ import com.scholarbridge.repository.BlogCommentRepository;
 import com.scholarbridge.repository.BlogPostRepository;
 import com.scholarbridge.repository.BlogReactionRepository;
 import com.scholarbridge.repository.BlogTagRepository;
-import com.scholarbridge.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -31,38 +29,36 @@ public class BlogDemoDataSeeder {
     private final BlogTagRepository tags;
     private final BlogCommentRepository comments;
     private final BlogReactionRepository reactions;
-    private final UserRepository users;
-
     public BlogDemoDataSeeder(
         BlogPostRepository posts,
         BlogTagRepository tags,
         BlogCommentRepository comments,
-        BlogReactionRepository reactions,
-        UserRepository users
+        BlogReactionRepository reactions
     ) {
         this.posts = posts;
         this.tags = tags;
         this.comments = comments;
         this.reactions = reactions;
-        this.users = users;
     }
 
     @Transactional
-    public void seedIfEmpty() {
-        if (posts.count() > 0) {
-            logger.info("Skipping blog demo data because blog posts already exist.");
+    public void seed(User student, User faculty) {
+        List<String> seededTitles = List.of(
+            "How I wrote my first research paper",
+            "Choosing a research topic as a third-year student",
+            "What I look for as a reviewer",
+            "Learning LaTeX the hard way",
+            "Turning a course project into a conference paper"
+        );
+        boolean alreadySeeded = posts.findByAuthorIdOrderByUpdatedAtDesc(student.getId()).stream()
+            .anyMatch(post -> seededTitles.contains(post.getTitle()))
+            || posts.findByAuthorIdOrderByUpdatedAtDesc(faculty.getId()).stream()
+                .anyMatch(post -> seededTitles.contains(post.getTitle()));
+        if (alreadySeeded) {
+            logger.info("Skipping blog demo posts because demo blog content already exists.");
             return;
         }
 
-        Optional<User> studentUser = users.findByEmailIgnoreCase("student@scholarbridge.edu");
-        Optional<User> facultyUser = users.findByEmailIgnoreCase("faculty@scholarbridge.edu");
-        if (studentUser.isEmpty() || facultyUser.isEmpty()) {
-            logger.warn("Skipping blog demo data because the seeded student and faculty users are not both available.");
-            return;
-        }
-
-        User student = studentUser.get();
-        User faculty = facultyUser.get();
         Map<String, BlogTag> tagCache = new HashMap<>();
         List<BlogPost> publishedPosts = new ArrayList<>();
 
@@ -122,18 +118,6 @@ public class BlogDemoDataSeeder {
             tagCache
         ));
 
-        createPost(
-            faculty,
-            "Notes on building reproducible NLP experiments",
-            "A draft checklist for making small NLP experiments easier to reproduce.",
-            """
-                I am collecting a short checklist for experiments that students can rerun after a semester has passed. It should record dataset versions, preprocessing choices, random seeds, and the exact evaluation script. The first draft will focus on lightweight NLP projects that can run on a standard lab machine. I would also like to include examples of reporting uncertainty without making the write-up harder to follow.
-                """,
-            List.of("nlp", "reproducibility"),
-            BlogPostStatus.DRAFT,
-            tagCache
-        );
-
         addComment(
             publishedPosts.get(0),
             student,
@@ -188,7 +172,7 @@ public class BlogDemoDataSeeder {
         addReaction(publishedPosts.get(4), student, BlogReactionType.INSPIRING);
         addReaction(publishedPosts.get(4), faculty, BlogReactionType.HELPFUL);
 
-        logger.info("Seeded 5 published blog posts, 1 draft, comments with replies, and 9 reactions.");
+        logger.info("Seeded 5 published demo blog posts, comments with replies, and 9 reactions.");
     }
 
     private BlogPost createPost(

@@ -159,7 +159,27 @@ public final class ApiDtos {
         List<FacultyProjectItem> projects,
         int profileCompleteness,
         List<OpeningResponse> openOpenings,
-        List<BlogPostSummaryResponse> publishedBlogPosts
+        List<BlogPostSummaryResponse> publishedBlogPosts,
+        List<PublicationResponse> publications
+    ) {}
+
+    public record PublicationRequest(
+        @NotBlank @Size(max = 300) String title,
+        @NotBlank @Size(max = 2000) String authors,
+        @Size(max = 300) String venue,
+        @PositiveOrZero Integer year,
+        @Size(max = 200) String doi,
+        @Pattern(regexp = "(?i)^https?://\\S+$") @Size(max = 500) String url
+    ) {}
+
+    public record PublicationResponse(
+        Long id,
+        String title,
+        String authors,
+        String venue,
+        Integer year,
+        String doi,
+        String url
     ) {}
 
     public record StudentDirectoryResponse(

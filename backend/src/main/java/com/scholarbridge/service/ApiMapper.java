@@ -12,6 +12,7 @@ import com.scholarbridge.dto.ApiDtos.FacultyDirectoryResponse;
 import com.scholarbridge.dto.ApiDtos.FacultyProjectItem;
 import com.scholarbridge.dto.ApiDtos.OpeningResponse;
 import com.scholarbridge.dto.ApiDtos.PaperResponse;
+import com.scholarbridge.dto.ApiDtos.PublicationResponse;
 import com.scholarbridge.dto.ApiDtos.StudentDetailResponse;
 import com.scholarbridge.dto.ApiDtos.StudentDirectoryResponse;
 import com.scholarbridge.dto.ApiDtos.StudentPaperSummaryResponse;
@@ -25,6 +26,7 @@ import com.scholarbridge.entity.FacultyProfile;
 import com.scholarbridge.entity.EducationEntry;
 import com.scholarbridge.entity.FacultyProjectEntry;
 import com.scholarbridge.entity.PaperSubmission;
+import com.scholarbridge.entity.Publication;
 import com.scholarbridge.entity.SubmissionStatus;
 import com.scholarbridge.entity.ResearchOpening;
 import com.scholarbridge.entity.StudentProfile;
@@ -103,7 +105,8 @@ public class ApiMapper {
     public FacultyDetailResponse facultyDetail(
         User user,
         List<OpeningResponse> openOpenings,
-        List<com.scholarbridge.dto.ApiDtos.BlogPostSummaryResponse> publishedBlogPosts
+        List<com.scholarbridge.dto.ApiDtos.BlogPostSummaryResponse> publishedBlogPosts,
+        List<PublicationResponse> publications
     ) {
         FacultyProfile profile = user.getFacultyProfile();
         return new FacultyDetailResponse(
@@ -130,7 +133,20 @@ public class ApiMapper {
             profile == null ? List.of() : profile.getProjects().stream().map(this::facultyProject).toList(),
             profileCompleteness(user),
             openOpenings,
-            publishedBlogPosts
+            publishedBlogPosts,
+            publications
+        );
+    }
+
+    public PublicationResponse publication(Publication publication) {
+        return new PublicationResponse(
+            publication.getId(),
+            publication.getTitle(),
+            publication.getAuthors(),
+            publication.getVenue(),
+            publication.getYear(),
+            publication.getDoi(),
+            publication.getUrl()
         );
     }
 
