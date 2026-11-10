@@ -7,14 +7,19 @@ import com.scholarbridge.entity.FacultyApprovalStatus;
 import com.scholarbridge.entity.OpeningStatus;
 import com.scholarbridge.entity.PaperStatus;
 import com.scholarbridge.entity.SubmissionStatus;
+import com.scholarbridge.entity.StudentVisibility;
 import com.scholarbridge.entity.UserRole;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +54,33 @@ public final class ApiDtos {
         String researchDomains,
         String skills,
         String year,
-        Instant createdAt
+        Instant createdAt,
+        int profileCompleteness,
+        List<String> skillTags,
+        List<String> interests,
+        List<StudentProjectItem> studentProjects,
+        String githubUrl,
+        String linkedinUrl,
+        StudentVisibility visibility,
+        String designation,
+        String qualifications,
+        String bio,
+        List<String> researchInterests,
+        String officeRoom,
+        String officeHours,
+        String scholarUrl,
+        String orcidUrl,
+        String researchGateUrl,
+        String facultyLinkedinUrl,
+        String websiteUrl,
+        Integer citationsCount,
+        Integer hIndex,
+        Integer i10Index,
+        LocalDate statsAsOf,
+        Boolean acceptingStudents,
+        List<EducationItem> education,
+        List<String> awards,
+        List<FacultyProjectItem> facultyProjects
     ) {}
 
     public record AuthResponse(String token, UserResponse user, String message) {}
@@ -59,7 +90,130 @@ public final class ApiDtos {
         @Size(max = 160) String department,
         @Size(max = 1000) String researchDomains,
         @Size(max = 1000) String skills,
-        @Size(max = 120) String year
+        @Size(max = 120) String year,
+        @Pattern(regexp = "(?i)^https?://\\S+$") @Size(max = 500) String photoUrl,
+        @Size(max = 160) String designation,
+        @Size(max = 2000) String qualifications,
+        @Size(max = 5000) String bio,
+        @Size(max = 50) List<@NotBlank @Size(max = 120) String> researchInterests,
+        @Size(max = 120) String officeRoom,
+        @Size(max = 160) String officeHours,
+        @Pattern(regexp = "(?i)^https?://\\S+$") @Size(max = 500) String scholarUrl,
+        @Pattern(regexp = "(?i)^https?://\\S+$") @Size(max = 500) String orcidUrl,
+        @Pattern(regexp = "(?i)^https?://\\S+$") @Size(max = 500) String researchGateUrl,
+        @Pattern(regexp = "(?i)^https?://\\S+$") @Size(max = 500) String linkedinUrl,
+        @Pattern(regexp = "(?i)^https?://\\S+$") @Size(max = 500) String websiteUrl,
+        @PositiveOrZero Integer citationsCount,
+        @PositiveOrZero Integer hIndex,
+        @PositiveOrZero Integer i10Index,
+        LocalDate statsAsOf,
+        Boolean acceptingStudents,
+        @Size(max = 30) List<@Valid EducationItem> education,
+        @Size(max = 50) List<@NotBlank @Size(max = 300) String> awards,
+        @Size(max = 50) List<@Valid FacultyProjectItem> facultyProjects,
+        @Size(max = 50) List<@NotBlank @Size(max = 120) String> skillTags,
+        @Size(max = 50) List<@NotBlank @Size(max = 120) String> interests,
+        @Size(max = 50) List<@Valid StudentProjectItem> studentProjects,
+        @Pattern(regexp = "(?i)^https?://\\S+$") @Size(max = 500) String githubUrl,
+        StudentVisibility visibility
+    ) {}
+
+    public record FacultyDirectoryResponse(
+        Long id,
+        String name,
+        String photoUrl,
+        String department,
+        String designation,
+        String bio,
+        List<String> researchInterests,
+        Integer citationsCount,
+        Integer hIndex,
+        Integer i10Index,
+        Boolean acceptingStudents,
+        int profileCompleteness
+    ) {}
+
+    public record FacultyDetailResponse(
+        Long id,
+        String name,
+        String photoUrl,
+        String department,
+        String designation,
+        String qualifications,
+        String bio,
+        List<String> researchInterests,
+        String officeRoom,
+        String officeHours,
+        String scholarUrl,
+        String orcidUrl,
+        String researchGateUrl,
+        String linkedinUrl,
+        String websiteUrl,
+        Integer citationsCount,
+        Integer hIndex,
+        Integer i10Index,
+        LocalDate statsAsOf,
+        Boolean acceptingStudents,
+        List<EducationItem> education,
+        List<String> awards,
+        List<FacultyProjectItem> projects,
+        int profileCompleteness,
+        List<OpeningResponse> openOpenings,
+        List<BlogPostSummaryResponse> publishedBlogPosts
+    ) {}
+
+    public record StudentDirectoryResponse(
+        Long id,
+        String name,
+        String photoUrl,
+        String year,
+        String skills,
+        List<String> skillTags,
+        List<String> interests,
+        List<StudentProjectItem> projects,
+        String githubUrl,
+        String linkedinUrl,
+        int profileCompleteness
+    ) {}
+
+    public record StudentPaperSummaryResponse(
+        Long id,
+        String title,
+        String category,
+        Double confidenceScore
+    ) {}
+
+    public record StudentDetailResponse(
+        Long id,
+        String name,
+        String photoUrl,
+        String year,
+        String skills,
+        List<String> skillTags,
+        List<String> interests,
+        List<StudentProjectItem> projects,
+        String githubUrl,
+        String linkedinUrl,
+        int profileCompleteness,
+        List<StudentPaperSummaryResponse> papers
+    ) {}
+
+    public record EducationItem(
+        @Size(max = 180) String degree,
+        @Size(max = 240) String institution,
+        @Size(max = 40) String year
+    ) {}
+
+    public record FacultyProjectItem(
+        @Size(max = 240) String title,
+        @Size(max = 240) String fundingAgency,
+        @Size(max = 100) String years,
+        @Size(max = 160) String role
+    ) {}
+
+    public record StudentProjectItem(
+        @Size(max = 240) String title,
+        @Size(max = 2000) String description
     ) {}
 
     public record OpeningCreateRequest(

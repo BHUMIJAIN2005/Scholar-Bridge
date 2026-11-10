@@ -166,6 +166,13 @@ public class BlogService {
     }
 
     @Transactional(readOnly = true)
+    public List<BlogPostSummaryResponse> getPublishedPostsForAuthor(Long authorId) {
+        return posts.findByAuthorIdAndStatusOrderByUpdatedAtDesc(authorId, BlogPostStatus.PUBLISHED).stream()
+            .map(this::toSummaryResponse)
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<BlogTagResponse> getPopularTags() {
         currentUser.requireUser();
         return posts.findPopularTags(BlogPostStatus.PUBLISHED, PageRequest.of(0, 20)).stream()

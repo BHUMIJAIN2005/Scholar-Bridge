@@ -1,6 +1,7 @@
 package com.scholarbridge.entity;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -35,6 +36,8 @@ public class User implements UserDetails {
     private String email;
     private String passwordHash;
     private String googleSubject;
+
+    @Column(length = 500)
     private String photoUrl;
 
     @Enumerated(EnumType.STRING)

@@ -45,6 +45,9 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, Long> {
     @EntityGraph(attributePaths = {"author", "linkedPaper", "tags"})
     List<BlogPost> findByAuthorIdOrderByUpdatedAtDesc(Long authorId);
 
+    @EntityGraph(attributePaths = {"author", "linkedPaper", "tags"})
+    List<BlogPost> findByAuthorIdAndStatusOrderByUpdatedAtDesc(Long authorId, BlogPostStatus status);
+
     @Query("""
         select t.name as name, count(p.id) as postCount
         from BlogPost p join p.tags t

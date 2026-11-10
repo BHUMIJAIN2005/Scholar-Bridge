@@ -41,6 +41,7 @@ public class AuthService {
     private final Set<String> allowedDomains;
     private final Set<String> facultyAutoApproveDomains;
     private final boolean passwordLoginEnabled;
+    private final boolean facultyRequireApproval;
 
     public AuthService(
         UserRepository users,
@@ -52,7 +53,8 @@ public class AuthService {
         @Value("${app.google.client-id:}") String googleClientId,
         @Value("${app.auth.allowed-domains:}") String allowedDomains,
         @Value("${app.auth.faculty-auto-approve-domains:}") String facultyAutoApproveDomains,
-        @Value("${app.auth.password-login-enabled:true}") boolean passwordLoginEnabled
+        @Value("${app.auth.password-login-enabled:true}") boolean passwordLoginEnabled,
+        @Value("${app.faculty.require-approval:false}") boolean facultyRequireApproval
     ) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
@@ -64,6 +66,7 @@ public class AuthService {
         this.allowedDomains = parseDomains(allowedDomains);
         this.facultyAutoApproveDomains = parseDomains(facultyAutoApproveDomains);
         this.passwordLoginEnabled = passwordLoginEnabled;
+        this.facultyRequireApproval = facultyRequireApproval;
     }
 
     @Transactional
@@ -84,10 +87,15 @@ public class AuthService {
             profile.setYear(request.year());
             user.setStudentProfile(profile);
         } else {
+            FacultyApprovalStatus approvalStatus = facultyRequireApproval
+                ? FacultyApprovalStatus.PENDING
+                : FacultyApprovalStatus.APPROVED;
+            user.setApprovalStatus(approvalStatus);
             FacultyProfile profile = new FacultyProfile();
             profile.setUser(user);
             profile.setDepartment(request.department());
             profile.setResearchDomains(request.researchDomains());
+            profile.setApprovalStatus(approvalStatus);
             user.setFacultyProfile(profile);
         }
         User saved = users.save(user);
@@ -157,6 +165,10 @@ public class AuthService {
             if (user.getRole() == UserRole.FACULTY && user.getApprovalStatus() == null) {
                 user.setApprovalStatus(FacultyApprovalStatus.APPROVED);
             }
+            if (user.getRole() == UserRole.FACULTY && user.getFacultyProfile() != null
+                && user.getFacultyProfile().getApprovalStatus() == null) {
+                user.getFacultyProfile().setApprovalStatus(user.getApprovalStatus());
+            }
             user = users.save(user);
         }
 
@@ -180,11 +192,14 @@ public class AuthService {
             profile.setUser(user);
             user.setStudentProfile(profile);
         } else {
-            user.setApprovalStatus(hasDomain(email, facultyAutoApproveDomains)
-                ? FacultyApprovalStatus.APPROVED
-                : FacultyApprovalStatus.PENDING);
+            FacultyApprovalStatus approvalStatus = facultyRequireApproval
+                || !hasDomain(email, facultyAutoApproveDomains)
+                ? FacultyApprovalStatus.PENDING
+                : FacultyApprovalStatus.APPROVED;
+            user.setApprovalStatus(approvalStatus);
             FacultyProfile profile = new FacultyProfile();
             profile.setUser(user);
+            profile.setApprovalStatus(approvalStatus);
             user.setFacultyProfile(profile);
         }
         return users.save(user);

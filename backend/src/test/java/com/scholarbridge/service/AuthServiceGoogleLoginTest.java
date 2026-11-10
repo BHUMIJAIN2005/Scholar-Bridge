@@ -16,6 +16,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.scholarbridge.dto.ApiDtos.AuthResponse;
 import com.scholarbridge.dto.ApiDtos.GoogleLoginOutcome;
 import com.scholarbridge.dto.ApiDtos.GoogleLoginRequest;
+import com.scholarbridge.dto.ApiDtos.SignupRequest;
 import com.scholarbridge.entity.FacultyApprovalStatus;
 import com.scholarbridge.entity.User;
 import com.scholarbridge.entity.UserRole;
@@ -56,7 +57,7 @@ class AuthServiceGoogleLoginTest {
             .thenReturn(new AuthResponse("application-jwt", null, "Signed in successfully."));
         service = new AuthService(
             users, passwordEncoder, authenticationManager, jwtService, mapper, verifier,
-            "google-client-id", "", "mitsgwl.ac.in", true
+            "google-client-id", "", "mitsgwl.ac.in", true, false
         );
     }
 
@@ -64,7 +65,7 @@ class AuthServiceGoogleLoginTest {
     void createsNewFacultyAsPendingWithoutAutoApproval() {
         service = new AuthService(
             users, passwordEncoder, authenticationManager, jwtService, mapper, verifier,
-            "google-client-id", "", "", true
+            "google-client-id", "", "", true, false
         );
 
         GoogleLoginOutcome result = service.googleLogin(new GoogleLoginRequest("valid-token", UserRole.FACULTY));
@@ -101,7 +102,7 @@ class AuthServiceGoogleLoginTest {
     void rejectsEmailOutsideConfiguredDomainWithExactForbiddenMessage() {
         service = new AuthService(
             users, passwordEncoder, authenticationManager, jwtService, mapper, verifier,
-            "google-client-id", "mitsgwl.ac.in", "", true
+            "google-client-id", "mitsgwl.ac.in", "", true, false
         );
         when(payload.getEmail()).thenReturn("faculty@notmitsgwl.ac.in");
 
@@ -160,5 +161,24 @@ class AuthServiceGoogleLoginTest {
 
         assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatus());
         verifyNoInteractions(users, jwtService, mapper);
+    }
+
+    @Test
+    void requiresApprovalForNewPasswordFacultyWhenConfigured() {
+        AuthService approvalRequiredService = new AuthService(
+            users, passwordEncoder, authenticationManager, jwtService, mapper, verifier,
+            "google-client-id", "", "mitsgwl.ac.in", true, true
+        );
+        when(passwordEncoder.encode("password-123")).thenReturn("password-hash");
+
+        approvalRequiredService.signup(new SignupRequest(
+            "New Faculty", "new-faculty@example.edu", "password-123",
+            UserRole.FACULTY, null, null, null, null
+        ));
+
+        var savedUser = org.mockito.ArgumentCaptor.forClass(User.class);
+        verify(users).save(savedUser.capture());
+        assertEquals(FacultyApprovalStatus.PENDING, savedUser.getValue().getApprovalStatus());
+        assertEquals(FacultyApprovalStatus.PENDING, savedUser.getValue().getFacultyProfile().getApprovalStatus());
     }
 }

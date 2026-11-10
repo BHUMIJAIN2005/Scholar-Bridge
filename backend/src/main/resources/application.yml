@@ -26,6 +26,8 @@ app:
     password-login-enabled: ${PASSWORD_LOGIN_ENABLED:true}
     allowed-domains: ${AUTH_ALLOWED_DOMAINS:}
     faculty-auto-approve-domains: ${FACULTY_AUTO_APPROVE_DOMAINS:}
+  faculty:
+    require-approval: ${FACULTY_REQUIRE_APPROVAL:false}
   jwt:
     secret: ${JWT_SECRET:local-development-secret-change-this-before-deployment-0123456789}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
