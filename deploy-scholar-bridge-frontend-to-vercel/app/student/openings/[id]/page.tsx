@@ -92,7 +92,7 @@ export default function OpeningDetailPage() {
               </span>
               <h1 className="mt-3 text-3xl font-bold text-ink">{opening.title}</h1>
               <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink/70">
-                {opening.facultyName && <span className="inline-flex items-center gap-2"><Briefcase size={15} className="text-leaf" />{opening.facultyName}</span>}
+                {opening.facultyName && <span className="inline-flex items-center gap-2"><Briefcase size={15} className="text-leaf" /><Link href={`/faculty/${opening.facultyId}`} className="font-semibold text-forest hover:text-mid-green hover:underline">{opening.facultyName}</Link></span>}
                 {opening.department && <span className="inline-flex items-center gap-2"><Building2 size={15} className="text-leaf" />{opening.department}</span>}
                 <span className="inline-flex items-center gap-2"><Users size={15} className="text-leaf" />{opening.seats} {opening.seats === 1 ? 'seat' : 'seats'}</span>
               </div>

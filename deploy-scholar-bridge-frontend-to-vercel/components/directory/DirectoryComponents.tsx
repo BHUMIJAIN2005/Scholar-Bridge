@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import type { FormEvent, ReactNode } from 'react';
-import { AlertCircle, ArrowLeft, ArrowRight, Loader2, RefreshCw, Search, Users } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, RefreshCw, Search, Users } from 'lucide-react';
 import type { DirectoryPage, FacultyDirectoryItem, StudentDirectoryItem } from '@/api/directoryApi';
+import { Avatar } from '@/components/Avatar';
 
 export function DirectorySearch({
   value,
@@ -46,7 +47,7 @@ export function DirectoryState({
   forbiddenMessage: string;
 }) {
   if (loading) {
-    return <div className="flex min-h-48 items-center justify-center gap-3 text-sm text-ink/70" role="status"><Loader2 size={20} className="animate-spin text-leaf" />Loading directory...</div>;
+    return <DirectorySkeleton />;
   }
   if (!error) return null;
   const isForbidden = error === 'FORBIDDEN';
@@ -59,23 +60,31 @@ export function DirectoryState({
   );
 }
 
+export function DirectorySkeleton() {
+  return (
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading directory">
+      {[1, 2, 3, 4, 5, 6].map((item) => <div key={item} className="solid-card animate-pulse p-5">
+        <div className="flex items-start gap-4"><div className="h-14 w-14 shrink-0 rounded-full bg-mist" /><div className="min-w-0 flex-1 space-y-2"><div className="h-4 w-3/4 rounded bg-mist" /><div className="h-3 w-1/2 rounded bg-mist" /></div></div>
+        <div className="mt-4 h-3 w-full rounded bg-mist" /><div className="mt-2 h-3 w-5/6 rounded bg-mist" /><div className="mt-4 h-3 w-2/5 rounded bg-mist" />
+      </div>)}
+    </div>
+  );
+}
+
+export function ProfileSkeleton() {
+  return <div className="solid-card animate-pulse overflow-hidden" role="status" aria-label="Loading profile"><div className="h-32 bg-mist" /><div className="space-y-5 p-6 sm:p-8"><div className="-mt-14 h-28 w-28 rounded-full border-4 border-white bg-sage/30" /><div className="space-y-3"><div className="h-8 w-2/5 rounded bg-mist" /><div className="h-4 w-1/4 rounded bg-mist" /><div className="h-3 w-3/5 rounded bg-mist" /></div><div className="grid gap-4 md:grid-cols-3"><div className="h-20 rounded bg-mist" /><div className="h-20 rounded bg-mist" /><div className="h-20 rounded bg-mist" /></div><div className="h-48 rounded bg-mist" /></div></div>;
+}
+
 export function DirectoryTags({ values }: { values?: string[] }) {
   if (!values?.length) return null;
   return <div className="flex flex-wrap gap-2">{values.map((tag) => <span key={tag} className="rounded-full bg-mint px-2.5 py-1 text-xs font-semibold text-forest border border-sage/30">{tag}</span>)}</div>;
 }
 
-function InitialsAvatar({ name, photoUrl, faculty }: { name: string; photoUrl?: string; faculty?: boolean }) {
-  const initials = name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || '?';
-  return photoUrl
-    ? <img src={photoUrl} alt="" className="h-14 w-14 rounded-full object-cover" />
-    : <div aria-hidden="true" className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-bold bg-mint text-forest">{initials}</div>;
-}
-
 export function FacultyCard({ faculty }: { faculty: FacultyDirectoryItem }) {
   return (
-    <Link href={`/faculty/${faculty.id}`} className="group solid-card p-5 block">
+    <Link href={`/faculty/${faculty.id}`} className="group relative solid-card p-5 block">
       <div className="flex items-start gap-4">
-        <InitialsAvatar name={faculty.name} photoUrl={faculty.photoUrl} faculty />
+        <Avatar name={faculty.name} photoUrl={faculty.photoUrl} />
         <div className="min-w-0 flex-1">
           <h2 className="font-bold text-ink group-hover:text-forest">{faculty.name}</h2>
           <p className="mt-0.5 text-sm text-ink/70">{[faculty.designation, faculty.department].filter(Boolean).join(' · ') || 'Faculty member'}</p>
@@ -87,15 +96,20 @@ export function FacultyCard({ faculty }: { faculty: FacultyDirectoryItem }) {
         <span>{faculty.acceptingStudents ? 'Accepting students' : 'Not currently accepting students'}</span>
         <span>{faculty.citationsCount ?? 0} citations · h-index {faculty.hIndex ?? 0}</span>
       </div>
+      <div className="pointer-events-none absolute left-4 right-4 top-full z-20 mt-2 hidden rounded-xl border border-sage/30 bg-white p-4 text-left shadow-xl md:block md:opacity-0 md:transition-opacity md:duration-200 md:group-hover:opacity-100 md:group-focus-visible:opacity-100">
+        <p className="text-xs font-semibold uppercase tracking-wide text-forest">Profile preview</p>
+        <p className="mt-2 line-clamp-3 text-sm leading-5 text-ink/80">{faculty.bio || 'No biography has been added yet.'}</p>
+        {faculty.researchInterests?.length ? <div className="mt-3"><p className="text-xs font-semibold text-ink/60">Interests</p><p className="mt-1 line-clamp-2 text-xs text-ink/70">{faculty.researchInterests.join(' · ')}</p></div> : null}
+      </div>
     </Link>
   );
 }
 
 export function StudentCard({ student }: { student: StudentDirectoryItem }) {
   return (
-    <Link href={`/students/${student.id}`} className="group solid-card p-5 block">
+    <Link href={`/students/${student.id}`} className="group relative solid-card p-5 block">
       <div className="flex items-start gap-4">
-        <InitialsAvatar name={student.name} photoUrl={student.photoUrl} />
+        <Avatar name={student.name} photoUrl={student.photoUrl} />
         <div className="min-w-0 flex-1">
           <h2 className="font-bold text-ink group-hover:text-forest">{student.name}</h2>
           <p className="mt-0.5 text-sm text-ink/70">{student.year || 'Student'}</p>
@@ -106,6 +120,11 @@ export function StudentCard({ student }: { student: StudentDirectoryItem }) {
       <div className="mt-4 flex items-center justify-between gap-2 text-xs text-ink/70">
         <span>{student.projects?.length ?? 0} projects</span>
         <span className="inline-flex items-center gap-1 font-semibold text-forest group-hover:text-mid-green">View profile <ArrowRight size={13} /></span>
+      </div>
+      <div className="pointer-events-none absolute left-4 right-4 top-full z-20 mt-2 hidden rounded-xl border border-sage/30 bg-white p-4 text-left shadow-xl md:block md:opacity-0 md:transition-opacity md:duration-200 md:group-hover:opacity-100 md:group-focus-visible:opacity-100">
+        <p className="text-xs font-semibold uppercase tracking-wide text-forest">Profile preview</p>
+        <p className="mt-2 line-clamp-3 text-sm leading-5 text-ink/80">{student.skills || 'No profile summary has been added yet.'}</p>
+        {student.interests?.length ? <div className="mt-3"><p className="text-xs font-semibold text-ink/60">Interests</p><p className="mt-1 line-clamp-2 text-xs text-ink/70">{student.interests.join(' · ')}</p></div> : null}
       </div>
     </Link>
   );

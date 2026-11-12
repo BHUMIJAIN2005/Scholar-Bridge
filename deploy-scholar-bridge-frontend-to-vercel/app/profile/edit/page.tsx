@@ -10,6 +10,7 @@ import type { Publication, PublicationRequest } from '@/api/publicationsApi';
 import type { EducationItem, FacultyProjectItem, StudentProjectItem, User } from '@/api/authApi';
 import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { Avatar } from '@/components/Avatar';
 
 interface ProfileDraft {
   name: string;
@@ -73,6 +74,22 @@ const optional = (value: string) => value.trim() || undefined;
 const optionalNumber = (value: string) => value.trim() ? Number(value) : undefined;
 const text = (value?: string | number | null) => value == null ? '' : String(value);
 
+function missingProfileItems(draft: ProfileDraft, isFaculty: boolean) {
+  const missing: string[] = [];
+  if (!draft.name.trim()) missing.push('Add your name');
+  if (!draft.photoUrl) missing.push('Upload a profile photo');
+  if (isFaculty) {
+    if (!draft.designation.trim()) missing.push('Add your designation');
+    if (!draft.bio.trim()) missing.push('Write a short biography');
+    if (!draft.researchInterests.trim()) missing.push('Add research interests');
+  } else {
+    if (!draft.year.trim()) missing.push('Add your year or program');
+    if (!draft.skills.trim()) missing.push('Add your skills');
+    if (!draft.interests.trim()) missing.push('Add your interests');
+  }
+  return missing.slice(0, 4);
+}
+
 function draftFromUser(user: User): ProfileDraft {
   return {
     ...emptyDraft,
@@ -126,7 +143,21 @@ function ProfileEditForm() {
   const [publicationDeletingId, setPublicationDeletingId] = useState<number | null>(null);
   const [publicationError, setPublicationError] = useState('');
   const [publicationNotice, setPublicationNotice] = useState('');
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState('');
   const isFaculty = user?.role === 'FACULTY';
+
+  useEffect(() => {
+    if (!selectedPhoto) {
+      setPhotoPreviewUrl('');
+      return;
+    }
+    const objectUrl = URL.createObjectURL(selectedPhoto);
+    setPhotoPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [selectedPhoto]);
 
   useEffect(() => {
     let active = true;
@@ -177,7 +208,6 @@ function ProfileEditForm() {
     try {
       const profile = await profileApi.updateMyProfile({
         name: optional(draft.name),
-        photoUrl: optional(draft.photoUrl),
         ...(isFaculty ? {
           department: optional(draft.department),
           designation: optional(draft.designation),
@@ -220,6 +250,57 @@ function ProfileEditForm() {
       setError(response?.data?.message ?? 'Could not save your profile. Please try again.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const selectPhoto = (file: File | undefined) => {
+    setPhotoError('');
+    if (!file) return;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setSelectedPhoto(null);
+      setPhotoError('Choose a JPEG, PNG, or WebP image.');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setSelectedPhoto(null);
+      setPhotoError('Profile photos must be 2 MB or smaller.');
+      return;
+    }
+    setSelectedPhoto(file);
+  };
+
+  const uploadPhoto = async () => {
+    if (!selectedPhoto) return;
+    setPhotoBusy(true);
+    setPhotoError('');
+    try {
+      const profile = await profileApi.uploadPhoto(selectedPhoto);
+      setDraft(draftFromUser(profile));
+      setSelectedPhoto(null);
+      await refreshUser();
+    } catch (err) {
+      const response = (err as { response?: { data?: { message?: string } } }).response;
+      setPhotoError(response?.data?.message ?? 'Could not upload your profile photo. Please try again.');
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const removePhoto = async () => {
+    setPhotoBusy(true);
+    setPhotoError('');
+    try {
+      const profile = await profileApi.removePhoto();
+      setDraft(draftFromUser(profile));
+      setDraft((current) => ({ ...current, photoUrl: '' }));
+      setSelectedPhoto(null);
+      await refreshUser();
+    } catch (err) {
+      const response = (err as { response?: { data?: { message?: string } } }).response;
+      setPhotoError(response?.data?.message ?? 'Could not remove your profile photo. Please try again.');
+    } finally {
+      setPhotoBusy(false);
     }
   };
 
@@ -347,12 +428,20 @@ function ProfileEditForm() {
       </header>
 
       <section className="solid-card p-5 sm:p-6" aria-label="Profile completeness">
-        <div className="mb-2 flex items-center justify-between gap-4">
-          <h2 className="text-sm font-semibold text-ink">Profile completeness</h2>
-          <span className="text-sm font-bold text-forest">{completeness ?? 0}%</span>
-        </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-mist">
-          <div className="h-full rounded-full bg-forest transition-all" style={{ width: `${Math.min(100, Math.max(0, completeness ?? 0))}%` }} />
+        <div className="grid gap-5 md:grid-cols-[1fr_240px] md:items-center">
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-4">
+              <h2 className="text-sm font-semibold text-ink">Profile completeness</h2>
+              <span className="text-sm font-bold text-forest">{completeness ?? 0}%</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-mist">
+              <div className="h-full rounded-full bg-forest transition-all" style={{ width: `${Math.min(100, Math.max(0, completeness ?? 0))}%` }} />
+            </div>
+          </div>
+          <div className="border-t border-sage/20 pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-0">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink/60">Next steps</h3>
+            {missingProfileItems(draft, isFaculty).length ? <ul className="mt-2 space-y-1 text-sm text-ink/80">{missingProfileItems(draft, isFaculty).map((item) => <li key={item} className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-leaf" />{item}</li>)}</ul> : <p className="mt-2 text-sm font-semibold text-forest">Your profile has all key details.</p>}
+          </div>
         </div>
       </section>
 
@@ -360,7 +449,24 @@ function ProfileEditForm() {
       {saved && <div role="status" className="flex items-center gap-2 rounded-lg border border-leaf/40 bg-mint/50 px-4 py-3 text-sm font-semibold text-forest"><CheckCircle2 size={17} />Profile saved successfully.</div>}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {section('Basic information', <div className="grid gap-4 sm:grid-cols-2">{input('Name', 'name', { max: 120 })}{input('Photo URL', 'photoUrl', { type: 'url', max: 500 })}</div>)}
+        {section('Basic information', <div className="grid gap-4 sm:grid-cols-2">{input('Name', 'name', { max: 120 })}</div>)}
+
+        {section('Profile photo', <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+          <Avatar name={draft.name || 'Profile'} photoUrl={photoPreviewUrl || draft.photoUrl} className="h-24 w-24" textClassName="text-3xl" />
+          <div className="space-y-3">
+            <div>
+              <label className={labelClass}>Choose a photo
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => selectPhoto(event.target.files?.[0])} className="mt-1 block w-full text-sm text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-mint file:px-3 file:py-2 file:font-semibold file:text-forest hover:file:bg-mint/70" />
+              </label>
+              <p className="mt-1 text-xs text-ink/60">JPEG, PNG, or WebP up to 2 MB.</p>
+            </div>
+            {photoError && <p role="alert" className="text-sm text-rose-700">{photoError}</p>}
+            <div className="flex flex-wrap gap-2">
+              <button type="button" disabled={!selectedPhoto || photoBusy} onClick={() => void uploadPhoto()} className="btn-primary px-4 py-2 text-sm font-semibold disabled:opacity-50">{photoBusy ? 'Uploading...' : 'Upload'}</button>
+              <button type="button" disabled={(!draft.photoUrl && !selectedPhoto) || photoBusy} onClick={() => void removePhoto()} className="btn-secondary px-4 py-2 text-sm font-semibold disabled:opacity-50">{photoBusy ? 'Removing...' : 'Remove'}</button>
+            </div>
+          </div>
+        </div>)}
 
         {isFaculty ? (
           <>

@@ -46,7 +46,7 @@ export const OpeningCard: React.FC<OpeningCardProps> = ({
         {opening.facultyName && (
           <p className="text-xs text-ink/70 mb-3 flex items-center gap-1">
             <User size={12} className="text-leaf" />
-            <span>{opening.facultyName}</span>
+            <Link href={`/faculty/${opening.facultyId}`} className="font-semibold text-forest hover:text-mid-green hover:underline">{opening.facultyName}</Link>
             {opening.department && <span>• {opening.department}</span>}
           </p>
         )}

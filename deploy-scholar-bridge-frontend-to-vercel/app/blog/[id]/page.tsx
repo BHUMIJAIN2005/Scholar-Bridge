@@ -8,6 +8,7 @@ import { blogApi } from '@/api/blogApi';
 import type { BlogPost } from '@/api/blogApi';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { Avatar } from '@/components/Avatar';
 import {
   AttachmentList,
   CommentSection,
@@ -79,6 +80,7 @@ function BlogDetail() {
       <Link href="/blog" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-ink/70 hover:text-forest"><ArrowLeft size={16} /> All posts</Link>
       <article className="solid-card p-6 sm:p-10">
         <div className="mb-5 flex flex-wrap items-center gap-2 text-sm text-ink/70">
+          <Avatar name={post.authorName} photoUrl={post.authorPhotoUrl ?? post.photoUrl} className="h-8 w-8" textClassName="text-xs" />
           <span className="font-semibold text-ink">{post.authorName}</span>
           <RoleBadge role={post.authorRole} />
           <time dateTime={post.createdAt} className="text-xs text-ink/60">{new Date(post.createdAt).toLocaleDateString()}</time>

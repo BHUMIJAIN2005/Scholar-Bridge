@@ -29,6 +29,8 @@ export interface BlogPostSummary {
   tags: string[];
   createdAt: string;
   updatedAt: string;
+  authorPhotoUrl?: string;
+  photoUrl?: string;
 }
 
 export interface BlogPost extends BlogPostSummary {
@@ -50,6 +52,8 @@ export interface BlogComment {
   likeCount: number;
   likedByCurrentUser: boolean;
   replies: BlogComment[];
+  authorPhotoUrl?: string;
+  photoUrl?: string;
 }
 
 export interface BlogTag {

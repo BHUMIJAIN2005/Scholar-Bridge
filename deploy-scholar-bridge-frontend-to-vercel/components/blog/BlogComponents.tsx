@@ -23,6 +23,7 @@ import type {
   BlogReactionType,
 } from '@/api/blogApi';
 import type { User } from '@/api/authApi';
+import { Avatar } from '@/components/Avatar';
 
 const roleStyles = {
   STUDENT: 'bg-mint text-forest border-sage/40',
@@ -49,6 +50,7 @@ export function BlogCard({ post }: { post: BlogPostSummary }) {
   return (
     <article className="solid-card p-5">
       <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-ink/70">
+        <Avatar name={post.authorName} photoUrl={post.authorPhotoUrl ?? post.photoUrl} className="h-8 w-8" textClassName="text-xs" />
         <span className="font-semibold text-ink">{post.authorName}</span>
         <RoleBadge role={post.authorRole} />
         <span aria-hidden="true">·</span>
@@ -306,6 +308,7 @@ function CommentItem({
   return (
     <article className="solid-card p-4">
       <div className="flex flex-wrap items-center gap-2 text-sm">
+        <Avatar name={comment.authorName} photoUrl={comment.authorPhotoUrl ?? comment.photoUrl} className="h-8 w-8" textClassName="text-xs" />
         <span className="font-semibold text-ink">{comment.authorName}</span>
         <RoleBadge role={comment.authorRole} />
         <time className="text-xs text-ink/60" dateTime={comment.createdAt}>{new Date(comment.createdAt).toLocaleString()}</time>

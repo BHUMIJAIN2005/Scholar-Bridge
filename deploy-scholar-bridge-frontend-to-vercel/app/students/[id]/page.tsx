@@ -6,7 +6,8 @@ import { useParams } from 'next/navigation';
 import { ArrowLeft, ArrowUpRight, FileText } from 'lucide-react';
 import { directoryApi, type StudentDetail } from '@/api/directoryApi';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { DirectoryState, DirectoryTags } from '@/components/directory/DirectoryComponents';
+import { Avatar } from '@/components/Avatar';
+import { DirectoryState, DirectoryTags, ProfileSkeleton } from '@/components/directory/DirectoryComponents';
 
 function StudentProfile() {
   const { id } = useParams<{ id: string }>();
@@ -38,26 +39,28 @@ function StudentProfile() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       <Link href="/students" className="inline-flex items-center gap-2 text-sm font-semibold text-ink/70 hover:text-forest"><ArrowLeft size={16} />Student directory</Link>
-      <div className="mt-6"><DirectoryState loading={loading} error={error} onRetry={() => void loadStudent()} forbiddenMessage="Student profiles are only available to faculty. This profile may also be limited to faculty whose openings the student applied to." /></div>
+      <div className="mt-6">{loading ? <ProfileSkeleton /> : <DirectoryState loading={false} error={error} onRetry={() => void loadStudent()} forbiddenMessage="Student profiles are only available to faculty. This profile may also be limited to faculty whose openings the student applied to." />}</div>
       {!loading && !error && student && (
         <article className="mt-6 space-y-5">
-          <header className="solid-card p-6 sm:p-8 space-y-5">
-            <div className="flex items-center gap-5">
-              {student.photoUrl ? (
-                <img src={student.photoUrl} alt="" className="h-20 w-20 rounded-full border-2 border-sage/30 object-cover" />
-              ) : (
-                <div aria-hidden="true" className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-mint text-2xl font-bold text-forest">
-                  {student.name.split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase()}
+          <header className="solid-card overflow-visible p-0">
+            <div className="h-32 rounded-t-2xl bg-gradient-to-r from-forest via-mid-green to-leaf" />
+            <div className="px-6 pb-6 sm:px-8">
+              <div className="-mt-14 flex flex-col gap-4 sm:flex-row sm:items-end">
+                <Avatar name={student.name} photoUrl={student.photoUrl} className="h-28 w-28 border-4 border-white" textClassName="text-3xl" />
+                <div className="pb-1">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-mint px-2.5 py-1 text-xs font-semibold text-forest">Student</span>
+                    <span className="rounded-full border border-sage/30 bg-white px-2.5 py-1 text-xs font-semibold text-ink/70">{student.year || 'Student researcher'}</span>
+                    {student.projects?.length ? <span className="rounded-full border border-sage/30 bg-white px-2.5 py-1 text-xs font-semibold text-ink/70">{student.projects.length} projects</span> : null}
+                  </div>
+                  <h1 className="mt-2 text-3xl font-bold text-ink">{student.name}</h1>
+                  <p className="mt-1 text-sm font-semibold text-forest">{student.year || 'Student researcher'}</p>
                 </div>
-              )}
-              <div>
-                <p className="text-sm font-semibold text-forest">{student.year || 'Student researcher'}</p>
-                <h1 className="mt-1 text-3xl font-bold text-ink">{student.name}</h1>
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap gap-2">
               {student.githubUrl && <a href={student.githubUrl} target="_blank" rel="noreferrer" className="btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold">GitHub<ArrowUpRight size={14} /></a>}
               {student.linkedinUrl && <a href={student.linkedinUrl} target="_blank" rel="noreferrer" className="btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold">LinkedIn<ArrowUpRight size={14} /></a>}
+              </div>
             </div>
           </header>
 

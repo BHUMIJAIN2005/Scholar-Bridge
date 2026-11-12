@@ -44,6 +44,18 @@ export const profileApi = {
     const response = await axiosClient.put<User>('/api/profile/me', profile);
     return response.data;
   },
+
+  async uploadPhoto(file: File): Promise<User> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axiosClient.post<User>('/api/profile/me/photo', formData);
+    return response.data;
+  },
+
+  async removePhoto(): Promise<User> {
+    const response = await axiosClient.delete<User>('/api/profile/me/photo');
+    return response.data;
+  },
 };
 
 export default profileApi;
