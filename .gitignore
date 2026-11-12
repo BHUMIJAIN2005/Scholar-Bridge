@@ -44,3 +44,10 @@ uploads/
 backend/uploads/
 .DS_Store
 desktop.ini
+   backend/startup-error*.log
+   uploads/
+   .env
+   .env.localbackend/startup-error*.log
+uploads/
+.env
+.env.local
