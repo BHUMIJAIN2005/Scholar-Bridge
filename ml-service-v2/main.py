@@ -63,7 +63,10 @@ class Opening(BaseModel):
     description: str = Field(default="", max_length=10000)
     required_skills: str | list[str] = ""
 
-
+class PaperEmbeddingRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=500)
+    abstract: str = Field(default="", max_length=10000)
+    text: str = Field(min_length=1, max_length=50000)
 class RecommendRequest(BaseModel):
     skills: str = Field(default="", max_length=5000)
     interests: str = Field(default="", max_length=5000)
@@ -208,4 +211,32 @@ def recommend(request: RecommendRequest) -> dict[str, Any]:
         raise HTTPException(
             status_code=500,
             detail=f"Recommendation failed: {exc}",
+        ) from exc
+
+@app.post("/papers/embed")
+def embed_paper(request: PaperEmbeddingRequest) -> dict[str, Any]:
+    paper_text = (
+        f"Research title: {request.title}. "
+        f"Abstract: {request.abstract}. "
+        f"Paper content: {request.text}"
+    )
+
+    try:
+        embedding = get_encoder().encode(
+            paper_text,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        )
+
+        return {
+            "title": request.title,
+            "embedding": embedding.tolist(),
+            "dimensions": int(len(embedding)),
+            "modelw": "all-MiniLM-L6-v2",
+        }
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Paper embedding failed: {exc}",
         ) from exc
