@@ -103,4 +103,16 @@ public class FacultyProfile {
 
     @Enumerated(EnumType.STRING)
     private FacultyApprovalStatus approvalStatus = FacultyApprovalStatus.APPROVED;
+
+    @Column(columnDefinition = "TEXT")
+    private String aiResearchProfileJson;
+
+    @Column(columnDefinition = "TEXT")
+    private String aiLaymanSummaryJson;
+
+    @Column(columnDefinition = "TEXT")
+    private String aiStatedRequirementsJson;
+
+    private Boolean aiProfileConfirmed = false;
+    private java.time.Instant aiProfileConfirmedAt;
 }
