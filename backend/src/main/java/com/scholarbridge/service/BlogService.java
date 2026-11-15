@@ -460,6 +460,7 @@ public class BlogService {
     private BlogPostSummaryResponse toSummaryResponse(BlogPost post) {
         return new BlogPostSummaryResponse(
             post.getId(),
+            post.getAuthor().getId(),
             post.getAuthor().getName(),
             post.getAuthor().getRole(),
             post.getTitle(),

@@ -31,7 +31,7 @@ export interface ProfileUpdateRequest {
   interests?: string[];
   studentProjects?: StudentProjectItem[];
   githubUrl?: string;
-  visibility?: 'ALL_FACULTY' | 'APPLIED_FACULTY_ONLY';
+  visibility?: 'ALL_USERS' | 'APPLIED_FACULTY_ONLY';
 }
 
 export const profileApi = {

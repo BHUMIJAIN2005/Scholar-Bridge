@@ -99,6 +99,18 @@ export const Navbar = () => {
               >
                 Blog
               </Link>
+              {isAuthenticated && (
+                <Link
+                  href="/directory"
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                    isActive('/directory')
+                      ? 'bg-mint text-forest font-semibold'
+                      : 'text-ink hover:text-forest hover:bg-mint/50'
+                  }`}
+                >
+                  Directory
+                </Link>
+              )}
 
               {/* Student specific links */}
               {isAuthenticated && isStudent && (
@@ -123,16 +135,6 @@ export const Navbar = () => {
                     }`}
                   >
                     My Profile
-                  </Link>
-                  <Link
-                    href="/faculty"
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
-                      isActive('/faculty')
-                        ? 'bg-mint text-forest font-semibold'
-                        : 'text-ink hover:text-forest hover:bg-mint/50'
-                    }`}
-                  >
-                    Faculty
                   </Link>
                   <Link
                     href="/student/openings"
@@ -200,16 +202,6 @@ export const Navbar = () => {
                     }`}
                   >
                     My Profile
-                  </Link>
-                  <Link
-                    href="/students"
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
-                      isActive('/students')
-                        ? 'bg-mint text-forest font-semibold'
-                        : 'text-ink hover:text-forest hover:bg-mint/50'
-                    }`}
-                  >
-                    Students
                   </Link>
                   <Link
                     href="/faculty/post-opening"
@@ -341,6 +333,17 @@ export const Navbar = () => {
           >
             Blog
           </Link>
+          {isAuthenticated && (
+            <Link
+              href="/directory"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                isActive('/directory') ? 'bg-mint/60 text-forest' : 'text-ink hover:bg-mint/60'
+              }`}
+            >
+              Directory
+            </Link>
+          )}
 
           {isAuthenticated && isStudent && (
             <div className="pt-2 border-t border-sage/20 space-y-1">
@@ -360,13 +363,6 @@ export const Navbar = () => {
                 className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 My Profile
-              </Link>
-              <Link
-                href="/faculty"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
-              >
-                Faculty
               </Link>
               <Link
                 href="/student/openings"
@@ -417,13 +413,6 @@ export const Navbar = () => {
                 className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
               >
                 My Profile
-              </Link>
-              <Link
-                href="/students"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base text-ink hover:bg-mint/60"
-              >
-                Students
               </Link>
               <Link
                 href="/faculty/post-opening"

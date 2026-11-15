@@ -288,7 +288,12 @@ export default function ViewApplicantsPage() {
                       <div className="space-y-1">
                         <h3 className="text-base font-bold text-ink flex items-center gap-2">
                           <User size={16} className="text-leaf shrink-0" />
-                          <span>{app.studentName}</span>
+                          <Link
+                            href={`/students/${app.studentId}`}
+                            className="rounded-sm text-ink transition hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-leaf focus-visible:ring-offset-2"
+                          >
+                            {app.studentName}
+                          </Link>
                           <span className="text-xs font-normal text-ink/60">
                             ({app.year})
                           </span>

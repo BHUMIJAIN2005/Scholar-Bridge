@@ -47,11 +47,15 @@ export function MarkdownRenderer({ content }: { content: string }) {
 }
 
 export function BlogCard({ post }: { post: BlogPostSummary }) {
+  const authorProfilePath = post.authorRole === 'FACULTY' ? 'faculty' : 'students';
+
   return (
     <article className="solid-card p-5">
       <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-ink/70">
         <Avatar name={post.authorName} photoUrl={post.authorPhotoUrl ?? post.photoUrl} className="h-8 w-8" textClassName="text-xs" />
-        <span className="font-semibold text-ink">{post.authorName}</span>
+        <Link href={`/${authorProfilePath}/${post.authorId}`} className="rounded-sm font-semibold text-ink hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-leaf focus-visible:ring-offset-2">
+          {post.authorName}
+        </Link>
         <RoleBadge role={post.authorRole} />
         <span aria-hidden="true">·</span>
         <time dateTime={post.createdAt}>
@@ -246,6 +250,7 @@ function CommentItem({
   const [error, setError] = useState('');
   const isAuthor = String(comment.authorId) === String(user.id);
   const mayDelete = isAuthor || isPostAuthor;
+  const authorProfilePath = comment.authorRole === 'FACULTY' ? 'faculty' : 'students';
 
   const submitReply = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -309,7 +314,9 @@ function CommentItem({
     <article className="solid-card p-4">
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Avatar name={comment.authorName} photoUrl={comment.authorPhotoUrl ?? comment.photoUrl} className="h-8 w-8" textClassName="text-xs" />
-        <span className="font-semibold text-ink">{comment.authorName}</span>
+        <Link href={`/${authorProfilePath}/${comment.authorId}`} className="rounded-sm font-semibold text-ink hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-leaf focus-visible:ring-offset-2">
+          {comment.authorName}
+        </Link>
         <RoleBadge role={comment.authorRole} />
         <time className="text-xs text-ink/60" dateTime={comment.createdAt}>{new Date(comment.createdAt).toLocaleString()}</time>
       </div>

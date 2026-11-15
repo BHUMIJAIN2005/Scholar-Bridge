@@ -20,6 +20,7 @@ export interface BlogAttachment {
 
 export interface BlogPostSummary {
   id: number;
+  authorId: number;
   authorName: string;
   authorRole: UserRole;
   title: string;
