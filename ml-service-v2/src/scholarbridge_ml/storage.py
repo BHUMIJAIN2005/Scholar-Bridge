@@ -80,7 +80,36 @@ class StudentOpportunityMatch(BaseModel):
     status: str
 
 
-class InMemoryStorage:
+
+    # ---------------------------------------------------------------------
+    # Application handling (student applications to opportunities)
+    # ---------------------------------------------------------------------
+    class ApplicationRecord(BaseModel):
+        """Persisted student application snapshot.
+
+        The ``profile_snapshot`` is a deep‑copy of the ``StudentProfileRecord``
+        at the moment the application is created so later edits to the student
+        profile do not affect historical applications.
+        """
+        application_id: str
+        opportunity_id: str
+        student_id: str
+        note: str | None = None
+        applied_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+        status: str = "applied"  # enum: applied, under_review, shortlisted, accepted, rejected
+        match_score: float
+        matching_factors: dict[str, float] = Field(default_factory=dict)
+        profile_snapshot: StudentProfileRecord
+
+    def __init__(self):
+        self._lock = threading.RLock()
+        self._unconfirmed_analyses: dict[str, dict[str, Any]] = {}
+        self._confirmed_profiles: dict[str, StoredProfile] = {}
+        self._embeddings: dict[str, np.ndarray] = {}  # professor_id -> np.ndarray (384,)
+        self._opportunities: dict[str, OpportunityContext] = {}
+        self._students: dict[str, StudentProfileRecord] = {}
+        self._applications: dict[str, InMemoryStorage.ApplicationRecord] = {}
+
     """
     Isolated, thread-safe in-memory storage for professor research profiles,
     embeddings, opportunities, and student candidate profiles.
