@@ -1,5 +1,6 @@
 package com.scholarbridge.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.scholarbridge.entity.ApplicationStatus;
 import com.scholarbridge.entity.BlogPostStatus;
 import com.scholarbridge.entity.BlogReactionType;
@@ -216,6 +217,17 @@ public final class ApiDtos {
         String linkedinUrl,
         int profileCompleteness,
         List<StudentPaperSummaryResponse> papers
+    ) {}
+
+    public record RecommendedProfessorResponse(
+        Long id,
+        String name,
+        String department,
+        double matchScore,
+        List<String> researchInterests,
+        List<String> sharedInterests,
+        String whyMatched,
+        boolean isDemo
     ) {}
 
     public record EducationItem(

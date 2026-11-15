@@ -1,5 +1,8 @@
+
 package com.scholarbridge.service;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scholarbridge.dto.ApiDtos.CategorizeRequest;
 import com.scholarbridge.dto.ApiDtos.CategorizeResponse;
 import com.scholarbridge.dto.ApiDtos.PaperResponse;
@@ -14,12 +17,14 @@ import com.scholarbridge.exception.ResourceNotFoundException;
 import com.scholarbridge.repository.ConferenceSubmissionRepository;
 import com.scholarbridge.repository.PaperSubmissionRepository;
 import com.scholarbridge.security.CurrentUserService;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
+
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -40,7 +45,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class PaperService {
-    private static final Logger logger = LoggerFactory.getLogger(PaperService.class);
+
+    private static final Logger logger =
+        LoggerFactory.getLogger(PaperService.class);
+
     private static final int MAX_CATEGORIZATION_TEXT_LENGTH = 50_000;
 
     private final PaperSubmissionRepository papers;
@@ -48,6 +56,7 @@ public class PaperService {
     private final CurrentUserService currentUser;
     private final ApiMapper mapper;
     private final RestClient mlClient;
+    private final ObjectMapper objectMapper;
     private final Path uploadDirectory;
 
     public PaperService(
@@ -56,6 +65,7 @@ public class PaperService {
         CurrentUserService currentUser,
         ApiMapper mapper,
         RestClient mlClient,
+        ObjectMapper objectMapper,
         @Value("${app.uploads.directory}") String uploadDirectory
     ) {
         this.papers = papers;
@@ -63,136 +73,381 @@ public class PaperService {
         this.currentUser = currentUser;
         this.mapper = mapper;
         this.mlClient = mlClient;
-        this.uploadDirectory = Paths.get(uploadDirectory).toAbsolutePath().normalize();
+        this.objectMapper = objectMapper;
+        this.uploadDirectory =
+            Paths.get(uploadDirectory).toAbsolutePath().normalize();
     }
 
+    // Request and response models for the FastAPI embedding endpoint
+
+    private record EmbeddingRequest(
+        String title,
+        @JsonProperty("abstract") String abstractText,
+        String text
+    ) {}
+
+    private record EmbeddingResponse(
+        String title,
+        List<Double> embedding,
+        int dimensions,
+        String model
+    ) {}
+
     @Transactional
-    public PaperResponse upload(String title, String abstractText, MultipartFile file) {
+    public PaperResponse upload(
+        String title,
+        String abstractText,
+        MultipartFile file
+    ) {
         User student = currentUser.requireRole(UserRole.STUDENT);
+
         if (file == null || file.isEmpty()) {
-            throw new BusinessRuleException(HttpStatus.BAD_REQUEST, "Choose a non-empty PDF file.");
+            throw new BusinessRuleException(
+                HttpStatus.BAD_REQUEST,
+                "Choose a non-empty PDF file."
+            );
         }
-        String originalName = file.getOriginalFilename() == null ? "paper.pdf" : file.getOriginalFilename();
-        if (!originalName.toLowerCase().endsWith(".pdf") || file.getSize() > 20L * 1024 * 1024) {
-            throw new BusinessRuleException(HttpStatus.BAD_REQUEST, "Upload a PDF file no larger than 20 MB.");
+
+        String originalName = file.getOriginalFilename() == null
+            ? "paper.pdf"
+            : file.getOriginalFilename();
+
+        if (!originalName.toLowerCase().endsWith(".pdf")
+            || file.getSize() > 20L * 1024 * 1024) {
+            throw new BusinessRuleException(
+                HttpStatus.BAD_REQUEST,
+                "Upload a PDF file no larger than 20 MB."
+            );
         }
 
         String storedFilename = UUID.randomUUID() + ".pdf";
         Path destination = uploadDirectory.resolve(storedFilename).normalize();
+
         try {
             Files.createDirectories(uploadDirectory);
+
             byte[] bytes = file.getBytes();
-            if (bytes.length < 5 || !new String(bytes, 0, 5, java.nio.charset.StandardCharsets.US_ASCII).equals("%PDF-")) {
-                throw new BusinessRuleException(HttpStatus.BAD_REQUEST, "The uploaded file is not a valid PDF.");
+
+            if (bytes.length < 5 ||
+                !new String(
+                    bytes,
+                    0,
+                    5,
+                    java.nio.charset.StandardCharsets.US_ASCII
+                ).equals("%PDF-")) {
+
+                throw new BusinessRuleException(
+                    HttpStatus.BAD_REQUEST,
+                    "The uploaded file is not a valid PDF."
+                );
             }
+
             Files.write(destination, bytes);
+
             PaperSubmission paper = new PaperSubmission();
             paper.setStudent(student);
-            paper.setTitle(title == null || title.isBlank() ? stripPdfExtension(originalName) : title.trim());
-            paper.setAbstractText(abstractText == null || abstractText.isBlank() ? null : abstractText.trim());
+
+            paper.setTitle(
+                title == null || title.isBlank()
+                    ? stripPdfExtension(originalName)
+                    : title.trim()
+            );
+
+            paper.setAbstractText(
+                abstractText == null || abstractText.isBlank()
+                    ? null
+                    : abstractText.trim()
+            );
+
             paper.setStoredFilename(storedFilename);
             paper.setStatus(PaperStatus.PROCESSING);
+
             PaperSubmission saved = papers.saveAndFlush(paper);
+
             categorize(saved, bytes);
+
             return mapper.paper(saved);
+
         } catch (BusinessRuleException exception) {
             removeFile(destination);
             throw exception;
+
         } catch (IOException exception) {
             removeFile(destination);
-            throw new BusinessRuleException(HttpStatus.BAD_REQUEST, "The PDF could not be read.");
+
+            throw new BusinessRuleException(
+                HttpStatus.BAD_REQUEST,
+                "The PDF could not be read."
+            );
         }
     }
 
     @Transactional(readOnly = true)
     public List<PaperResponse> getMine() {
         User student = currentUser.requireRole(UserRole.STUDENT);
-        return papers.findByStudentIdOrderByUploadedAtDesc(student.getId()).stream().map(mapper::paper).toList();
+
+        return papers.findByStudentIdOrderByUploadedAtDesc(student.getId())
+            .stream()
+            .map(mapper::paper)
+            .toList();
     }
 
     @Transactional
     public PaperResponse reclassify(Long id) {
+
         User student = currentUser.requireRole(UserRole.STUDENT);
+
         PaperSubmission paper = papers.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Paper was not found."));
+            .orElseThrow(() ->
+                new ResourceNotFoundException("Paper was not found.")
+            );
+
         if (!paper.getStudent().getId().equals(student.getId())) {
-            throw new BusinessRuleException(HttpStatus.FORBIDDEN, "You cannot reclassify this paper.");
+            throw new BusinessRuleException(
+                HttpStatus.FORBIDDEN,
+                "You cannot reclassify this paper."
+            );
         }
 
-        Path path = uploadDirectory.resolve(paper.getStoredFilename()).normalize();
-        if (!path.startsWith(uploadDirectory) || !Files.isRegularFile(path)) {
-            throw new ResourceNotFoundException("The paper file is no longer available.");
+        Path path = uploadDirectory
+            .resolve(paper.getStoredFilename())
+            .normalize();
+
+        if (!path.startsWith(uploadDirectory)
+            || !Files.isRegularFile(path)) {
+            throw new ResourceNotFoundException(
+                "The paper file is no longer available."
+            );
         }
+
         try {
             byte[] bytes = Files.readAllBytes(path);
+
             paper.setCategory(null);
             paper.setConfidenceScore(null);
+            paper.setEmbeddingJson(null);
             paper.setStatus(PaperStatus.PROCESSING);
+
             papers.saveAndFlush(paper);
+
             categorize(paper, bytes);
+
             return mapper.paper(paper);
+
         } catch (IOException exception) {
-            throw new BusinessRuleException(HttpStatus.INTERNAL_SERVER_ERROR, "The stored PDF could not be read.");
+            throw new BusinessRuleException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "The stored PDF could not be read."
+            );
         }
     }
 
     @Transactional(readOnly = true)
     public DownloadedPaper getFile(Long id) {
+
         User user = currentUser.requireUser();
+
         PaperSubmission paper = papers.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Paper was not found."));
-        if (user.getRole() == UserRole.STUDENT && !paper.getStudent().getId().equals(user.getId())) {
-            throw new BusinessRuleException(HttpStatus.FORBIDDEN, "You cannot access this file.");
+            .orElseThrow(() ->
+                new ResourceNotFoundException("Paper was not found.")
+            );
+
+        if (user.getRole() == UserRole.STUDENT
+            && !paper.getStudent().getId().equals(user.getId())) {
+
+            throw new BusinessRuleException(
+                HttpStatus.FORBIDDEN,
+                "You cannot access this file."
+            );
         }
-        Path path = uploadDirectory.resolve(paper.getStoredFilename()).normalize();
-        if (!path.startsWith(uploadDirectory) || !Files.isRegularFile(path)) {
-            throw new ResourceNotFoundException("The paper file is no longer available.");
+
+        Path path = uploadDirectory
+            .resolve(paper.getStoredFilename())
+            .normalize();
+
+        if (!path.startsWith(uploadDirectory)
+            || !Files.isRegularFile(path)) {
+            throw new ResourceNotFoundException(
+                "The paper file is no longer available."
+            );
         }
-        return new DownloadedPaper(new FileSystemResource(path), paper.getTitle() + ".pdf");
+
+        return new DownloadedPaper(
+            new FileSystemResource(path),
+            paper.getTitle() + ".pdf"
+        );
     }
 
     @Transactional(readOnly = true)
     public DownloadedPaper getPublicConferencePaper(Long submissionId) {
-        ConferenceSubmission submission = conferenceSubmissions.findById(submissionId)
-            .orElseThrow(() -> new ResourceNotFoundException("The public paper was not found."));
+
+        ConferenceSubmission submission =
+            conferenceSubmissions.findById(submissionId)
+                .orElseThrow(() ->
+                    new ResourceNotFoundException(
+                        "The public paper was not found."
+                    )
+                );
+
         if (submission.getStatus() != SubmissionStatus.ACCEPTED
             || !Boolean.TRUE.equals(submission.getPublicPdfAllowed())) {
-            throw new ResourceNotFoundException("The public paper was not found.");
+
+            throw new ResourceNotFoundException(
+                "The public paper was not found."
+            );
         }
+
         PaperSubmission paper = submission.getPaper();
-        Path path = uploadDirectory.resolve(paper.getStoredFilename()).normalize();
-        if (!path.startsWith(uploadDirectory) || !Files.isRegularFile(path)) {
-            throw new ResourceNotFoundException("The paper file is no longer available.");
+
+        Path path = uploadDirectory
+            .resolve(paper.getStoredFilename())
+            .normalize();
+
+        if (!path.startsWith(uploadDirectory)
+            || !Files.isRegularFile(path)) {
+            throw new ResourceNotFoundException(
+                "The paper file is no longer available."
+            );
         }
-        return new DownloadedPaper(new FileSystemResource(path), paper.getTitle() + ".pdf");
+
+        return new DownloadedPaper(
+            new FileSystemResource(path),
+            paper.getTitle() + ".pdf"
+        );
     }
 
+    // Generate and persist the semantic embedding through FastAPI
+
+    private void generateEmbedding(
+        PaperSubmission paper,
+        String extractedText
+    ) {
+        try {
+
+            String textForEmbedding = extractedText.substring(
+                0,
+                Math.min(
+                    extractedText.length(),
+                    MAX_CATEGORIZATION_TEXT_LENGTH
+                )
+            );
+
+            EmbeddingResponse result = mlClient.post()
+                .uri("/papers/embed")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                    new EmbeddingRequest(
+                        paper.getTitle(),
+                        paper.getAbstractText() == null
+                            ? ""
+                            : paper.getAbstractText(),
+                        textForEmbedding
+                    )
+                )
+                .retrieve()
+                .body(EmbeddingResponse.class);
+
+            if (result == null
+                || result.embedding() == null
+                || result.dimensions() != 384
+                || result.embedding().size() != 384) {
+
+                throw new IllegalStateException(
+                    "Invalid embedding response from ML service."
+                );
+            }
+
+            String embeddingJson =
+                objectMapper.writeValueAsString(result.embedding());
+
+            paper.setEmbeddingJson(embeddingJson);
+
+            logger.info(
+                "Generated embedding for paper {} with {} dimensions.",
+                paper.getId(),
+                result.dimensions()
+            );
+
+        } catch (Exception exception) {
+
+            logger.warn(
+                "Embedding generation failed for paper {}. Categorization will continue independently.",
+                paper.getId(),
+                exception
+            );
+
+            paper.setEmbeddingJson(null);
+        }
+    }
+
+    // Existing categorization workflow, now integrated with embeddings
+
     private void categorize(PaperSubmission paper, byte[] bytes) {
+
         try (PDDocument document = Loader.loadPDF(bytes)) {
-            String text = new PDFTextStripper().getText(document).trim();
+
+            String text = new PDFTextStripper()
+                .getText(document)
+                .trim();
+
             if (text.isBlank()) {
                 paper.setStatus(PaperStatus.FAILED);
                 papers.save(paper);
                 return;
             }
+
+            // Generate semantic embedding
+            generateEmbedding(paper, text);
+
+            // Existing ML categorization
             CategorizeResponse result = mlClient.post()
                 .uri("/categorize")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new CategorizeRequest(text.substring(0, Math.min(text.length(), MAX_CATEGORIZATION_TEXT_LENGTH))))
+                .body(
+                    new CategorizeRequest(
+                        text.substring(
+                            0,
+                            Math.min(
+                                text.length(),
+                                MAX_CATEGORIZATION_TEXT_LENGTH
+                            )
+                        )
+                    )
+                )
                 .retrieve()
                 .body(CategorizeResponse.class);
-            if (result == null || result.category() == null || result.confidence() == null) {
+
+            if (result == null
+                || result.category() == null
+                || result.confidence() == null) {
+
                 paper.setStatus(PaperStatus.FAILED);
+
             } else {
+
                 paper.setCategory(result.category());
-                paper.setConfidenceScore(Math.max(0, Math.min(1, result.confidence())));
+
+                paper.setConfidenceScore(
+                    Math.max(
+                        0,
+                        Math.min(1, result.confidence())
+                    )
+                );
+
                 paper.setStatus(PaperStatus.DONE);
             }
+
         } catch (IOException | RestClientException exception) {
-            logger.warn("Could not categorize paper {}. The uploaded file was saved, but categorization failed.",
-                paper.getId(), exception);
+
+            logger.warn(
+                "Could not categorize paper {}. The uploaded file was saved, but categorization failed.",
+                paper.getId(),
+                exception
+            );
+
             paper.setStatus(PaperStatus.FAILED);
         }
+
         papers.save(paper);
     }
 
@@ -207,11 +462,22 @@ public class PaperService {
         return name.replaceFirst("(?i)\\.pdf$", "");
     }
 
-    public record DownloadedPaper(Resource resource, String filename) {
+    public record DownloadedPaper(
+        Resource resource,
+        String filename
+    ) {
         public HttpHeaders headers() {
+
             HttpHeaders headers = new HttpHeaders();
+
             headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDisposition(ContentDisposition.inline().filename(filename).build());
+
+            headers.setContentDisposition(
+                ContentDisposition.inline()
+                    .filename(filename)
+                    .build()
+            );
+
             return headers;
         }
     }

@@ -9,6 +9,8 @@ import ProfileCompletenessCard from '@/components/ProfileCompletenessCard';
 import { applicationsApi, Application } from '@/api/applicationsApi';
 import { openingsApi, ResearchOpening } from '@/api/openingsApi';
 import { papersApi, PaperSubmission } from '@/api/papersApi';
+import { getRecommendedProfessors, RecommendedProfessor } from '@/api/studentsApi';
+import RecommendedProfessorCard from '@/components/RecommendedProfessorCard';
 import {
   AlertCircle,
   Briefcase,
@@ -25,6 +27,9 @@ export default function StudentDashboardPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [papers, setPapers] = useState<PaperSubmission[]>([]);
   const [openings, setOpenings] = useState<ResearchOpening[]>([]);
+  const [recommendedProfessors, setRecommendedProfessors] = useState<RecommendedProfessor[]>([]);
+  const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(true);
+  const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,6 +56,23 @@ export default function StudentDashboardPage() {
   useEffect(() => {
     void loadDashboard();
   }, [loadDashboard]);
+
+  const loadRecommendedProfessors = useCallback(async () => {
+    setIsRecommendationsLoading(true);
+    setRecommendationsError(null);
+    try {
+      setRecommendedProfessors(await getRecommendedProfessors());
+    } catch (err) {
+      const response = (err as { response?: { data?: { message?: string } } }).response;
+      setRecommendationsError(response?.data?.message ?? 'Could not load professor recommendations. Please try again.');
+    } finally {
+      setIsRecommendationsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadRecommendedProfessors();
+  }, [loadRecommendedProfessors]);
 
   const activeApplications = applications.filter((application) => application.status !== 'REJECTED').length;
   const recentActivity = [
@@ -200,6 +222,37 @@ export default function StudentDashboardPage() {
                 </Link></li>;
               })}
             </ul>
+          )}
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-lg font-bold text-ink">Recommended Professors</h2>
+          {isRecommendationsLoading ? (
+            <div className="flex items-center justify-center gap-2 py-10 text-sm text-ink/70">
+              <Loader2 size={18} className="animate-spin text-leaf" />
+              Loading professor recommendations...
+            </div>
+          ) : recommendationsError ? (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">
+              <span className="inline-flex items-center gap-2"><AlertCircle size={16} />{recommendationsError}</span>
+              <button
+                type="button"
+                onClick={() => void loadRecommendedProfessors()}
+                className="btn-secondary inline-flex shrink-0 items-center gap-1.5 px-3 py-1 text-xs font-semibold"
+              >
+                <RefreshCw size={14} />Retry
+              </button>
+            </div>
+          ) : recommendedProfessors.length === 0 ? (
+            <div className="solid-card border-dashed border-sage/40 px-5 py-10 text-center text-sm text-ink/70">
+              No professor recommendations available yet
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {recommendedProfessors.map((professor) => (
+                <RecommendedProfessorCard key={professor.id} professor={professor} />
+              ))}
+            </div>
           )}
         </section>
       </main>

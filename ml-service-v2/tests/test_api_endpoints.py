@@ -273,6 +273,57 @@ class TestApiEndpoints(unittest.TestCase):
             self.assertIn("matching_reasons", item)
             self.assertIn("eligibility_gaps", item)
 
+    @patch("scholarbridge_ml.api_routes.get_shared_encoder")
+    def test_student_profile_sync_generates_embedding_for_professor_matches(self, mock_encoder_getter):
+        import numpy as np
+
+        encoder = MagicMock()
+        encoder.encode.return_value = np.ones((1, 384), dtype=np.float32)
+        mock_encoder_getter.return_value = encoder
+
+        sync_response = self.client.put(
+            "/students/6/profile",
+            json={
+                "id": "6",
+                "name": "Authenticated Student",
+                "department": "Computer Science",
+                "academic_year": "3rd Year",
+                "skills": "Python, ML",
+                "skill_tags": ["Python", "ML"],
+                "interests": ["Machine Learning"],
+                "projects": [{"title": "Project", "description": "A test project"}],
+                "papers": [],
+            },
+        )
+        self.assertEqual(sync_response.status_code, 200)
+        self.assertEqual(sync_response.json(), {"student_id": "6", "embedding_dimensions": 384})
+        stored_student = storage.get_student("6")
+        self.assertIsNotNone(stored_student)
+        self.assertEqual(len(stored_student.embedding), 384)
+
+        match_response = self.client.post("/students/6/match-professors")
+        self.assertEqual(match_response.status_code, 200)
+        match_data = match_response.json()
+        self.assertEqual(match_data["student_id"], "6")
+        self.assertEqual(match_data["count"], 4)
+        self.assertTrue(all(match["is_demo"] for match in match_data["matches"]))
+        self.assertTrue(all(match["professor_name"].startswith("[TEST DATA]") for match in match_data["matches"]))
+        self.assertGreater(match_data["matches"][0]["match_score"], 0)
+        self.assertIn("Machine Learning", match_data["matches"][0]["shared_research_interests"])
+        for professor_id in ("-1001", "-1002", "-1003", "-1004"):
+            professor = storage.get_confirmed_profile(professor_id)
+            self.assertIsNotNone(professor)
+            self.assertTrue(professor.is_confirmed)
+            self.assertTrue(professor.is_demo)
+            self.assertEqual(len(storage.get_professor_embedding(professor_id)), 384)
+
+    def test_student_profile_sync_rejects_mismatched_ids(self):
+        response = self.client.put(
+            "/students/6/profile",
+            json={"id": "7", "name": "Student"},
+        )
+        self.assertEqual(response.status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
