@@ -78,11 +78,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
               join skillProfile.skillTags skillTag
               where skillProfile = sp and lower(skillTag) like lower(concat('%', :skill, '%'))
             ))
-          and (sp.visibility = :allFaculty or sp.visibility is null
-            or exists (
+          and (sp.visibility = :allUsers or sp.visibility is null
+            or u.id = :viewerId
+            or (:viewerRole = :facultyRole and exists (
               select a.id from Application a
-              where a.student = u and a.opening.faculty.id = :facultyId
-            ))
+              where a.student = u and a.opening.faculty.id = :viewerId
+            )))
         """,
         countQuery = """
         select count(u) from User u
@@ -96,18 +97,21 @@ public interface UserRepository extends JpaRepository<User, Long> {
               join skillProfile.skillTags skillTag
               where skillProfile = sp and lower(skillTag) like lower(concat('%', :skill, '%'))
             ))
-          and (sp.visibility = :allFaculty or sp.visibility is null
-            or exists (
+          and (sp.visibility = :allUsers or sp.visibility is null
+            or u.id = :viewerId
+            or (:viewerRole = :facultyRole and exists (
               select a.id from Application a
-              where a.student = u and a.opening.faculty.id = :facultyId
-            ))
+              where a.student = u and a.opening.faculty.id = :viewerId
+            )))
         """)
-    Page<User> findVisibleStudentsForFaculty(
+    Page<User> findVisibleStudentsForViewer(
         @Param("studentRole") UserRole studentRole,
         @Param("query") String query,
         @Param("skill") String skill,
-        @Param("facultyId") Long facultyId,
-        @Param("allFaculty") StudentVisibility allFaculty,
+        @Param("viewerId") Long viewerId,
+        @Param("viewerRole") UserRole viewerRole,
+        @Param("facultyRole") UserRole facultyRole,
+        @Param("allUsers") StudentVisibility allUsers,
         Pageable pageable
     );
 

@@ -12,6 +12,7 @@ import com.scholarbridge.entity.Publication;
 import com.scholarbridge.entity.ResearchOpening;
 import com.scholarbridge.entity.StudentProfile;
 import com.scholarbridge.entity.StudentProjectEntry;
+import com.scholarbridge.entity.StudentVisibility;
 import com.scholarbridge.entity.User;
 import com.scholarbridge.entity.UserRole;
 import com.scholarbridge.repository.ApplicationRepository;
@@ -196,6 +197,7 @@ public class DemoDataInitializer implements CommandLineRunner {
                 UserRole.STUDENT, passwordHash);
             StudentProfile profile = new StudentProfile();
             profile.setUser(user);
+            profile.setVisibility(StudentVisibility.ALL_USERS);
             profile.setYear(yearOfStudy(2 + index % 3));
             profile.setSkills(skillSets.get(index));
             profile.setSkillTags(List.of(skillSets.get(index).split(", ")));

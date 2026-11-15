@@ -52,7 +52,7 @@ function StudentDirectory() {
         </label>
       </section>
 
-      <DirectoryState loading={loading} error={error} onRetry={() => void loadStudents()} forbiddenMessage="The student directory is for faculty members. Sign in with a faculty account to browse eligible student profiles." />
+      <DirectoryState loading={loading} error={error} onRetry={() => void loadStudents()} forbiddenMessage="This directory is available to signed-in members of ScholarBridge." />
       {!loading && !error && result && (result.content.length ? (
         <>
           <p className="text-sm text-ink/60">{result.totalElements} student profile{result.totalElements === 1 ? '' : 's'}</p>
@@ -65,5 +65,5 @@ function StudentDirectory() {
 }
 
 export default function StudentDirectoryPage() {
-  return <ProtectedRoute allowedRoles={['FACULTY']}><StudentDirectory /></ProtectedRoute>;
+  return <ProtectedRoute allowedRoles={['STUDENT', 'FACULTY']}><StudentDirectory /></ProtectedRoute>;
 }

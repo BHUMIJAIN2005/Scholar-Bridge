@@ -37,7 +37,7 @@ export interface User {
   studentProjects?: StudentProjectItem[];
   githubUrl?: string;
   linkedinUrl?: string;
-  visibility?: 'ALL_FACULTY' | 'APPLIED_FACULTY_ONLY';
+  visibility?: 'ALL_USERS' | 'APPLIED_FACULTY_ONLY';
   year?: string;
   createdAt?: string;
 }

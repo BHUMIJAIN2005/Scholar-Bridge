@@ -92,28 +92,35 @@ public class DirectoryService {
 
     @Transactional(readOnly = true)
     public Page<StudentDirectoryResponse> getStudents(String query, String skill, Pageable pageable) {
-        User faculty = currentUser.requireRole(UserRole.FACULTY);
-        return users.findVisibleStudentsForFaculty(
+        User viewer = currentUser.requireUser();
+        return users.findVisibleStudentsForViewer(
             UserRole.STUDENT,
             normalize(query),
             normalize(skill),
-            faculty.getId(),
-            StudentVisibility.ALL_FACULTY,
+            viewer.getId(),
+            viewer.getRole(),
+            UserRole.FACULTY,
+            StudentVisibility.ALL_USERS,
             pageRequest(pageable)
         ).map(mapper::studentDirectory);
     }
 
     @Transactional(readOnly = true)
     public StudentDetailResponse getStudent(Long id) {
-        User faculty = currentUser.requireRole(UserRole.FACULTY);
+        User viewer = currentUser.requireUser();
         User student = users.findByIdAndRoleWithStudentProfile(id, UserRole.STUDENT)
             .orElseThrow(() -> new ResourceNotFoundException("Student profile was not found."));
+        if (viewer.getId().equals(student.getId())) {
+            return mapper.studentDetail(student, papers.findByStudentIdOrderByUploadedAtDesc(student.getId()));
+        }
         StudentVisibility visibility = student.getStudentProfile() == null
             || student.getStudentProfile().getVisibility() == null
-            ? StudentVisibility.ALL_FACULTY
+            || student.getStudentProfile().getVisibility() == StudentVisibility.ALL_FACULTY
+            ? StudentVisibility.ALL_USERS
             : student.getStudentProfile().getVisibility();
         if (visibility == StudentVisibility.APPLIED_FACULTY_ONLY
-            && !applications.existsByStudentAndFaculty(student.getId(), faculty.getId())) {
+            && (viewer.getRole() != UserRole.FACULTY
+                || !applications.existsByStudentAndFaculty(student.getId(), viewer.getId()))) {
             throw new ResourceNotFoundException("Student profile was not found.");
         }
         return mapper.studentDetail(student, papers.findByStudentIdOrderByUploadedAtDesc(student.getId()));

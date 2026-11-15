@@ -69,5 +69,5 @@ function FacultyDirectory() {
 }
 
 export default function FacultyDirectoryPage() {
-  return <ProtectedRoute allowedRoles={['STUDENT']}><FacultyDirectory /></ProtectedRoute>;
+  return <ProtectedRoute allowedRoles={['STUDENT', 'FACULTY']}><FacultyDirectory /></ProtectedRoute>;
 }

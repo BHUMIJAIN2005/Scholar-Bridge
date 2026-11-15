@@ -50,23 +50,39 @@ function FacultyProfile() {
       <div className="mt-6">{loading ? <ProfileSkeleton /> : <DirectoryState loading={false} error={error} onRetry={() => void loadFaculty()} forbiddenMessage="This profile is available to signed-in ScholarBridge members. Please sign in with an authorized account." />}</div>
       {!loading && !error && faculty && (
         <article className="mt-6 space-y-6">
-          <header className="solid-card overflow-visible p-0">
-            <div className="h-32 rounded-t-2xl bg-gradient-to-r from-forest via-mid-green to-leaf" />
-            <div className="px-6 pb-6 sm:px-8">
-              <div className="-mt-14 flex flex-col gap-4 sm:flex-row sm:items-end">
-                <Avatar name={faculty.name} photoUrl={faculty.photoUrl} className="h-28 w-28 border-4 border-white" textClassName="text-3xl" />
-                <div className="pb-1">
+          <header className="solid-card overflow-hidden p-0">
+            <div className="h-28 bg-gradient-to-r from-forest via-mid-green to-leaf sm:h-32" />
+            <div className="px-5 pb-6 sm:px-8">
+              <div className="-mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end">
+                <Avatar name={faculty.name} photoUrl={faculty.photoUrl} className="h-24 w-24 border-4 border-white sm:h-28 sm:w-28" textClassName="text-3xl" />
+                <div className="min-w-0 flex-1 pb-1">
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-mint px-2.5 py-1 text-xs font-semibold text-forest">Faculty</span>
                     {faculty.department && <span className="rounded-full border border-sage/30 bg-white px-2.5 py-1 text-xs font-semibold text-ink/70">{faculty.department}</span>}
                     {faculty.acceptingStudents && <span className="rounded-full border border-leaf/30 bg-mint/60 px-2.5 py-1 text-xs font-semibold text-forest">Accepting students</span>}
                   </div>
-                  <h1 className="mt-2 text-3xl font-bold text-ink">{faculty.name}</h1>
+                  <h1 className="mt-2 break-words text-2xl font-bold leading-tight text-ink sm:text-3xl">{faculty.name}</h1>
                   <p className="mt-1 text-sm font-semibold text-forest">{faculty.designation || 'Faculty member'}</p>
                 </div>
               </div>
-              {faculty.qualifications && <p className="mt-4 text-sm text-ink/70">{faculty.qualifications}</p>}
-              <div className="mt-4 flex flex-wrap gap-2">{links.map(([label, href]) => <a key={label} href={href} target="_blank" rel="noreferrer" className="btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold">{label}<ArrowUpRight size={14} /></a>)}</div>
+              {(faculty.qualifications || links.length > 0) && (
+                <div className="mt-5 grid gap-4 border-t border-sage/30 pt-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+                  {faculty.qualifications && (
+                    <div className="flex items-start gap-3">
+                      <GraduationCap size={18} className="mt-0.5 shrink-0 text-leaf" />
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-ink/60">Qualifications</p>
+                        <p className="mt-1 text-sm leading-6 text-ink/80">{faculty.qualifications}</p>
+                      </div>
+                    </div>
+                  )}
+                  {links.length > 0 && (
+                    <div className="flex flex-wrap gap-2 md:justify-end">
+                      {links.map(([label, href]) => <a key={label} href={href} target="_blank" rel="noreferrer" className="btn-secondary inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold">{label}<ArrowUpRight size={14} /></a>)}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </header>
 

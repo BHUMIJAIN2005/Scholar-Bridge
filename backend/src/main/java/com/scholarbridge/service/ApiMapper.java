@@ -63,7 +63,9 @@ public class ApiMapper {
             student == null ? List.of() : student.getProjects().stream().map(this::studentProject).toList(),
             student == null ? null : student.getGithubUrl(),
             student == null ? null : student.getLinkedinUrl(),
-            student == null || student.getVisibility() == null ? StudentVisibility.ALL_FACULTY : student.getVisibility(),
+            student == null || student.getVisibility() == null || student.getVisibility() == StudentVisibility.ALL_FACULTY
+                ? StudentVisibility.ALL_USERS
+                : student.getVisibility(),
             faculty == null ? null : faculty.getDesignation(),
             faculty == null ? null : faculty.getQualifications(),
             faculty == null ? null : faculty.getBio(),

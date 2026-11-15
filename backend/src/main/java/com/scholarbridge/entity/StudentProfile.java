@@ -68,5 +68,5 @@ public class StudentProfile {
     private String linkedinUrl;
 
     @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
-    private StudentVisibility visibility = StudentVisibility.ALL_FACULTY;
+    private StudentVisibility visibility = StudentVisibility.ALL_USERS;
 }

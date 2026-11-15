@@ -43,7 +43,7 @@ interface ProfileDraft {
   studentProjects: StudentProjectItem[];
   githubUrl: string;
   linkedinUrl: string;
-  visibility: 'ALL_FACULTY' | 'APPLIED_FACULTY_ONLY';
+  visibility: 'ALL_USERS' | 'APPLIED_FACULTY_ONLY';
 }
 
 const emptyDraft: ProfileDraft = {
@@ -52,7 +52,7 @@ const emptyDraft: ProfileDraft = {
   orcidUrl: '', researchGateUrl: '', facultyLinkedinUrl: '', websiteUrl: '', citationsCount: '',
   hIndex: '', i10Index: '', statsAsOf: '', acceptingStudents: false, education: [], awards: '',
   facultyProjects: [], year: '', skills: '', skillTags: '', interests: '', studentProjects: [],
-  githubUrl: '', linkedinUrl: '', visibility: 'ALL_FACULTY',
+  githubUrl: '', linkedinUrl: '', visibility: 'ALL_USERS',
 };
 
 interface PublicationDraft {
@@ -123,7 +123,7 @@ function draftFromUser(user: User): ProfileDraft {
     studentProjects: user.studentProjects?.length ? user.studentProjects : [],
     githubUrl: user.githubUrl ?? '',
     linkedinUrl: user.linkedinUrl ?? '',
-    visibility: user.visibility ?? 'ALL_FACULTY',
+    visibility: user.visibility ?? 'ALL_USERS',
   };
 }
 
@@ -563,8 +563,8 @@ function ProfileEditForm() {
               {input('GitHub URL', 'githubUrl', { type: 'url', max: 500 })}{input('LinkedIn URL', 'linkedinUrl', { type: 'url', max: 500 })}
               <label className={`${labelClass} sm:col-span-2`}>Profile visibility
                 <select className={inputClass} value={draft.visibility} onChange={(event) => setField('visibility', event.target.value as ProfileDraft['visibility'])}>
-                  <option value="ALL_FACULTY">Visible to all faculty</option>
-                  <option value="APPLIED_FACULTY_ONLY">Only faculty whose openings I applied to</option>
+                  <option value="ALL_USERS">Visible to everyone logged in</option>
+                  <option value="APPLIED_FACULTY_ONLY">Visible only to faculty I apply to</option>
                 </select>
               </label>
             </div>)}

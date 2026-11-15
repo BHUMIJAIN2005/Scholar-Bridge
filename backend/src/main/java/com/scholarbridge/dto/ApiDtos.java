@@ -371,6 +371,7 @@ public final class ApiDtos {
 
     public record BlogPostSummaryResponse(
         Long id,
+        Long authorId,
         String authorName,
         UserRole authorRole,
         String title,

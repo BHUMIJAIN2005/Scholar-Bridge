@@ -1,6 +1,8 @@
 package com.scholarbridge.entity;
 
 public enum StudentVisibility {
-    ALL_FACULTY,
-    APPLIED_FACULTY_ONLY
+    ALL_USERS,
+    APPLIED_FACULTY_ONLY,
+    @Deprecated
+    ALL_FACULTY
 }

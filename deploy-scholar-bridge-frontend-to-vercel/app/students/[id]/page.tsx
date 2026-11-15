@@ -38,8 +38,8 @@ function StudentProfile() {
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <Link href="/students" className="inline-flex items-center gap-2 text-sm font-semibold text-ink/70 hover:text-forest"><ArrowLeft size={16} />Student directory</Link>
-      <div className="mt-6">{loading ? <ProfileSkeleton /> : <DirectoryState loading={false} error={error} onRetry={() => void loadStudent()} forbiddenMessage="Student profiles are only available to faculty. This profile may also be limited to faculty whose openings the student applied to." />}</div>
+      <Link href="/directory?tab=students" className="inline-flex items-center gap-2 text-sm font-semibold text-ink/70 hover:text-forest"><ArrowLeft size={16} />Student directory</Link>
+      <div className="mt-6">{loading ? <ProfileSkeleton /> : <DirectoryState loading={false} error={error} onRetry={() => void loadStudent()} forbiddenMessage="This profile is unavailable or may be limited to faculty whose openings the student applied to." />}</div>
       {!loading && !error && student && (
         <article className="mt-6 space-y-5">
           <header className="solid-card overflow-visible p-0">
@@ -86,5 +86,5 @@ function StudentProfile() {
 }
 
 export default function StudentDetailPage() {
-  return <ProtectedRoute allowedRoles={['FACULTY']}><StudentProfile /></ProtectedRoute>;
+  return <ProtectedRoute allowedRoles={['STUDENT', 'FACULTY']}><StudentProfile /></ProtectedRoute>;
 }
