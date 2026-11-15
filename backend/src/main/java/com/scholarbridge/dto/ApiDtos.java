@@ -424,4 +424,98 @@ public final class ApiDtos {
         boolean likedByCurrentUser,
         List<BlogCommentResponse> replies
     ) {}
+
+    public record FacultyAiResearchProfileDto(
+        List<String> research_interests,
+        List<String> research_domains,
+        List<String> methods,
+        List<String> publications,
+        List<String> contributions,
+        String embedding_text
+    ) {}
+
+    public record FacultyAiLaymanSummaryDto(
+        String tldr,
+        String why_it_matters,
+        String key_insight,
+        String analogy,
+        List<java.util.Map<String, String>> glossary
+    ) {}
+
+    public record FacultyAiStatedRequirementsDto(
+        List<String> preferred_skills,
+        List<String> preferred_years,
+        String notes
+    ) {}
+
+    public record FacultyAiDocumentMetadataDto(
+        String filename,
+        String document_type,
+        String extraction_method,
+        int extracted_char_count,
+        String status,
+        List<String> warnings
+    ) {}
+
+    public record FacultyAiAnalysisResponse(
+        String draft_id,
+        String status,
+        boolean no_research_content,
+        FacultyAiResearchProfileDto research_profile,
+        FacultyAiStatedRequirementsDto stated_requirements,
+        FacultyAiLaymanSummaryDto layman_summary,
+        String reason,
+        List<FacultyAiDocumentMetadataDto> extraction_metadata,
+        List<String> warnings
+    ) {}
+
+    public record FacultyProfileConfirmRequest(
+        FacultyAiResearchProfileDto research_profile,
+        FacultyAiStatedRequirementsDto stated_requirements,
+        FacultyAiLaymanSummaryDto layman_summary,
+        String draft_id
+    ) {}
+
+    public record FacultyProfileConfirmResponse(
+        String professor_id,
+        String status,
+        boolean is_confirmed,
+        String confirmed_at,
+        String message,
+        FacultyAiResearchProfileDto research_profile,
+        FacultyAiStatedRequirementsDto stated_requirements,
+        FacultyAiLaymanSummaryDto layman_summary
+    ) {}
+
+    public record FacultyAiProfileStatusResponse(
+        Long faculty_id,
+        boolean is_confirmed,
+        String confirmed_at,
+        FacultyAiResearchProfileDto research_profile,
+        FacultyAiStatedRequirementsDto stated_requirements,
+        FacultyAiLaymanSummaryDto layman_summary
+    ) {}
+
+    public record FacultyStudentMatchDto(
+        Object student_id,
+        String student_name,
+        String department,
+        String academic_year,
+        List<String> research_interests,
+        List<String> relevant_technical_skills,
+        double match_score,
+        double research_similarity_score,
+        Double skill_match_score,
+        Double experience_match_score,
+        Double preference_match_score,
+        List<String> shared_research_interests,
+        String why_matched
+    ) {}
+
+    public record FacultyStudentMatchesResponse(
+        String professor_id,
+        List<FacultyStudentMatchDto> matches,
+        int count,
+        String note
+    ) {}
 }

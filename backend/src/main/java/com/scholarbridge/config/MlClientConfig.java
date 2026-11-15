@@ -15,8 +15,8 @@ public class MlClientConfig {
         @Value("${app.ml.service-url}") String serviceUrl
     ) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(Duration.ofSeconds(3));
-        requestFactory.setReadTimeout(Duration.ofSeconds(12));
+        requestFactory.setConnectTimeout(Duration.ofSeconds(5));
+        requestFactory.setReadTimeout(Duration.ofSeconds(90));
         return builder.baseUrl(serviceUrl).requestFactory(requestFactory).build();
     }
 }

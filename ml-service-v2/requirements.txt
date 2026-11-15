@@ -7,3 +7,8 @@ scikit-learn==1.9.1
 joblib==1.4.2
 sentence-transformers==4.1.0
 numpy==2.2.6
+pymupdf>=1.24.0
+pytesseract>=0.3.10
+groq>=1.7.0
+pytest>=8.0.0
+python-dotenv>=1.0.0
