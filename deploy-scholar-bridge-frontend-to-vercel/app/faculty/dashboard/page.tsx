@@ -8,6 +8,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import ProfileCompletenessCard from '@/components/ProfileCompletenessCard';
 import { openingsApi, ResearchOpening } from '@/api/openingsApi';
 import { conferenceApi, Conference, ConferenceSubmission } from '@/api/conferenceApi';
+import AiResearchProfileSection from '@/components/faculty/AiResearchProfileSection';
 import {
   AlertCircle,
   ArrowRight,
@@ -17,6 +18,9 @@ import {
   RefreshCw,
   Users,
   Award,
+  Brain,
+  Sparkles,
+  LayoutDashboard,
 } from 'lucide-react';
 
 export default function FacultyDashboardPage() {
@@ -26,6 +30,7 @@ export default function FacultyDashboardPage() {
   const [pendingSubmissions, setPendingSubmissions] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'ai_research'>('overview');
 
   const loadDashboard = useCallback(async () => {
     setIsLoading(true);
@@ -76,10 +81,17 @@ export default function FacultyDashboardPage() {
                 Welcome, {user?.name}!
               </h1>
               <p className="text-white/85 text-sm mt-1 max-w-xl">
-                {user?.department ? `${user.department} • ` : ''}Manage research opportunities, review student applications and research, and guide conference submissions.
+                {user?.department ? `${user.department} • ` : ''}Manage research opportunities, AI research profiles, review student candidates, and guide conference submissions.
               </p>
             </div>
             <div className="shrink-0 flex items-center gap-3">
+              <button
+                onClick={() => setActiveTab('ai_research')}
+                className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-4 py-2.5 rounded-[12px] text-sm font-semibold shadow-xs transition flex items-center gap-2"
+              >
+                <Sparkles size={16} />
+                <span>AI Research Profile</span>
+              </button>
               <Link
                 href="/faculty/post-opening"
                 className="btn-secondary border-white text-white hover:bg-white/15 px-4 py-2.5 rounded-[12px] text-sm font-semibold shadow-xs transition flex items-center gap-2"
@@ -89,9 +101,33 @@ export default function FacultyDashboardPage() {
               </Link>
             </div>
           </div>
-        </div>
 
-        <ProfileCompletenessCard completeness={user?.profileCompleteness} role="FACULTY" />
+          {/* Navigation Tab Bar */}
+          <div className="flex items-center gap-2 mt-6 pt-5 border-t border-white/20 text-xs sm:text-sm font-semibold">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 rounded-xl transition flex items-center gap-2 ${
+                activeTab === 'overview'
+                  ? 'bg-white text-forest shadow-xs'
+                  : 'text-white/85 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <LayoutDashboard size={16} />
+              <span>Dashboard Overview</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('ai_research')}
+              className={`px-4 py-2 rounded-xl transition flex items-center gap-2 ${
+                activeTab === 'ai_research'
+                  ? 'bg-white text-forest shadow-xs'
+                  : 'text-white/85 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <Brain size={16} />
+              <span>AI Research Profile & Matching</span>
+            </button>
+          </div>
+        </div>
 
         {error && (
           <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">
@@ -100,91 +136,136 @@ export default function FacultyDashboardPage() {
           </div>
         )}
 
-        {/* Dashboard Overview Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <div className="solid-card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-ink/70 uppercase tracking-wider">
-                My Research Openings
-              </span>
-              <div className="h-8 w-8 rounded-lg bg-mint text-forest flex items-center justify-center">
-                <Briefcase size={16} />
+        {/* TAB CONTENT: AI RESEARCH PROFILE */}
+        {activeTab === 'ai_research' && (
+          <AiResearchProfileSection professorId={user?.id} />
+        )}
+
+        {/* TAB CONTENT: OVERVIEW */}
+        {activeTab === 'overview' && (
+          <>
+            <ProfileCompletenessCard completeness={user?.profileCompleteness} role="FACULTY" />
+
+            {/* Dashboard Overview Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {/* Card 1: Openings */}
+              <div className="solid-card p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-ink/70 uppercase tracking-wider">
+                    My Openings
+                  </span>
+                  <div className="h-8 w-8 rounded-lg bg-mint text-forest flex items-center justify-center">
+                    <Briefcase size={16} />
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-ink mb-1">{isLoading ? <Loader2 size={20} className="animate-spin text-leaf" /> : `${openings.length} Openings`}</div>
+                <p className="text-xs text-ink/70 mb-3">Active research lab positions.</p>
+                <Link
+                  href="/faculty/post-opening"
+                  className="text-xs font-semibold text-forest hover:text-mid-green flex items-center gap-1"
+                >
+                  <span>Create new opening</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
+
+              {/* Card 2: Applicants */}
+              <div className="solid-card p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-ink/70 uppercase tracking-wider">
+                    Pending Applicants
+                  </span>
+                  <div className="h-8 w-8 rounded-lg bg-mint text-forest flex items-center justify-center">
+                    <Users size={16} />
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-ink mb-1">{isLoading ? <Loader2 size={20} className="animate-spin text-leaf" /> : `${pendingApplicants} Applicants`}</div>
+                <p className="text-xs text-ink/70 mb-3">Candidates awaiting decisions.</p>
+                <Link
+                  href="/faculty/applicants"
+                  className="text-xs font-semibold text-forest hover:text-mid-green flex items-center gap-1"
+                >
+                  <span>Review applicants</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
+
+              {/* Card 3: Conference Reviews */}
+              <div className="solid-card p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-ink/70 uppercase tracking-wider">
+                    Track Reviews
+                  </span>
+                  <div className="h-8 w-8 rounded-lg bg-mint text-forest flex items-center justify-center">
+                    <Award size={16} />
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-ink mb-1">{isLoading ? <Loader2 size={20} className="animate-spin text-leaf" /> : `${pendingSubmissions} Submissions`}</div>
+                <p className="text-xs text-ink/70 mb-3">Department submissions for review.</p>
+                <Link
+                  href="/faculty/reviews"
+                  className="text-xs font-semibold text-forest hover:text-mid-green flex items-center gap-1"
+                >
+                  <span>Review submissions</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
+
+              {/* Card 4: AI Research Profile Quick Access */}
+              <div className="solid-card p-5 border-leaf/40 bg-gradient-to-br from-white to-mint/15">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-forest uppercase tracking-wider">
+                    AI Research Profile
+                  </span>
+                  <div className="h-8 w-8 rounded-lg bg-forest text-white flex items-center justify-center">
+                    <Brain size={16} />
+                  </div>
+                </div>
+                <div className="text-xl font-bold text-ink mb-1 flex items-center gap-1.5">
+                  <Sparkles size={16} className="text-leaf" />
+                  <span>AI Matching</span>
+                </div>
+                <p className="text-xs text-ink/70 mb-3">Analyze CV & match student collaborators.</p>
+                <button
+                  onClick={() => setActiveTab('ai_research')}
+                  className="text-xs font-semibold text-forest hover:text-mid-green flex items-center gap-1"
+                >
+                  <span>Open AI profile</span>
+                  <ArrowRight size={13} />
+                </button>
               </div>
             </div>
-            <div className="text-2xl font-bold text-ink mb-1">{isLoading ? <Loader2 size={20} className="animate-spin text-leaf" /> : `${openings.length} Openings`}</div>
-            <p className="text-xs text-ink/70 mb-3">Active research lab positions posted by your department.</p>
-            <Link
-              href="/faculty/post-opening"
-              className="text-xs font-semibold text-forest hover:text-mid-green flex items-center gap-1"
-            >
-              <span>Create new opening</span>
-              <ArrowRight size={13} />
-            </Link>
-          </div>
 
-          <div className="solid-card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-ink/70 uppercase tracking-wider">
-                Pending Applicants
-              </span>
-              <div className="h-8 w-8 rounded-lg bg-mint text-forest flex items-center justify-center">
-                <Users size={16} />
+            {/* Embedded AI Research Profile Section in Dashboard */}
+            <div className="pt-4">
+              <AiResearchProfileSection professorId={user?.id} />
+            </div>
+
+            {/* Section: Your openings */}
+            <section className="space-y-4 pt-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-ink">Your openings</h2>
+                <Link href="/faculty/applicants" className="inline-flex items-center gap-1 text-sm font-semibold text-forest hover:text-mid-green">Review applicants <ArrowRight size={14} /></Link>
               </div>
-            </div>
-            <div className="text-2xl font-bold text-ink mb-1">{isLoading ? <Loader2 size={20} className="animate-spin text-leaf" /> : `${pendingApplicants} Applicants`}</div>
-            <p className="text-xs text-ink/70 mb-3">Student candidates awaiting your accept/reject decision.</p>
-            <Link
-              href="/faculty/applicants"
-              className="text-xs font-semibold text-forest hover:text-mid-green flex items-center gap-1"
-            >
-              <span>Review applicants</span>
-              <ArrowRight size={13} />
-            </Link>
-          </div>
-
-          <div className="solid-card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-ink/70 uppercase tracking-wider">
-                Conference Track Reviews
-              </span>
-              <div className="h-8 w-8 rounded-lg bg-mint text-forest flex items-center justify-center">
-                <Award size={16} />
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-ink mb-1">{isLoading ? <Loader2 size={20} className="animate-spin text-leaf" /> : `${pendingSubmissions} Submissions`}</div>
-            <p className="text-xs text-ink/70 mb-3">Department conference submissions for peer review.</p>
-            <Link
-              href="/faculty/reviews"
-              className="text-xs font-semibold text-forest hover:text-mid-green flex items-center gap-1"
-            >
-              <span>Review submissions</span>
-              <ArrowRight size={13} />
-            </Link>
-          </div>
-        </div>
-
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-ink">Your openings</h2>
-            <Link href="/faculty/applicants" className="inline-flex items-center gap-1 text-sm font-semibold text-forest hover:text-mid-green">Review applicants <ArrowRight size={14} /></Link>
-          </div>
-          {isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-ink/70"><Loader2 size={18} className="animate-spin text-leaf" />Loading openings...</div>
-          ) : openings.length === 0 ? (
-            <div className="solid-card border-dashed border-sage/40 px-5 py-10 text-center text-sm text-ink/70">
-              You have not posted any openings yet. <Link href="/faculty/post-opening" className="font-semibold text-forest underline hover:text-mid-green">Post an opening</Link>
-            </div>
-          ) : (
-            <ul className="divide-y divide-sage/20 solid-card overflow-hidden">
-              {openings.slice(0, 5).map((opening) => (
-                <li key={opening.id} className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-mint/40 transition">
-                  <span className="min-w-0 truncate text-sm font-semibold text-ink">{opening.title}</span>
-                  <span className="shrink-0 text-xs text-ink/60">{opening.status}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+              {isLoading ? (
+                <div className="flex items-center justify-center gap-2 py-10 text-sm text-ink/70"><Loader2 size={18} className="animate-spin text-leaf" />Loading openings...</div>
+              ) : openings.length === 0 ? (
+                <div className="solid-card border-dashed border-sage/40 px-5 py-10 text-center text-sm text-ink/70">
+                  You have not posted any openings yet. <Link href="/faculty/post-opening" className="font-semibold text-forest underline hover:text-mid-green">Post an opening</Link>
+                </div>
+              ) : (
+                <ul className="divide-y divide-sage/20 solid-card overflow-hidden">
+                  {openings.slice(0, 5).map((opening) => (
+                    <li key={opening.id} className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-mint/40 transition">
+                      <span className="min-w-0 truncate text-sm font-semibold text-ink">{opening.title}</span>
+                      <span className="shrink-0 text-xs text-ink/60">{opening.status}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
+        )}
       </main>
     </ProtectedRoute>
   );

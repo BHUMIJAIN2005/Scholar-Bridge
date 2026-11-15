@@ -1,6 +1,7 @@
 
 from pathlib import Path
 import json
+import sys
 from functools import lru_cache
 from typing import Any
 
@@ -13,6 +14,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_DIR = BASE_DIR / "models"
+SRC_DIR = BASE_DIR / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from scholarbridge_ml.api_routes import router as matching_router, set_encoder_getter
 
 app = FastAPI(
     title="ScholarBridge ML Service",
@@ -39,6 +45,12 @@ def get_encoder():
         str(MODEL_DIR / "sentence_transformer"),
         device="cpu",
     )
+
+
+# Configure shared encoder dependency and mount professor & opportunity matching routes
+set_encoder_getter(get_encoder)
+app.include_router(matching_router)
+
 
 
 class CategorizeRequest(BaseModel):
