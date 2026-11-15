@@ -9,7 +9,7 @@ import type { UserRole } from '@/api/authApi';
 import { BlogCard } from '@/components/blog/BlogComponents';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
-function BlogFeed() {
+export function BlogFeed() {
   const [result, setResult] = useState<BlogPageResult | null>(null);
   const [tags, setTags] = useState<BlogTag[]>([]);
   const [query, setQuery] = useState('');

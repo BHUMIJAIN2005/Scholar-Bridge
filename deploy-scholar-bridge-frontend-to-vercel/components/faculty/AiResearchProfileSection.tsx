@@ -370,7 +370,7 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
             </div>
             <h2 className="text-xl font-bold text-ink">AI Research Profile & Matching</h2>
             {confirmedStatus?.is_confirmed && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#C2E8FF] text-[#042558] border border-[#7C9DC6]">
                 <Check size={12} />
                 Profile Active
               </span>
@@ -399,11 +399,11 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
 
       {/* CONFIRMATION SUCCESS BANNER */}
       {confirmSuccess && (
-        <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-900 text-sm animate-fadeIn">
-          <CheckCircle2 size={20} className="text-emerald-600 shrink-0" />
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-[#7C9DC6] bg-[#C2E8FF]/40 text-[#042558] text-sm animate-fadeIn">
+          <CheckCircle2 size={20} className="text-[#507CA9] shrink-0" />
           <div>
             <p className="font-semibold">Research Profile Confirmed Successfully!</p>
-            <p className="text-xs text-emerald-800">
+            <p className="text-xs text-[#042558]">
               Your 384-dimensional normalized MiniLM research embedding has been generated and stored.
               Student collaborator recommendations are now active.
             </p>
@@ -940,7 +940,7 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
                     {draftRequirements.preferred_skills.map((skill, idx) => (
                       <span
                         key={idx}
-                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold"
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#C2E8FF]/40 text-[#042558] border border-[#7C9DC6] text-xs font-semibold"
                       >
                         {skill}
                         <button onClick={() => removeTag('skills', idx)}>
@@ -1020,7 +1020,7 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
                   </p>
                 </div>
               </div>
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 self-start sm:self-auto flex items-center gap-1.5">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#C2E8FF] text-[#042558] border border-[#7C9DC6] self-start sm:self-auto flex items-center gap-1.5">
                 <CheckCircle2 size={14} /> Matching Enabled
               </span>
             </div>

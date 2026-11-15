@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import dashboardHeroImage from '../Dashboard hero image.jpeg';
 import {
   GraduationCap,
   BookOpen,
@@ -20,71 +21,75 @@ export default function HomePage() {
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <main className="gradient-hero min-h-[calc(100vh-4rem)] space-y-16 py-12 px-4 sm:px-6 lg:px-8">
+    <main className="landing-page min-h-[calc(100vh-4rem)] space-y-16 pb-16">
       {/* Hero Section */}
-      <section className="max-w-6xl mx-auto text-center space-y-6">
-        <div className="inline-flex items-center gap-3 px-3.5 py-2 rounded-full glass-card text-white text-xs font-semibold shadow-xs">
-          <span className="h-9 w-9 rounded-lg bg-white p-1 shadow-xs ring-1 ring-white/30">
-            <Image
-              src="/mits-gwalior-logo.png"
-              alt="MITS Gwalior emblem"
-              width={36}
-              height={36}
-              className="h-full w-full object-contain"
-            />
-          </span>
-          <span className="text-left">
-            <span className="block font-bold">Madhav Institute of Technology &amp; Science</span>
-            <span className="mt-0.5 block text-[10px] font-medium text-mint">Gwalior · Research Collaboration Portal</span>
-          </span>
-          <Sparkles size={14} className="ml-1 shrink-0 text-mint" />
-        </div>
+      <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4 sm:pt-8 lg:pt-12 lg:pb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+          {/* Hero Copy */}
+          <div className="lg:col-span-7 space-y-6 z-10">
+            <div className="inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-white/45 border border-white/50 text-[#042558] backdrop-blur-md shadow-xs">
+              Madhav Institute of Technology and science -DU
+            </div>
 
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight">
-          Connecting Students &amp; Faculty for{' '}
-          <span className="text-mint">
-            Real Academic Research
-          </span>
-        </h1>
+            <h1 className="max-w-xl text-4xl font-extrabold leading-[1.12] tracking-tight text-[#011023] sm:text-5xl lg:text-[3.5rem]">
+              Research that shapes the future of computing
+            </h1>
 
-        <p className="text-base sm:text-lg text-white/90 max-w-2xl mx-auto leading-relaxed">
-          ScholarBridge bridges the gap between undergraduate ambition and academic mentorship.
-          Discover research opportunities, share your work, and take your ideas to academic conferences.
-        </p>
+            <p className="max-w-xl text-base font-normal leading-relaxed text-[#042558]/85 sm:text-lg">
+              We study intelligent systems, software and networks, and turn the results into technology people can use.
+            </p>
 
-        {/* CTA Buttons: Mint primary with forest text & white-outlined secondary */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-          {isAuthenticated && user ? (
-            <Link
-              href={user.role === 'STUDENT' ? '/student/dashboard' : '/faculty/dashboard'}
-              className="w-full sm:w-auto px-6 py-3 rounded-[12px] bg-mint text-forest hover:bg-mint/90 font-semibold text-sm shadow-md transition flex items-center justify-center gap-2 hover:-translate-y-0.5 active:scale-98"
-            >
-              <span>Go to Your {user.role === 'STUDENT' ? 'Student' : 'Faculty'} Dashboard</span>
-              <ArrowRight size={16} />
-            </Link>
-          ) : (
-            <>
-              <Link
-                href="/signup"
-                className="w-full sm:w-auto px-6 py-3 rounded-[12px] bg-mint text-forest hover:bg-mint/90 font-semibold text-sm shadow-md transition flex items-center justify-center gap-2 hover:-translate-y-0.5 active:scale-98"
-              >
-                <span>Create an Account</span>
-                <ArrowRight size={16} />
-              </Link>
-              <Link
-                href="/login"
-                className="w-full sm:w-auto px-6 py-3 rounded-[12px] border-[1.5px] border-white text-white bg-transparent hover:bg-white/15 font-semibold text-sm shadow-xs transition flex items-center justify-center gap-2 hover:-translate-y-0.5 active:scale-98"
-              >
-                <KeyRound size={16} />
-                <span>Sign in (Student or Faculty)</span>
-              </Link>
-            </>
-          )}
+            {/* CTA Buttons: Pill style matching reference design */}
+            <div className="flex flex-wrap items-center gap-4 pt-2">
+              {isAuthenticated && user ? (
+                <>
+                  <Link
+                    href={user.role === 'STUDENT' ? '/student/dashboard' : '/faculty/dashboard'}
+                    className="flex items-center justify-center gap-2 rounded-full bg-[#042558] px-7 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#071e3d] active:scale-98"
+                  >
+                    <span>Go to Your {user.role === 'STUDENT' ? 'Student' : 'Faculty'} Dashboard</span>
+                    <ArrowRight size={16} />
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/signup"
+                    className="flex items-center justify-center gap-2 rounded-full bg-[#042558] px-7 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#071e3d] active:scale-98"
+                  >
+                    <span>Explore our research</span>
+                    <ArrowRight size={16} />
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="flex items-center justify-center gap-2 rounded-full bg-[#042558] px-7 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#071e3d] active:scale-98"
+                  >
+                    <KeyRound size={16} />
+                    <span>Sign in (Student or Faculty)</span>
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Hero Illustration */}
+          <div className="lg:col-span-5 relative flex items-center justify-center">
+            <div className="hero-visual relative w-full aspect-[16/10] max-w-[540px] lg:max-w-none">
+              <Image
+                src={dashboardHeroImage}
+                alt="Technology research illustration"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 45vw"
+                className="object-contain mix-blend-multiply"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Three Glass Cards */}
-      <section className="max-w-6xl mx-auto">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="glass-card p-6 flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white shadow-inner">

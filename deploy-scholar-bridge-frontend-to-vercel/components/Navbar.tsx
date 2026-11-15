@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -19,13 +19,27 @@ import {
   CheckSquare,
   BookOpen,
   Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 
 export const Navbar = () => {
   const { user, isAuthenticated, logout, isStudent, isFaculty } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const isLoginPage = pathname === '/login';
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, []);
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
 
@@ -80,24 +94,14 @@ export const Navbar = () => {
                 Conference Showcase
               </Link>
               <Link
-                href="/guidance"
+                href="/insights"
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
-                  isActive('/guidance')
+                  isActive('/insights')
                     ? 'bg-mint text-forest font-semibold'
                     : 'text-ink hover:text-forest hover:bg-mint/50'
                 }`}
               >
-                Research Guidance
-              </Link>
-              <Link
-                href="/blog"
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
-                  isActive('/blog')
-                    ? 'bg-mint text-forest font-semibold'
-                    : 'text-ink hover:text-forest hover:bg-mint/50'
-                }`}
-              >
-                Blog
+                Insights
               </Link>
               {isAuthenticated && (
                 <Link
@@ -125,16 +129,6 @@ export const Navbar = () => {
                     }`}
                   >
                     Dashboard
-                  </Link>
-                  <Link
-                    href="/profile/edit"
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
-                      isActive('/profile/edit')
-                        ? 'bg-mint text-forest font-semibold'
-                        : 'text-ink hover:text-forest hover:bg-mint/50'
-                    }`}
-                  >
-                    My Profile
                   </Link>
                   <Link
                     href="/student/openings"
@@ -194,16 +188,6 @@ export const Navbar = () => {
                     Dashboard
                   </Link>
                   <Link
-                    href="/profile/edit"
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
-                      isActive('/profile/edit')
-                        ? 'bg-mint text-forest font-semibold'
-                        : 'text-ink hover:text-forest hover:bg-mint/50'
-                    }`}
-                  >
-                    My Profile
-                  </Link>
-                  <Link
                     href="/faculty/post-opening"
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
                       isActive('/faculty/post-opening')
@@ -244,8 +228,18 @@ export const Navbar = () => {
           {!isLoginPage && (
             <div className="hidden items-center gap-3 md:flex">
               {isAuthenticated && user ? (
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2.5 rounded-full border border-sage/30 bg-white/90 px-3 py-1.5">
+                <div ref={profileMenuRef} className="relative">
+                  <button
+                    type="button"
+                    aria-expanded={profileMenuOpen}
+                    aria-haspopup="menu"
+                    onClick={() => setProfileMenuOpen((open) => !open)}
+                    className={`flex items-center gap-2.5 rounded-full border px-3 py-1.5 transition ${
+                      profileMenuOpen || isActive('/profile/edit')
+                        ? 'border-sage/50 bg-mint/70'
+                        : 'border-sage/30 bg-white/90 hover:bg-mint/40'
+                    }`}
+                  >
                     <div className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white bg-forest">
                       {user.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
                     </div>
@@ -257,15 +251,45 @@ export const Navbar = () => {
                         {user.role}
                       </span>
                     </div>
-                  </div>
-
-                  <button
-                    onClick={logout}
-                    title="Sign out"
-                    className="rounded-lg p-2 text-ink/70 transition hover:bg-rose-50 hover:text-rose-600"
-                  >
-                    <LogOut size={18} />
+                    <ChevronDown
+                      size={16}
+                      className={`text-ink/60 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`}
+                    />
                   </button>
+
+                  {profileMenuOpen && (
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-full mt-2 w-52 overflow-hidden rounded-xl border border-sage/30 bg-white p-1.5 shadow-lg shadow-forest/10"
+                    >
+                      <Link
+                        href="/profile/edit"
+                        role="menuitem"
+                        onClick={() => setProfileMenuOpen(false)}
+                        className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
+                          isActive('/profile/edit')
+                            ? 'bg-mint text-forest'
+                            : 'text-ink hover:bg-mint/60 hover:text-forest'
+                        }`}
+                      >
+                        <UserIcon size={16} />
+                        My Profile
+                      </Link>
+                      <div className="my-1 border-t border-sage/20" />
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          logout();
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+                      >
+                        <LogOut size={16} />
+                        Log out
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
@@ -320,18 +344,11 @@ export const Navbar = () => {
             Conference Showcase
           </Link>
           <Link
-            href="/guidance"
+            href="/insights"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-md text-base font-medium text-ink hover:bg-mint/60"
           >
-            Research Guidance
-          </Link>
-          <Link
-            href="/blog"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-ink hover:bg-mint/60"
-          >
-            Blog
+            Insights
           </Link>
           {isAuthenticated && (
             <Link

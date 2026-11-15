@@ -37,12 +37,12 @@ function ApplicationCard({ app }: { app: Application }) {
     : 'Unknown date';
 
   return (
-    <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-xs flex flex-col gap-4 hover:border-emerald-200 hover:shadow-sm transition-all duration-200">
+    <div className="bg-white rounded-2xl border border-[#7C9DC6]/40 p-6 shadow-xs flex flex-col gap-4 hover:border-[#507CA9] hover:shadow-sm transition-all duration-200">
       {/* Header row */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Briefcase size={15} className="text-emerald-600 shrink-0" />
+            <Briefcase size={15} className="text-[#507CA9] shrink-0" />
             <h3 className="font-bold text-neutral-900 text-base leading-snug line-clamp-2">
               {app.openingTitle ?? `Opening #${app.openingId}`}
             </h3>
@@ -78,7 +78,7 @@ function ApplicationCard({ app }: { app: Application }) {
           {isLong && (
             <button
               onClick={() => setExpanded((prev) => !prev)}
-              className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors mt-1"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[#507CA9] hover:text-[#042558] transition-colors mt-1"
             >
               {expanded ? (
                 <>
@@ -125,7 +125,7 @@ function MyApplicationsContent() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4 text-neutral-400">
-        <Loader2 size={36} className="animate-spin text-emerald-500" />
+        <Loader2 size={36} className="animate-spin text-[#507CA9]" />
         <p className="text-sm">Loading your applications…</p>
       </div>
     );
@@ -153,8 +153,8 @@ function MyApplicationsContent() {
       {/* Empty state */}
       {!errorMsg && applications.length === 0 && (
         <div className="flex flex-col items-center justify-center gap-5 py-24 text-center">
-          <div className="rounded-full bg-emerald-50 p-5">
-            <FileSearch size={36} className="text-emerald-500" />
+          <div className="rounded-full bg-[#C2E8FF]/50 p-5">
+            <FileSearch size={36} className="text-[#507CA9]" />
           </div>
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-neutral-800">No applications yet</h2>
@@ -164,7 +164,7 @@ function MyApplicationsContent() {
           </div>
           <Link
             href="/student/openings"
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 active:bg-emerald-800 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#042558] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#507CA9] active:bg-[#011023] transition-colors"
           >
             Browse Openings <ArrowRight size={15} />
           </Link>

@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { BookOpen, Compass, Award, CheckCircle2, ArrowRight } from 'lucide-react';
 
-export default function GuidancePage() {
+export function GuidanceContent() {
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       <div className="text-center max-w-2xl mx-auto">
@@ -87,4 +87,8 @@ export default function GuidancePage() {
       </div>
     </main>
   );
+}
+
+export default function GuidancePage() {
+  return <GuidanceContent />;
 }

@@ -1,0 +1,183 @@
+/* Shared interaction language: lift, glow, and a soft light sweep. */
+.glass-card,
+.solid-card,
+.panel,
+.stat-card,
+.focus-card,
+.focus-panel,
+.activity-panel,
+.tip-banner,
+.composer,
+.opening-card,
+.paper-card,
+.profile-card,
+.feature-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+}
+
+.glass-card::after,
+.solid-card::after,
+.panel::after,
+.stat-card::after,
+.focus-card::after,
+.focus-panel::after,
+.activity-panel::after,
+.tip-banner::after,
+.composer::after,
+.opening-card::after,
+.paper-card::after,
+.profile-card::after,
+.feature-card::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 24%, rgba(128, 151, 255, 0.16) 48%, transparent 72%);
+  transform: translateX(-115%);
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  content: '';
+}
+
+.glass-card:hover,
+.solid-card:hover,
+.panel:hover,
+.stat-card:hover,
+.focus-card:hover,
+.focus-panel:hover,
+.activity-panel:hover,
+.tip-banner:hover,
+.composer:hover,
+.opening-card:hover,
+.paper-card:hover,
+.profile-card:hover,
+.feature-card:hover {
+  border-color: rgba(109, 137, 255, 0.58);
+  box-shadow: 0 0 0 1px rgba(109, 137, 255, 0.1), 0 18px 42px rgba(47, 60, 156, 0.2);
+  transform: translateY(-5px);
+}
+
+.glass-card:hover::after,
+.solid-card:hover::after,
+.panel:hover::after,
+.stat-card:hover::after,
+.focus-card:hover::after,
+.focus-panel:hover::after,
+.activity-panel:hover::after,
+.tip-banner:hover::after,
+.composer:hover::after,
+.opening-card:hover::after,
+.paper-card:hover::after,
+.profile-card:hover::after,
+.feature-card:hover::after {
+  transform: translateX(115%);
+}
+
+.btn-primary,
+.btn-secondary,
+.primary-button,
+.secondary-button,
+.focus-button,
+.text-button,
+.icon-button,
+.dots-button,
+.close-button,
+.nav-item,
+button[type='submit'],
+a[class*='rounded-'] {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover,
+.primary-button:hover,
+.secondary-button:hover,
+.focus-button:hover,
+.text-button:hover,
+.icon-button:hover,
+.dots-button:hover,
+.close-button:hover,
+.nav-item:hover,
+button[type='submit']:hover,
+a[class*='rounded-']:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(57, 77, 180, 0.2);
+}
+
+.btn-primary:active,
+.btn-secondary:active,
+.primary-button:active,
+.secondary-button:active,
+.focus-button:active,
+button[type='submit']:active,
+a[class*='rounded-']:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Keep profile menus readable on dark-themed pages. */
+header [role='menu'] {
+  color: #102044;
+  background: #ffffff;
+  border-color: rgba(80, 112, 190, 0.3);
+}
+
+header [role='menu'] a {
+  color: #102044 !important;
+}
+
+header [role='menu'] a:hover,
+header [role='menu'] a[aria-current='page'] {
+  color: #173d8f !important;
+  background: #e7efff;
+}
+
+header [role='menu'] button {
+  color: #b42318 !important;
+}
+
+header [role='menu'] button:hover {
+  color: #8f1d14 !important;
+  background: #fff0ee;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-card,
+  .solid-card,
+  .panel,
+  .stat-card,
+  .focus-card,
+  .focus-panel,
+  .activity-panel,
+  .tip-banner,
+  .composer,
+  .opening-card,
+  .paper-card,
+  .profile-card,
+  .feature-card,
+  .btn-primary,
+  .btn-secondary,
+  .primary-button,
+  .secondary-button,
+  .focus-button,
+  .nav-item {
+    transition: none;
+  }
+
+  .glass-card::after,
+  .solid-card::after,
+  .panel::after,
+  .stat-card::after,
+  .focus-card::after,
+  .focus-panel::after,
+  .activity-panel::after,
+  .tip-banner::after,
+  .composer::after,
+  .opening-card::after,
+  .paper-card::after,
+  .profile-card::after,
+  .feature-card::after {
+    display: none;
+  }
+}

@@ -1,0 +1,183 @@
+/* Landing-page theme inspired by the supplied dark portfolio reference. */
+body:has(.landing-page) {
+  background: #030711;
+  color: #f4f7ff;
+}
+
+body:has(.landing-page) header {
+  border-color: rgba(122, 143, 255, 0.2);
+  background: rgba(3, 7, 17, 0.84);
+  color: #f4f7ff;
+}
+
+body:has(.landing-page) header a,
+body:has(.landing-page) header button {
+  color: rgba(244, 247, 255, 0.78);
+}
+
+body:has(.landing-page) header a:hover,
+body:has(.landing-page) header button:hover {
+  color: #ffffff;
+}
+
+body:has(.landing-page) header .text-ink {
+  color: #ffffff !important;
+}
+
+body:has(.landing-page) header .text-leaf {
+  color: #8faaff !important;
+}
+
+body:has(.landing-page) header .text-ink\/70 {
+  color: rgba(218, 226, 255, 0.72) !important;
+}
+
+body:has(.landing-page) footer {
+  border-color: rgba(122, 143, 255, 0.2);
+  background: #030711;
+  color: rgba(218, 226, 255, 0.62);
+}
+
+.landing-page {
+  min-height: 100%;
+  color: #f4f7ff;
+  background-color: #030711;
+  background-image:
+    radial-gradient(circle at 78% 9%, rgba(68, 100, 255, 0.22), transparent 28rem),
+    radial-gradient(circle at 18% 30%, rgba(104, 52, 255, 0.1), transparent 24rem),
+    linear-gradient(180deg, rgba(3, 7, 17, 0.18), #030711 76%),
+    url('/hero-backdrop.jpg');
+  background-position: center, center, center, right 7rem;
+  background-repeat: no-repeat;
+  background-size: cover, cover, cover, min(1024px, 100%) auto;
+}
+
+.landing-page::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(120, 144, 255, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(120, 144, 255, 0.045) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, black, transparent 72%);
+  content: '';
+}
+
+.landing-page h1 {
+  max-width: 760px;
+  color: #ffffff;
+  font-size: clamp(2.7rem, 4.5vw, 3.6rem);
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+  text-shadow: 0 0 34px rgba(93, 117, 255, 0.2);
+}
+
+.landing-page h2,
+.landing-page h3 {
+  color: #f7f8ff;
+}
+
+.landing-page p {
+  color: rgba(220, 228, 255, 0.72);
+}
+
+.landing-page .hero-visual {
+  min-height: 280px;
+}
+
+.landing-page .inline-flex.rounded-full {
+  border-color: rgba(125, 151, 255, 0.42);
+  background: rgba(21, 30, 68, 0.64);
+  color: #a7bcff;
+  box-shadow: 0 0 28px rgba(69, 99, 255, 0.16);
+}
+
+.landing-page .bg-\[\#042558\] {
+  background: linear-gradient(135deg, #4b67ff, #7750ff);
+  box-shadow: 0 10px 30px rgba(80, 82, 255, 0.32);
+}
+
+.landing-page .bg-\[\#042558\]:hover {
+  background: linear-gradient(135deg, #637aff, #8b68ff);
+}
+
+.landing-page .text-\[\#042558\] {
+  color: #b4c5ff;
+}
+
+.landing-page .border-\[\#042558\] {
+  border-color: rgba(131, 151, 255, 0.62);
+}
+
+.landing-page .glass-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(109, 137, 255, 0.24);
+  background: linear-gradient(145deg, rgba(17, 25, 52, 0.78), rgba(7, 12, 27, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 18px 45px rgba(0, 0, 0, 0.25);
+}
+
+.landing-page .glass-card::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(120deg, transparent 30%, rgba(116, 139, 255, 0.1), transparent 72%);
+  transform: translateX(-100%);
+  transition: transform 700ms ease;
+  content: '';
+}
+
+.landing-page .glass-card:hover {
+  border-color: rgba(126, 150, 255, 0.62);
+  box-shadow: 0 0 0 1px rgba(103, 131, 255, 0.08), 0 22px 60px rgba(55, 63, 180, 0.28);
+  transform: translateY(-7px);
+}
+
+.landing-page .glass-card:hover::before {
+  transform: translateX(100%);
+}
+
+.landing-page .text-white\/80,
+.landing-page .text-white\/85,
+.landing-page .text-white\/90 {
+  color: rgba(220, 228, 255, 0.7);
+}
+
+@keyframes landing-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -12px, 0); }
+}
+
+.landing-page .mix-blend-multiply {
+  filter: saturate(0.82) contrast(1.06) drop-shadow(0 22px 34px rgba(54, 74, 218, 0.28));
+  animation: landing-float 8s ease-in-out infinite;
+}
+
+@media (max-width: 768px) {
+  .landing-page {
+    background-position: center, center, center, 72% 5rem;
+    background-size: cover, cover, cover, auto 38%;
+  }
+
+  .landing-page h1 {
+    max-width: 100%;
+    font-size: clamp(2.35rem, 8vw, 2.8rem);
+    line-height: 1.04;
+  }
+
+  .landing-page > section + section {
+    margin-top: 2.5rem;
+  }
+
+  .landing-page .hero-visual {
+    min-height: 180px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .glass-card,
+  .landing-page .mix-blend-multiply {
+    animation: none;
+    transition: none;
+  }
+}

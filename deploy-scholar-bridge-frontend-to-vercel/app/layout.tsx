@@ -4,6 +4,8 @@ import { AuthProvider } from '@/context/AuthContext';
 import { Navbar } from '@/components/Navbar';
 import { SiteFooter } from '@/components/SiteFooter';
 import './globals.css';
+import './landing-theme.css';
+import './interaction-theme.css';
 
 export const metadata: Metadata = {
   title: 'ScholarBridge | MITS Gwalior',
@@ -15,7 +17,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#059669',
+  themeColor: '#042558',
 };
 
 export default function RootLayout({
@@ -25,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-neutral-50 text-neutral-900 font-sans antialiased flex flex-col">
+      <body className="min-h-screen bg-mist text-ink font-sans antialiased flex flex-col">
         <AuthProvider>
           <Navbar />
           <div className="flex-1">
