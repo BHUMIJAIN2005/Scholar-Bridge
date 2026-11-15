@@ -4,6 +4,7 @@ from typing import Any
 import numpy as np
 from pydantic import BaseModel, Field
 
+
 from scholarbridge_ml.storage import (
     OpportunityContext,
     StudentOpportunityMatch,
@@ -487,6 +488,143 @@ def rank_opportunities_for_student(
                 status=opp.status,
             )
         )
+
+def rank_professors_for_student(
+    student: StudentProfileRecord,
+    professors: list[tuple[Any, np.ndarray]],
+    top_k: int = 20,
+) -> list[dict[str, Any]]:
+    """
+    Rank confirmed professors for a student using cosine similarity
+    between their normalized research embeddings.
+
+    Each item in professors contains:
+        (StoredProfile, professor_embedding)
+    """
+
+    if not student.embedding or len(student.embedding) != 384:
+        logger.warning(
+            "Student %s does not have a valid 384-dimensional embedding.",
+            student.id,
+        )
+        return []
+
+    if not professors:
+        return []
+
+    student_vector = np.asarray(
+        student.embedding, dtype=np.float32
+    ).flatten()
+
+    student_norm = np.linalg.norm(student_vector)
+
+    if student_norm == 0:
+        logger.warning("Student embedding has zero magnitude.")
+        return []
+
+    student_vector = student_vector / student_norm
+
+    student_skills = list(
+        set(
+            student.skill_tags
+            + [
+                skill.strip()
+                for skill in student.skills.split(",")
+                if skill.strip()
+            ]
+        )
+    )
+
+    student_interests = {
+        interest.strip().lower(): interest
+        for interest in student.interests
+        if interest.strip()
+    }
+
+    results = []
+
+    for stored_profile, professor_embedding in professors:
+        if not stored_profile.is_confirmed:
+            continue
+
+        if professor_embedding is None:
+            continue
+
+        professor_vector = np.asarray(
+            professor_embedding, dtype=np.float32
+        ).flatten()
+
+        if professor_vector.shape[0] != 384:
+            continue
+
+        professor_norm = np.linalg.norm(professor_vector)
+
+        if professor_norm == 0:
+            continue
+
+        professor_vector = professor_vector / professor_norm
+
+        # Cosine similarity between student and professor embeddings
+        similarity = float(
+            np.dot(student_vector, professor_vector)
+        )
+
+        similarity = min(1.0, max(0.0, similarity))
+
+        profile = stored_profile.confirmed_profile
+
+        professor_methods = profile.methods or []
+        professor_domains = profile.research_domains or []
+        professor_interests = profile.research_interests or []
+
+        # Identify overlapping technical skills
+        skill_score, matched_skills = compute_skill_overlap(
+            professor_methods,
+            student_skills,
+        )
+
+        # Identify shared research interests
+        professor_interest_set = {
+            interest.strip().lower(): interest
+            for interest in professor_interests
+            if interest.strip()
+        }
+
+        shared_interests = [
+            student_interests[key]
+            for key in student_interests
+            if key in professor_interest_set
+        ]
+
+        results.append(
+            {
+                "professor_id": stored_profile.professor_id,
+                "match_score": round(similarity * 100.0, 1),
+                "research_similarity_score": round(
+                    similarity * 100.0, 1
+                ),
+                "matched_skills": matched_skills,
+                "shared_research_interests": shared_interests,
+                "research_domains": professor_domains,
+                "research_interests": professor_interests,
+                "methods": professor_methods,
+                "skill_match_score": round(skill_score * 100.0, 1),
+                "why_matched": (
+                    "Research alignment with "
+                    + ", ".join(professor_domains[:3])
+                    if professor_domains
+                    else "Semantic alignment with your research profile."
+                ),
+            }
+        )
+
+    results.sort(
+        key=lambda result: result["match_score"],
+        reverse=True,
+    )
+
+    return results[:top_k]
+
 
     matches.sort(key=lambda m: m.match_score, reverse=True)
     return matches[:top_k]

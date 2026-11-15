@@ -28,6 +28,7 @@ from scholarbridge_ml.student_matching import (
     rank_opportunities_for_student,
     rank_students_for_opportunity,
     rank_students_for_professor,
+    rank_professors_for_student,
 )
 
 logger = logging.getLogger("scholarbridge_ml.api_routes")
@@ -93,6 +94,11 @@ class OpportunityCreateRequest(BaseModel):
 class OpportunityMatchRequest(BaseModel):
     students: list[StudentProfileRecord] | None = None
     top_k: int = Field(default=20, ge=1, le=100)
+
+
+class StudentProfileSyncResponse(BaseModel):
+    student_id: str
+    embedding_dimensions: int
 
 
 def build_student_embedding(student: StudentProfileRecord, encoder: Any) -> list[float]:
@@ -169,6 +175,110 @@ def seed_demo_data_if_empty(encoder: Any) -> None:
         storage.save_student(s)
 
     logger.info("Seeded %d realistic candidate students into memory.", len(demo_students))
+
+
+def seed_demo_professor_profiles_if_empty(encoder: Any) -> None:
+    """Create confirmed, clearly labelled test profiles when no faculty profiles exist."""
+    if storage.get_all_confirmed_profiles():
+        return
+
+    demo_profiles = [
+        (
+            "-1001",
+            "[TEST DATA] Dr. Demo Machine Learning Professor",
+            "Computer Science and Engineering [DEMO]",
+            ResearchProfile(
+                research_interests=[
+                    "Machine Learning",
+                    "Collaborative research",
+                    "Natural Language Processing",
+                ],
+                research_domains=["Artificial Intelligence", "Natural Language Processing"],
+                methods=["Python", "PyTorch", "Transformers"],
+                publications=["TEST DATA: Demonstration study of compact language models"],
+                contributions=["Synthetic profile for validating recommendation matching."],
+                embedding_text=(
+                    "TEST DATA professor profile. Research in machine learning, collaborative "
+                    "research, and natural language processing. Uses Python, PyTorch, and "
+                    "transformers to build reliable language models."
+                ),
+            ),
+        ),
+        (
+            "-1002",
+            "[TEST DATA] Dr. Demo Computer Vision Professor",
+            "Computer Science and Engineering [DEMO]",
+            ResearchProfile(
+                research_interests=["Machine Learning", "Computer Vision", "Medical Imaging"],
+                research_domains=["Artificial Intelligence", "Computer Vision"],
+                methods=["PyTorch", "Convolutional Neural Networks", "Image Segmentation"],
+                publications=["TEST DATA: Demonstration study of image segmentation"],
+                contributions=["Synthetic profile for validating recommendation matching."],
+                embedding_text=(
+                    "TEST DATA professor profile. Research in machine learning, computer "
+                    "vision, and medical imaging. Uses PyTorch and convolutional neural "
+                    "networks for image segmentation."
+                ),
+            ),
+        ),
+        (
+            "-1003",
+            "[TEST DATA] Dr. Demo Cybersecurity Professor",
+            "Computer Science and Engineering [DEMO]",
+            ResearchProfile(
+                research_interests=["Cybersecurity", "Software assurance", "Collaborative research"],
+                research_domains=["Application Security", "Privacy Engineering"],
+                methods=["Secure coding", "Threat modeling", "Security testing"],
+                publications=["TEST DATA: Demonstration study of software assurance"],
+                contributions=["Synthetic profile for validating recommendation matching."],
+                embedding_text=(
+                    "TEST DATA professor profile. Research in cybersecurity, software "
+                    "assurance, and privacy engineering. Uses secure coding, threat modeling, "
+                    "and security testing to improve application safety."
+                ),
+            ),
+        ),
+        (
+            "-1004",
+            "[TEST DATA] Dr. Demo Distributed Systems Professor",
+            "Computer Science and Engineering [DEMO]",
+            ResearchProfile(
+                research_interests=["Distributed Systems", "Cloud Computing", "Observability"],
+                research_domains=["Cloud and Web Systems", "Reliable Infrastructure"],
+                methods=["Java", "Service Monitoring", "Fault-tolerant Systems"],
+                publications=["TEST DATA: Demonstration study of observable services"],
+                contributions=["Synthetic profile for validating recommendation matching."],
+                embedding_text=(
+                    "TEST DATA professor profile. Research in distributed systems, cloud "
+                    "computing, and observability. Uses Java and service monitoring to build "
+                    "reliable, fault-tolerant infrastructure."
+                ),
+            ),
+        ),
+    ]
+
+    for professor_id, professor_name, department, profile in demo_profiles:
+        embedding = encoder.encode([profile.embedding_text], normalize_embeddings=True)[0]
+        if len(embedding) != 384:
+            raise RuntimeError(
+                f"Demo professor embedding for {professor_id} has {len(embedding)} dimensions; expected 384."
+            )
+        storage.save_confirmed_profile(
+            professor_id=professor_id,
+            confirmed_profile=profile,
+            original_profile=None,
+            stated_requirements=None,
+            layman_summary=None,
+            embedding=embedding,
+            professor_name=professor_name,
+            department=department,
+            is_demo=True,
+        )
+
+    logger.info(
+        "Seeded %d confirmed test professor profiles with 384-dimensional embeddings.",
+        len(demo_profiles),
+    )
 
 
 # ---------------------------------------------------------
@@ -620,4 +730,106 @@ def get_student_opportunity_feed(
         "feed": matches,
         "count": len(matches),
         "note": "Personalized opportunity feed ranked by research relevance with visible eligibility guidance.",
+    }
+
+
+# ---------------------------------------------------------
+# 9. Student-to-Professor Research Matching
+# ---------------------------------------------------------
+
+@router.put(
+    "/students/{student_id}/profile",
+    response_model=StudentProfileSyncResponse,
+)
+def sync_student_profile(
+    student_id: str,
+    student: StudentProfileRecord,
+) -> StudentProfileSyncResponse:
+    """Synchronize the authenticated app profile and generate its matching embedding."""
+    if str(student.id) != student_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Student profile ID must match the request path.",
+        )
+
+    encoder = get_shared_encoder()
+    student.embedding = build_student_embedding(student, encoder)
+    if len(student.embedding) != 384:
+        raise HTTPException(
+            status_code=500,
+            detail="Student embedding generation returned an invalid dimension.",
+        )
+
+    storage.save_student(student)
+    logger.info("Synchronized student %s with a 384-dimensional embedding.", student_id)
+    return StudentProfileSyncResponse(
+        student_id=student_id,
+        embedding_dimensions=len(student.embedding),
+    )
+
+
+@router.post(
+    "/students/{student_id}/match-professors",
+    response_model=dict[str, Any],
+)
+def match_professors_for_student(
+    student_id: str,
+    top_k: int = Query(default=20, ge=1, le=100),
+) -> dict[str, Any]:
+    """
+    Rank confirmed professors for a student using research
+    embedding cosine similarity.
+    """
+
+    encoder = get_shared_encoder()
+
+    student = storage.get_student(student_id)
+
+    if not student:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Student profile '{student_id}' not found. "
+                "Please register a student profile first."
+            ),
+        )
+
+    # Generate student embedding if missing
+    if not student.embedding or len(student.embedding) != 384:
+        student.embedding = build_student_embedding(student, encoder)
+        storage.save_student(student)
+
+    # Retrieve all confirmed professor profiles and embeddings
+    professors = storage.get_all_confirmed_profiles_with_embeddings()
+
+    if not professors:
+        seed_demo_professor_profiles_if_empty(encoder)
+        professors = storage.get_all_confirmed_profiles_with_embeddings()
+
+    # Rank professors for this student
+    ranked_matches = rank_professors_for_student(
+        student=student,
+        professors=professors,
+        top_k=top_k,
+    )
+    matches = []
+    for match in ranked_matches:
+        professor = storage.get_confirmed_profile(str(match["professor_id"]))
+        if professor is None:
+            continue
+        matches.append({
+            **match,
+            "professor_name": professor.professor_name,
+            "department": professor.department,
+            "is_demo": professor.is_demo,
+        })
+
+    return {
+        "student_id": student_id,
+        "matches": matches,
+        "count": len(matches),
+        "note": (
+            "Professors ranked by semantic research similarity "
+            "using cosine similarity between normalized embeddings."
+        ),
     }

@@ -1,3 +1,4 @@
+
 package com.scholarbridge.entity;
 
 import jakarta.persistence.Entity;
@@ -31,11 +32,16 @@ public class PaperSubmission {
     private User student;
 
     private String title;
+
     @Column(length = 5000)
     private String abstractText;
+
     private String storedFilename;
     private String category;
     private Double confidenceScore;
+
+    @Column(name = "embedding_json", columnDefinition = "TEXT")
+    private String embeddingJson;
 
     @Enumerated(EnumType.STRING)
     private PaperStatus status = PaperStatus.PROCESSING;
