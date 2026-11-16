@@ -13,7 +13,13 @@ export default function PostOpeningPage() {
   const [description, setDescription] = useState('');
   const [requiredSkills, setRequiredSkills] = useState('');
   const [seats, setSeats] = useState(2);
+  const [preferredSkills, setPreferredSkills] = useState<string[]>([]);
+  const [preferredYears, setPreferredYears] = useState<string[]>([]);
+  const [eligibilityCriteria, setEligibilityCriteria] = useState<string[]>([]);
+  const [deadline, setDeadline] = useState('');
+  const [showOtherCriteria, setShowOtherCriteria] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [syncPending, setSyncPending] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,12 +28,17 @@ export default function PostOpeningPage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      await openingsApi.create({
+      const opening = await openingsApi.create({
         title,
         description,
         requiredSkills,
         seats: Number(seats),
+        preferredSkills,
+        preferredYears,
+        eligibilityCriteria,
+        deadline: deadline || null,
       });
+      setSyncPending(opening.recommendationSyncPending);
       setIsSuccess(true);
       setTimeout(() => {
         router.push('/faculty/dashboard');
@@ -61,7 +72,11 @@ export default function PostOpeningPage() {
         {isSuccess && (
           <div className="p-4 bg-mint/40 border border-sage/40 rounded-xl flex items-center gap-2 text-xs text-forest font-semibold">
             <CheckCircle2 size={16} className="text-leaf shrink-0" />
-            <span>Research opening published successfully! Redirecting to dashboard...</span>
+            <span>
+              Research opening saved{syncPending
+                ? '. Recommendation synchronization is pending and will be retried automatically.'
+                : ' and synchronized with recommendations.'} Redirecting to dashboard...
+            </span>
           </div>
         )}
 
@@ -130,6 +145,95 @@ export default function PostOpeningPage() {
               />
             </div>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-forest uppercase tracking-wider mb-1.5">
+                Application Deadline
+              </label>
+              <input
+                type="date"
+                value={deadline}
+                onChange={(event) => setDeadline(event.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-lg border border-sage/40 bg-white text-ink text-sm focus:border-leaf focus:outline-none focus:ring-3 focus:ring-leaf/40"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={() => setShowOtherCriteria((visible) => !visible)}
+                aria-expanded={showOtherCriteria}
+                className="btn-secondary px-4 py-2.5 text-sm font-semibold"
+              >
+                + Add Other Criteria
+              </button>
+            </div>
+          </div>
+
+          {showOtherCriteria && (
+            <section className="rounded-xl border border-sage/30 bg-mist/30 p-4 space-y-4">
+              <h2 className="text-sm font-bold text-ink">Structured eligibility preferences</h2>
+              <p className="text-xs text-ink/70">
+                These preferences are shown to students and inform matching; they are not hard rejection rules.
+              </p>
+              {requiredSkills.split(',').map((skill) => skill.trim()).filter(Boolean).length > 0 && (
+                <fieldset>
+                  <legend className="mb-2 text-xs font-semibold text-ink">Preferred skills</legend>
+                  <div className="flex flex-wrap gap-3">
+                    {[...new Set(requiredSkills.split(',').map((skill) => skill.trim()).filter(Boolean))].map((skill) => (
+                      <label key={skill} className="inline-flex items-center gap-2 text-xs text-ink">
+                        <input
+                          type="checkbox"
+                          checked={preferredSkills.includes(skill)}
+                          onChange={(event) => setPreferredSkills((current) => event.target.checked
+                            ? [...current, skill]
+                            : current.filter((value) => value !== skill))}
+                        />
+                        {skill}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
+              <fieldset>
+                <legend className="mb-2 text-xs font-semibold text-ink">Preferred academic years</legend>
+                <div className="flex flex-wrap gap-3">
+                  {['1st Year', '2nd Year', '3rd Year', '4th Year'].map((year) => (
+                    <label key={year} className="inline-flex items-center gap-2 text-xs text-ink">
+                      <input
+                        type="checkbox"
+                        checked={preferredYears.includes(year)}
+                        onChange={(event) => setPreferredYears((current) => event.target.checked
+                          ? [...current, year]
+                          : current.filter((value) => value !== year))}
+                      />
+                      {year}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset>
+                <legend className="mb-2 text-xs font-semibold text-ink">Additional criteria</legend>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    'Prior research or project experience preferred',
+                    'Statement of interest required',
+                  ].map((criterion) => (
+                    <label key={criterion} className="inline-flex items-center gap-2 text-xs text-ink">
+                      <input
+                        type="checkbox"
+                        checked={eligibilityCriteria.includes(criterion)}
+                        onChange={(event) => setEligibilityCriteria((current) => event.target.checked
+                          ? [...current, criterion]
+                          : current.filter((value) => value !== criterion))}
+                      />
+                      {criterion}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </section>
+          )}
 
           <div className="pt-3 border-t border-sage/20 flex items-center justify-end gap-3">
             <Link

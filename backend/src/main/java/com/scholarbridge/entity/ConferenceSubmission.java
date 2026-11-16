@@ -45,4 +45,6 @@ public class ConferenceSubmission {
 
     private String reviewComments;
     private Instant acceptedAt;
+    @Column(name = "format_validation_json", columnDefinition = "TEXT")
+    private String formatValidationJson;
 }

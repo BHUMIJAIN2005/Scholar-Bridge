@@ -16,9 +16,10 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { papersApi, PaperSubmission } from '@/api/papersApi';
-import { conferenceApi, Conference } from '@/api/conferenceApi';
+import { conferenceApi, Conference, ConferenceSubmission } from '@/api/conferenceApi';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { CategoryChip } from '@/components/CategoryChip';
+import { ConferenceFormatReport } from '@/components/ConferenceFormatReport';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-IN', {
@@ -42,6 +43,7 @@ function ConferenceSubmitPageInner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submittedPaper, setSubmittedPaper] = useState<ConferenceSubmission | null>(null);
 
   const selectedPaper =
     selectedPaperId !== '' ? donePapers.find((p) => p.id === selectedPaperId) ?? null : null;
@@ -87,13 +89,15 @@ function ConferenceSubmitPageInner() {
     setIsSubmitting(true);
     setSubmitError(null);
     setSubmitSuccess(false);
+    setSubmittedPaper(null);
 
     try {
-      await conferenceApi.submit(selectedConferenceId as number, {
+      const submission = await conferenceApi.submit(selectedConferenceId as number, {
         paperId: selectedPaperId as number,
         track: track.trim(),
         allowPublicPdf,
       });
+      setSubmittedPaper(submission);
       setSubmitSuccess(true);
       setSelectedPaperId('');
       setSelectedConferenceId('');
@@ -168,6 +172,7 @@ function ConferenceSubmitPageInner() {
           </div>
         </div>
       )}
+      {submitSuccess && <ConferenceFormatReport result={submittedPaper?.formatValidation} />}
 
       {submitError && (
         <div className="flex items-start gap-3 mb-6 p-4 rounded-xl border border-rose-200 bg-rose-50">

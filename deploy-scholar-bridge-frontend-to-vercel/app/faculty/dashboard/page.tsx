@@ -138,7 +138,7 @@ export default function FacultyDashboardPage() {
 
         {/* TAB CONTENT: AI RESEARCH PROFILE */}
         {activeTab === 'ai_research' && (
-          <AiResearchProfileSection professorId={user?.id} />
+          <AiResearchProfileSection />
         )}
 
         {/* TAB CONTENT: OVERVIEW */}
@@ -238,7 +238,7 @@ export default function FacultyDashboardPage() {
 
             {/* Embedded AI Research Profile Section in Dashboard */}
             <div className="pt-4">
-              <AiResearchProfileSection professorId={user?.id} />
+              <AiResearchProfileSection />
             </div>
 
             {/* Section: Your openings */}

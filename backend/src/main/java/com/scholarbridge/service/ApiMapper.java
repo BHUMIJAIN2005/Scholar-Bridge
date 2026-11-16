@@ -1,11 +1,15 @@
 package com.scholarbridge.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scholarbridge.dto.ApiDtos.ApplicantPaperResponse;
 import com.scholarbridge.dto.ApiDtos.ApplicantResponse;
 import com.scholarbridge.dto.ApiDtos.ApplicationResponse;
 import com.scholarbridge.dto.ApiDtos.AuthResponse;
 import com.scholarbridge.dto.ApiDtos.ConferenceResponse;
 import com.scholarbridge.dto.ApiDtos.ConferenceSubmissionResponse;
+import com.scholarbridge.dto.ApiDtos.ConferenceFormatValidationResult;
 import com.scholarbridge.dto.ApiDtos.EducationItem;
 import com.scholarbridge.dto.ApiDtos.FacultyDetailResponse;
 import com.scholarbridge.dto.ApiDtos.FacultyDirectoryResponse;
@@ -17,6 +21,7 @@ import com.scholarbridge.dto.ApiDtos.StudentDetailResponse;
 import com.scholarbridge.dto.ApiDtos.StudentDirectoryResponse;
 import com.scholarbridge.dto.ApiDtos.StudentPaperSummaryResponse;
 import com.scholarbridge.dto.ApiDtos.StudentProjectItem;
+import com.scholarbridge.dto.ApiDtos.StudentResumeDetails;
 import com.scholarbridge.dto.ApiDtos.UserResponse;
 import com.scholarbridge.entity.Application;
 import com.scholarbridge.entity.Conference;
@@ -36,10 +41,21 @@ import com.scholarbridge.entity.User;
 import com.scholarbridge.entity.UserRole;
 import java.util.Arrays;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ApiMapper {
+    private static final Logger logger = LoggerFactory.getLogger(ApiMapper.class);
+    private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {};
+
+    private final ObjectMapper objectMapper;
+
+    public ApiMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     public UserResponse user(User user) {
         FacultyProfile faculty = user.getFacultyProfile();
         StudentProfile student = user.getStudentProfile();
@@ -84,7 +100,9 @@ public class ApiMapper {
             faculty == null ? null : faculty.getAcceptingStudents(),
             faculty == null ? List.of() : faculty.getEducation().stream().map(this::education).toList(),
             faculty == null ? List.of() : List.copyOf(faculty.getAwards()),
-            faculty == null ? List.of() : faculty.getProjects().stream().map(this::facultyProject).toList()
+            faculty == null ? List.of() : faculty.getProjects().stream().map(this::facultyProject).toList(),
+            studentResumeDetails(student),
+            null
         );
     }
 
@@ -268,8 +286,46 @@ public class ApiMapper {
         );
     }
 
-    private StudentProjectItem studentProject(StudentProjectEntry project) {
-        return new StudentProjectItem(project.getTitle(), project.getDescription());
+    public StudentProjectItem studentProject(StudentProjectEntry project) {
+        return new StudentProjectItem(
+            project.getTitle(),
+            project.getDescription(),
+            readTechnologies(project.getTechnologiesJson())
+        );
+    }
+
+    private List<String> readTechnologies(String technologiesJson) {
+        if (!present(technologiesJson)) {
+            return List.of();
+        }
+        return readStringList(technologiesJson, "student project technologies");
+    }
+
+    private List<String> readStringList(String json, String fieldName) {
+        if (!present(json)) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(json, STRING_LIST_TYPE);
+        } catch (JsonProcessingException exception) {
+            logger.error("Could not deserialize {}.", fieldName, exception);
+            throw new IllegalStateException(fieldName + " could not be loaded.", exception);
+        }
+    }
+
+    private StudentResumeDetails studentResumeDetails(StudentProfile student) {
+        if (student == null) {
+            return null;
+        }
+        if (!present(student.getResumeDetailsJson())) {
+            return new StudentResumeDetails(null, null, List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+        }
+        try {
+            return objectMapper.readValue(student.getResumeDetailsJson(), StudentResumeDetails.class);
+        } catch (JsonProcessingException exception) {
+            logger.error("Could not deserialize student resume profile details.", exception);
+            throw new IllegalStateException("Student resume profile details could not be loaded.", exception);
+        }
     }
 
     public AuthResponse auth(User user, String token, String message) {
@@ -281,7 +337,11 @@ public class ApiMapper {
             opening.getId(), opening.getFaculty().getId(), opening.getFaculty().getName(),
             opening.getFaculty().getFacultyProfile() == null ? null : opening.getFaculty().getFacultyProfile().getDepartment(),
             opening.getTitle(), opening.getDescription(), opening.getRequiredSkills(),
-            opening.getSeats(), opening.getStatus(), opening.getCreatedAt()
+            readStringList(opening.getPreferredSkillsJson(), "opening preferred skills"),
+            readStringList(opening.getPreferredYearsJson(), "opening preferred years"),
+            readStringList(opening.getEligibilityCriteriaJson(), "opening eligibility criteria"),
+            opening.getSeats(), opening.getDeadline(), opening.getStatus(),
+            opening.isRecommendationSyncPending(), opening.getCreatedAt()
         );
     }
 
@@ -328,8 +388,21 @@ public class ApiMapper {
             submission.getStatus() == SubmissionStatus.ACCEPTED
                 && Boolean.TRUE.equals(submission.getPublicPdfAllowed())
                 ? "/api/public/conference-submissions/" + submission.getId() + "/paper"
-                : null
+                : null,
+            conferenceFormatValidation(submission.getFormatValidationJson())
         );
+    }
+
+    private ConferenceFormatValidationResult conferenceFormatValidation(String value) {
+        if (!present(value)) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(value, ConferenceFormatValidationResult.class);
+        } catch (JsonProcessingException exception) {
+            logger.error("Could not deserialize conference paper format validation.", exception);
+            throw new IllegalStateException("Conference paper format validation could not be loaded.", exception);
+        }
     }
 
     private ApplicantPaperResponse applicantPaper(PaperSubmission paper) {

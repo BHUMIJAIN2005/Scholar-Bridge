@@ -1,5 +1,42 @@
 import axiosClient from './axiosClient';
-import type { EducationItem, FacultyProjectItem, StudentProjectItem, User } from './authApi';
+import type {
+  EducationItem,
+  FacultyProjectItem,
+  StudentProjectItem,
+  StudentResumeDetails,
+  User,
+} from './authApi';
+
+export interface StudentResumeProfileDraft {
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  academicYear?: string | null;
+  education?: NonNullable<StudentResumeDetails['education']>;
+  technicalSkills?: string[];
+  skillTags?: string[];
+  projects?: StudentProjectItem[];
+  internships?: NonNullable<StudentResumeDetails['internships']>;
+  workExperience?: NonNullable<StudentResumeDetails['workExperience']>;
+  certifications?: string[];
+  achievements?: string[];
+  researchInterests?: string[];
+  researchExperience?: NonNullable<StudentResumeDetails['researchExperience']>;
+}
+
+export interface StudentResumeAnalysisResponse {
+  status: 'draft';
+  profile: StudentResumeProfileDraft;
+  extractionMetadata: {
+    filename: string;
+    documentType: string;
+    extractionMethod: string;
+    extractedCharCount: number;
+    status: string;
+    warnings: string[];
+  };
+  warnings: string[];
+}
 
 export interface ProfileUpdateRequest {
   name?: string;
@@ -32,6 +69,7 @@ export interface ProfileUpdateRequest {
   studentProjects?: StudentProjectItem[];
   githubUrl?: string;
   visibility?: 'ALL_USERS' | 'APPLIED_FACULTY_ONLY';
+  studentResumeDetails?: StudentResumeDetails;
 }
 
 export const profileApi = {
@@ -42,6 +80,17 @@ export const profileApi = {
 
   async updateMyProfile(profile: ProfileUpdateRequest): Promise<User> {
     const response = await axiosClient.put<User>('/api/profile/me', profile);
+    return response.data;
+  },
+
+  async analyzeResume(file: File): Promise<StudentResumeAnalysisResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axiosClient.post<StudentResumeAnalysisResponse>(
+      '/api/profile/analyze-resume',
+      formData,
+      { timeout: 95_000 },
+    );
     return response.data;
   },
 

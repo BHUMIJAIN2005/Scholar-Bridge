@@ -3,12 +3,14 @@ package com.scholarbridge.controller;
 import com.scholarbridge.dto.ApiDtos.ApplicantResponse;
 import com.scholarbridge.dto.ApiDtos.OpeningCreateRequest;
 import com.scholarbridge.dto.ApiDtos.OpeningResponse;
+import com.scholarbridge.dto.ApiDtos.OpeningUpdateRequest;
 import com.scholarbridge.service.OpeningService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,6 +41,14 @@ public class OpeningController {
     @PostMapping
     public OpeningResponse create(@Valid @RequestBody OpeningCreateRequest request) {
         return openingService.create(request);
+    }
+
+    @PutMapping("/{id}")
+    public OpeningResponse update(
+        @PathVariable Long id,
+        @Valid @RequestBody OpeningUpdateRequest request
+    ) {
+        return openingService.update(id, request);
     }
 
     @GetMapping("/{id}/applicants")

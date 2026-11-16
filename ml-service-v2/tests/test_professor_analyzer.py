@@ -1,6 +1,6 @@
 import json
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from scholarbridge_ml.professor_analyzer import (
     analyze_professor_documents,
@@ -22,6 +22,8 @@ class TestProfessorAnalyzer(unittest.TestCase):
             "research_profile": {
                 "research_interests": ["Medical Image Segmentation", "Federated Learning"],
                 "research_domains": ["Computer Vision", "Healthcare AI"],
+                "technical_skills": ["Python", "PyTorch"],
+                "research_experience": ["Principal investigator of a multi-site MRI study"],
                 "methods": ["U-Net", "PyTorch", "Differential Privacy"],
                 "publications": ["FedMed: Privacy-Preserving Image Segmentation (CVPR 2024)"],
                 "contributions": ["Novel federated optimization algorithm for multi-site MRI datasets"],
@@ -44,13 +46,23 @@ class TestProfessorAnalyzer(unittest.TestCase):
 
         result = analyze_professor_documents(
             combined_text="=== CV ===\nProfessor Jane Doe, expert in Medical Imaging...",
+            model="qwen/qwen3.8-27b",
             groq_client=mock_groq,
         )
 
         self.assertEqual(result.status, "success")
+        call_options = mock_groq.chat.completions.create.call_args.kwargs
+        self.assertEqual(call_options["reasoning_effort"], "none")
+        self.assertEqual(call_options["temperature"], 0.7)
+        self.assertEqual(call_options["response_format"], {"type": "json_object"})
         self.assertIsNotNone(result.research_profile)
         self.assertEqual(result.research_profile.research_interests, ["Medical Image Segmentation", "Federated Learning"])
         self.assertIn("Computer Vision", result.research_profile.research_domains)
+        self.assertEqual(result.research_profile.technical_skills, ["Python", "PyTorch"])
+        self.assertEqual(
+            result.research_profile.research_experience,
+            ["Principal investigator of a multi-site MRI study"],
+        )
         self.assertIn("U-Net", result.research_profile.methods)
         self.assertEqual(len(result.research_profile.publications), 1)
         self.assertIsNotNone(result.stated_requirements)
@@ -92,7 +104,7 @@ class TestProfessorAnalyzer(unittest.TestCase):
         )
 
         self.assertEqual(result.status, "error")
-        self.assertIn("valid JSON", result.reason)
+        self.assertIn("malformed", result.reason)
         self.assertIsNone(result.research_profile)
 
     def test_api_exception_handling(self):
@@ -106,7 +118,74 @@ class TestProfessorAnalyzer(unittest.TestCase):
         )
 
         self.assertEqual(result.status, "error")
-        self.assertIn("Groq API error", result.reason)
+        self.assertEqual(result.error_code, "provider_error")
+        self.assertEqual(result.reason, "The AI provider could not analyze these documents.")
+
+    @patch(
+        "scholarbridge_ml.professor_analyzer.get_groq_client",
+        side_effect=RuntimeError("provider-secret-detail"),
+    )
+    def test_client_initialization_error_does_not_expose_provider_details(self, _mock_client):
+        result = analyze_professor_documents(
+            combined_text="Academic research experience and publication record.",
+        )
+
+        self.assertEqual(result.error_code, "client_initialization_error")
+        self.assertNotIn("provider-secret-detail", result.reason)
+        self.assertNotIn("provider-secret-detail", result.warnings)
+
+    def test_rate_limit_is_classified_without_exposing_provider_details(self):
+        class RateLimitError(Exception):
+            status_code = 429
+            body = {"error": {"message": "provider detail"}}
+
+        mock_groq = MagicMock()
+        mock_groq.chat.completions.create.side_effect = RateLimitError("provider detail")
+
+        result = analyze_professor_documents(
+            combined_text="=== CV ===\nAcademic research experience and publications.",
+            groq_client=mock_groq,
+        )
+
+        self.assertEqual(result.error_code, "rate_limited")
+        self.assertIn("rate limit", result.reason)
+        self.assertNotIn("provider detail", result.reason)
+
+    def test_unavailable_model_retries_with_supported_model(self):
+        class ModelNotFoundError(Exception):
+            status_code = 404
+            body = {"error": {"code": "model_not_found"}}
+
+        mock_groq = MagicMock()
+        mock_choice = MagicMock()
+        mock_choice.message.content = json.dumps({
+            "has_research_content": True,
+            "research_profile": {
+                "research_interests": ["Graph Learning"],
+                "research_domains": ["Artificial Intelligence"],
+                "methods": ["Graph Neural Networks"],
+                "publications": [],
+                "contributions": [],
+                "embedding_text": "Research on graph learning.",
+            },
+        })
+        mock_groq.chat.completions.create.side_effect = [
+            ModelNotFoundError("unavailable"),
+            MagicMock(choices=[mock_choice]),
+        ]
+
+        result = analyze_professor_documents(
+            combined_text="Research in graph neural networks and their use in learning.",
+            model="qwen/qwen3.8-27b",
+            groq_client=mock_groq,
+        )
+
+        self.assertEqual(result.status, "success")
+        self.assertEqual(mock_groq.chat.completions.create.call_count, 2)
+        self.assertEqual(
+            mock_groq.chat.completions.create.call_args.kwargs["model"],
+            "openai/gpt-oss-20b",
+        )
 
     def test_prompt_injection_sanitization(self):
         """Test: Prompt injection delimiters inside uploaded text are neutralized."""

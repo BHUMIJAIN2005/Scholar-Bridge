@@ -8,8 +8,13 @@ export interface ResearchOpening {
   title: string;
   description: string;
   requiredSkills: string;
+  preferredSkills: string[];
+  preferredYears: string[];
+  eligibilityCriteria: string[];
   seats: number;
+  deadline?: string | null;
   status: 'OPEN' | 'CLOSED';
+  recommendationSyncPending: boolean;
   createdAt?: string;
 }
 
@@ -18,6 +23,19 @@ export interface CreateOpeningRequest {
   description: string;
   requiredSkills: string;
   seats: number;
+  preferredSkills?: string[];
+  preferredYears?: string[];
+  eligibilityCriteria?: string[];
+  deadline?: string | null;
+  status?: 'OPEN' | 'CLOSED';
+}
+
+export interface RecommendedOpening {
+  opening: ResearchOpening;
+  matchScore: number;
+  relevanceScore: number;
+  matchingReasons: string[];
+  eligibilityGaps: string[];
 }
 
 export interface ApplicantSummary {
@@ -48,6 +66,11 @@ export const openingsApi = {
     return response.data;
   },
 
+  async getRecommended(): Promise<RecommendedOpening[]> {
+    const response = await axiosClient.get<RecommendedOpening[]>('/api/students/me/recommended-opportunities');
+    return response.data;
+  },
+
   /**
    * Fetch a single opening detail by ID.
    * Calls GET /api/openings/{id}
@@ -63,6 +86,11 @@ export const openingsApi = {
    */
   async create(data: CreateOpeningRequest): Promise<ResearchOpening> {
     const response = await axiosClient.post<ResearchOpening>('/api/openings', data);
+    return response.data;
+  },
+
+  async update(id: number | string, data: CreateOpeningRequest & { status: 'OPEN' | 'CLOSED' }): Promise<ResearchOpening> {
+    const response = await axiosClient.put<ResearchOpening>(`/api/openings/${id}`, data);
     return response.data;
   },
 

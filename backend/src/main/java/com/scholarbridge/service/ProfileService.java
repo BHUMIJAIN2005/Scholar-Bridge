@@ -1,7 +1,13 @@
 package com.scholarbridge.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scholarbridge.dto.ApiDtos.ProfileUpdateRequest;
+import com.scholarbridge.dto.ApiDtos.StudentEducationItem;
+import com.scholarbridge.dto.ApiDtos.StudentExperienceItem;
 import com.scholarbridge.dto.ApiDtos.UserResponse;
+import com.scholarbridge.dto.ApiDtos.StudentResumeDetails;
+import com.scholarbridge.dto.ApiDtos.StudentResumeAnalysisResponse;
 import com.scholarbridge.entity.EducationEntry;
 import com.scholarbridge.entity.FacultyApprovalStatus;
 import com.scholarbridge.entity.FacultyProfile;
@@ -21,7 +27,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
@@ -30,32 +39,51 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ProfileService {
+    private static final Logger logger = LoggerFactory.getLogger(ProfileService.class);
     private static final long MAX_PHOTO_SIZE = 2L * 1024 * 1024; // 2 MB
+    private static final long MAX_RESUME_SIZE = 20L * 1024 * 1024;
 
     private final CurrentUserService currentUser;
     private final UserRepository users;
     private final ApiMapper mapper;
+    private final ObjectMapper objectMapper;
+    private final RestClient mlClient;
+    private final StudentRecommendationsService recommendations;
     private final Path profilePhotosDirectory;
 
     public ProfileService(
         CurrentUserService currentUser,
         UserRepository users,
         ApiMapper mapper,
+        ObjectMapper objectMapper,
+        RestClient mlClient,
+        StudentRecommendationsService recommendations,
         @Value("${app.uploads.profile-photos-dir:uploads/profile-photos}") String profilePhotosDir
     ) {
         this.currentUser = currentUser;
         this.users = users;
         this.mapper = mapper;
+        this.objectMapper = objectMapper;
+        this.mlClient = mlClient;
+        this.recommendations = recommendations;
         this.profilePhotosDirectory = Paths.get(profilePhotosDir).toAbsolutePath().normalize();
     }
 
     @Transactional(readOnly = true)
     public UserResponse getCurrent() {
-        return mapper.user(currentUser.requireUser());
+        User authenticatedUser = currentUser.requireUser();
+        User persistedUser = users.findById(authenticatedUser.getId())
+            .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        return mapper.user(persistedUser);
     }
 
     @Transactional
@@ -79,6 +107,12 @@ public class ProfileService {
             if (request.interests() != null) profile.setInterests(List.copyOf(request.interests()));
             if (request.studentProjects() != null) {
                 profile.setProjects(request.studentProjects().stream().map(this::studentProject).toList());
+            }
+            if (request.studentResumeDetails() != null) {
+                profile.setResumeDetailsJson(mergeResumeDetails(
+                    profile.getResumeDetailsJson(),
+                    request.studentResumeDetails()
+                ));
             }
             if (request.githubUrl() != null) profile.setGithubUrl(request.githubUrl());
             if (request.linkedinUrl() != null) profile.setLinkedinUrl(request.linkedinUrl());
@@ -126,7 +160,92 @@ public class ProfileService {
                 profile.setProjects(request.facultyProjects().stream().map(this::facultyProject).toList());
             }
         }
-        return mapper.user(users.save(user));
+        User saved = users.save(user);
+        UserResponse response = mapper.user(saved);
+        if (saved.getRole() == UserRole.STUDENT) {
+            try {
+                recommendations.synchronizeStudentProfile(saved);
+            } catch (BusinessRuleException exception) {
+                logger.warn(
+                    "Profile {} was saved, but recommendation synchronization failed: {}",
+                    saved.getId(),
+                    exception.getMessage()
+                );
+                return response.withRecommendationSyncWarning(exception.getMessage());
+            }
+        }
+        return response;
+    }
+
+    public StudentResumeAnalysisResponse analyzeResume(MultipartFile file) {
+        currentUser.requireRole(UserRole.STUDENT);
+        if (file == null || file.isEmpty()) {
+            throw new BusinessRuleException(HttpStatus.BAD_REQUEST, "Choose a non-empty PDF resume.");
+        }
+        if (file.getSize() > MAX_RESUME_SIZE) {
+            throw new BusinessRuleException(HttpStatus.PAYLOAD_TOO_LARGE, "Resume PDF must be 20 MB or smaller.");
+        }
+
+        String filename = file.getOriginalFilename() == null ? "resume.pdf" : file.getOriginalFilename();
+        if (!filename.toLowerCase().endsWith(".pdf")
+            && !MediaType.APPLICATION_PDF_VALUE.equalsIgnoreCase(file.getContentType())) {
+            throw new BusinessRuleException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Upload a PDF resume.");
+        }
+
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (IOException exception) {
+            throw new BusinessRuleException(HttpStatus.BAD_REQUEST, "The resume PDF could not be read.");
+        }
+        if (bytes.length > MAX_RESUME_SIZE) {
+            throw new BusinessRuleException(HttpStatus.PAYLOAD_TOO_LARGE, "Resume PDF must be 20 MB or smaller.");
+        }
+        if (bytes.length < 5
+            || !new String(bytes, 0, 5, java.nio.charset.StandardCharsets.US_ASCII).equals("%PDF-")) {
+            throw new BusinessRuleException(HttpStatus.BAD_REQUEST, "The uploaded file is not a valid PDF.");
+        }
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new ByteArrayResource(bytes) {
+            @Override
+            public String getFilename() {
+                return filename;
+            }
+        });
+
+        try {
+            StudentResumeAnalysisResponse response = mlClient.post()
+                .uri("/students/analyze-resume")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(body)
+                .retrieve()
+                .body(StudentResumeAnalysisResponse.class);
+            if (response == null || response.profile() == null) {
+                logger.error("ML service returned an empty student resume analysis response.");
+                throw new BusinessRuleException(
+                    HttpStatus.BAD_GATEWAY,
+                    "The resume analysis service returned an invalid draft."
+                );
+            }
+            return response;
+        } catch (RestClientResponseException exception) {
+            logger.error("ML resume analysis returned HTTP status {}.", exception.getStatusCode().value());
+            HttpStatus status = switch (exception.getStatusCode().value()) {
+                case 400 -> HttpStatus.BAD_REQUEST;
+                case 413 -> HttpStatus.PAYLOAD_TOO_LARGE;
+                case 415 -> HttpStatus.UNSUPPORTED_MEDIA_TYPE;
+                case 422 -> HttpStatus.UNPROCESSABLE_ENTITY;
+                default -> HttpStatus.BAD_GATEWAY;
+            };
+            throw new BusinessRuleException(status, "The resume could not be analyzed. Please check the PDF and try again.");
+        } catch (RestClientException exception) {
+            logger.error("ML service could not analyze a student resume.", exception);
+            throw new BusinessRuleException(
+                HttpStatus.BAD_GATEWAY,
+                "The resume analysis service is unavailable. Your profile was not changed."
+            );
+        }
     }
 
     @Transactional
@@ -321,6 +440,59 @@ public class ProfileService {
         StudentProjectEntry project = new StudentProjectEntry();
         project.setTitle(item.title());
         project.setDescription(item.description());
+        project.setTechnologiesJson(writeJson(item.technologies() == null ? List.of() : item.technologies()));
         return project;
+    }
+
+    private String mergeResumeDetails(String existingJson, StudentResumeDetails updates) {
+        StudentResumeDetails existing = readResumeDetails(existingJson);
+        StudentResumeDetails merged = new StudentResumeDetails(
+            updates.contactEmail() != null ? blankToNull(updates.contactEmail()) : existing.contactEmail(),
+            updates.phone() != null ? blankToNull(updates.phone()) : existing.phone(),
+            updates.education() != null ? List.copyOf(updates.education()) : nonNull(existing.education()),
+            updates.internships() != null ? List.copyOf(updates.internships()) : nonNull(existing.internships()),
+            updates.workExperience() != null ? List.copyOf(updates.workExperience()) : nonNull(existing.workExperience()),
+            updates.certifications() != null ? List.copyOf(updates.certifications()) : nonNull(existing.certifications()),
+            updates.achievements() != null ? List.copyOf(updates.achievements()) : nonNull(existing.achievements()),
+            updates.researchExperience() != null
+                ? List.copyOf(updates.researchExperience())
+                : nonNull(existing.researchExperience())
+        );
+        return writeJson(merged);
+    }
+
+    private StudentResumeDetails readResumeDetails(String detailsJson) {
+        if (detailsJson == null || detailsJson.isBlank()) {
+            return new StudentResumeDetails(null, null, List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+        }
+        try {
+            return objectMapper.readValue(detailsJson, StudentResumeDetails.class);
+        } catch (JsonProcessingException exception) {
+            logger.error("Could not deserialize saved student resume profile details.", exception);
+            throw new BusinessRuleException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Saved student profile details could not be loaded."
+            );
+        }
+    }
+
+    private String writeJson(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException exception) {
+            logger.error("Could not serialize student resume profile details.", exception);
+            throw new BusinessRuleException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Student profile details could not be saved."
+            );
+        }
+    }
+
+    private <T> List<T> nonNull(List<T> values) {
+        return values == null ? List.of() : List.copyOf(values);
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

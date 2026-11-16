@@ -67,6 +67,9 @@ public class StudentProfile {
     @Column(length = 500)
     private String linkedinUrl;
 
+    @Column(name = "resume_details_json", columnDefinition = "TEXT")
+    private String resumeDetailsJson;
+
     @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
     private StudentVisibility visibility = StudentVisibility.ALL_USERS;
 }

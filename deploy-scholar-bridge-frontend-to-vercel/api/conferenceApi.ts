@@ -1,7 +1,16 @@
+
 import axiosClient from './axiosClient';
 
 export interface Conference {
   id: number;
+  name: string;
+  department: string;
+  submissionDeadline: string;
+  eventDate: string;
+  tracks: string[];
+}
+
+export interface CreateConferenceRequest {
   name: string;
   department: string;
   submissionDeadline: string;
@@ -23,6 +32,18 @@ export interface ConferenceSubmission {
   confidenceScore?: number;
   acceptedAt?: string;
   publicPdfUrl?: string;
+  formatValidation?: ConferenceFormatValidation | null;
+}
+
+export interface ConferenceFormatValidation {
+  passed: boolean;
+  errors: string[];
+  warnings: string[];
+  pageCount: number;
+  detectedFonts: string[];
+  detectedSections: string[];
+  filename: string;
+  validationType: string;
 }
 
 export interface SubmitToConferenceRequest {
@@ -42,11 +63,29 @@ export const conferenceApi = {
   },
 
   /**
+   * Create a conference (Faculty only).
+   * Calls POST /api/conferences
+   */
+  async create(data: CreateConferenceRequest): Promise<Conference> {
+    const response = await axiosClient.post<Conference>(
+      '/api/conferences',
+      data
+    );
+    return response.data;
+  },
+
+  /**
    * Submit a paper to a conference (Student only).
    * Calls POST /api/conferences/{id}/submit
    */
-  async submit(conferenceId: number, data: SubmitToConferenceRequest): Promise<ConferenceSubmission> {
-    const response = await axiosClient.post<ConferenceSubmission>(`/api/conferences/${conferenceId}/submit`, data);
+  async submit(
+    conferenceId: number,
+    data: SubmitToConferenceRequest
+  ): Promise<ConferenceSubmission> {
+    const response = await axiosClient.post<ConferenceSubmission>(
+      `/api/conferences/${conferenceId}/submit`,
+      data
+    );
     return response.data;
   },
 
@@ -55,7 +94,9 @@ export const conferenceApi = {
    * Calls GET /api/conferences/{id}/submissions
    */
   async getSubmissions(conferenceId: number): Promise<ConferenceSubmission[]> {
-    const response = await axiosClient.get<ConferenceSubmission[]>(`/api/conferences/${conferenceId}/submissions`);
+    const response = await axiosClient.get<ConferenceSubmission[]>(
+      `/api/conferences/${conferenceId}/submissions`
+    );
     return response.data;
   },
 
@@ -68,10 +109,13 @@ export const conferenceApi = {
     status: 'ACCEPTED' | 'REJECTED',
     reviewComments?: string
   ): Promise<ConferenceSubmission> {
-    const response = await axiosClient.put<ConferenceSubmission>(`/api/submissions/${submissionId}/status`, {
-      status,
-      reviewComments,
-    });
+    const response = await axiosClient.put<ConferenceSubmission>(
+      `/api/submissions/${submissionId}/status`,
+      {
+        status,
+        reviewComments,
+      }
+    );
     return response.data;
   },
 
@@ -80,7 +124,9 @@ export const conferenceApi = {
    * Calls GET /api/conferences/{id}/showcase
    */
   async getShowcase(conferenceId: number): Promise<ConferenceSubmission[]> {
-    const response = await axiosClient.get<ConferenceSubmission[]>(`/api/conferences/${conferenceId}/showcase`);
+    const response = await axiosClient.get<ConferenceSubmission[]>(
+      `/api/conferences/${conferenceId}/showcase`
+    );
     return response.data;
   },
 };

@@ -95,6 +95,7 @@ export default function OpeningDetailPage() {
                 {opening.facultyName && <span className="inline-flex items-center gap-2"><Briefcase size={15} className="text-leaf" /><Link href={`/faculty/${opening.facultyId}`} className="font-semibold text-forest hover:text-mid-green hover:underline">{opening.facultyName}</Link></span>}
                 {opening.department && <span className="inline-flex items-center gap-2"><Building2 size={15} className="text-leaf" />{opening.department}</span>}
                 <span className="inline-flex items-center gap-2"><Users size={15} className="text-leaf" />{opening.seats} {opening.seats === 1 ? 'seat' : 'seats'}</span>
+                {opening.deadline && <span>Deadline: {new Date(`${opening.deadline}T00:00:00`).toLocaleDateString()}</span>}
               </div>
             </header>
 
@@ -110,6 +111,23 @@ export default function OpeningDetailPage() {
                   {opening.requiredSkills.split(',').map((skill) => (
                     <span key={skill.trim()} className="rounded-md bg-mint/50 border border-sage/20 px-2.5 py-1 text-xs font-semibold text-forest">{skill.trim()}</span>
                   ))}
+                </div>
+              </section>
+            )}
+
+            {(opening.preferredSkills?.length > 0
+              || opening.preferredYears?.length > 0
+              || opening.eligibilityCriteria?.length > 0) && (
+              <section>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-forest">Other eligibility preferences</h2>
+                <div className="mt-2 space-y-1 text-sm text-ink/80">
+                  {opening.preferredSkills?.length > 0 && (
+                    <p>Preferred skills: {opening.preferredSkills.join(', ')}</p>
+                  )}
+                  {opening.preferredYears?.length > 0 && (
+                    <p>Preferred academic years: {opening.preferredYears.join(', ')}</p>
+                  )}
+                  {opening.eligibilityCriteria?.map((criterion) => <p key={criterion}>{criterion}</p>)}
                 </div>
               </section>
             )}
