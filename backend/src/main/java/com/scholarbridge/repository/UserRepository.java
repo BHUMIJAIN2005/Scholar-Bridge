@@ -4,6 +4,7 @@ import com.scholarbridge.entity.User;
 import com.scholarbridge.entity.UserRole;
 import com.scholarbridge.entity.FacultyApprovalStatus;
 import com.scholarbridge.entity.StudentVisibility;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmailIgnoreCase(String email);
     Optional<User> findByGoogleSubject(String googleSubject);
     boolean existsByEmailIgnoreCase(String email);
+
+    @EntityGraph(attributePaths = "studentProfile")
+    List<User> findAllByRole(UserRole role);
 
     @EntityGraph(attributePaths = "facultyProfile")
     @Query(value = """

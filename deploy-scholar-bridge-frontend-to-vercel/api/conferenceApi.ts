@@ -32,6 +32,18 @@ export interface ConferenceSubmission {
   confidenceScore?: number;
   acceptedAt?: string;
   publicPdfUrl?: string;
+  formatValidation?: ConferenceFormatValidation | null;
+}
+
+export interface ConferenceFormatValidation {
+  passed: boolean;
+  errors: string[];
+  warnings: string[];
+  pageCount: number;
+  detectedFonts: string[];
+  detectedSections: string[];
+  filename: string;
+  validationType: string;
 }
 
 export interface SubmitToConferenceRequest {

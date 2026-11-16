@@ -37,6 +37,7 @@ SUPPORTED_GROQ_MODELS = {
     "gemma2-9b-it",
 }
 DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b"
+FALLBACK_GROQ_MODEL = "openai/gpt-oss-20b"
 
 
 class LaymanSummary(BaseModel):
@@ -52,6 +53,8 @@ class LaymanSummary(BaseModel):
 class ResearchProfile(BaseModel):
     research_interests: list[str] = Field(default_factory=list)
     research_domains: list[str] = Field(default_factory=list)
+    technical_skills: list[str] = Field(default_factory=list)
+    research_experience: list[str] = Field(default_factory=list)
     methods: list[str] = Field(default_factory=list)
     publications: list[str] = Field(default_factory=list)
     contributions: list[str] = Field(default_factory=list)
@@ -68,6 +71,7 @@ class ProfessorAnalysisResult(BaseModel):
     draft_id: str = ""
     status: str = "success"  # "success", "no_research_content", "error", "config_error"
     no_research_content: bool = False
+    error_code: str | None = None
     research_profile: ResearchProfile | None = None
     stated_requirements: StatedRequirements | None = None
     layman_summary: LaymanSummary | None = None
@@ -94,6 +98,8 @@ CRITICAL INSTRUCTIONS:
 3. EXTRACTION RULES:
    - "research_interests": Specific, granular research topics (e.g., "Medical Image Segmentation", "Federated Learning").
    - "research_domains": Broader disciplines/domains (e.g., "Computer Vision", "Healthcare AI", "Distributed Systems").
+   - "technical_skills": Explicit technical skills, programming languages, and tools stated in the documents.
+   - "research_experience": Explicit research roles, projects, and experience described in the documents.
    - "methods": Concrete methodologies, models, algorithms, frameworks, and lab tools (e.g., "U-Net", "PyTorch", "Graph Neural Networks").
    - "publications": Explicit titles of published works or preprints identified in the text.
    - "contributions": Major scientific or practical contributions described in the papers or CV.
@@ -120,6 +126,8 @@ CRITICAL INSTRUCTIONS:
   "research_profile": {
     "research_interests": ["..."],
     "research_domains": ["..."],
+    "technical_skills": ["..."],
+    "research_experience": ["..."],
     "methods": ["..."],
     "publications": ["..."],
     "contributions": ["..."],
@@ -202,7 +210,10 @@ def get_groq_client(api_key: str | None = None):
     Configured with appropriate timeout and max retries.
     """
     key = api_key or os.getenv("GROQ_API_KEY")
-    if not key or not key.strip() or key.strip() == "your_groq_api_key":
+    if not key or not key.strip() or key.strip().lower() in {
+        "your_groq_api_key",
+        "your_groq_api_key_here",
+    }:
         raise ValueError(
             "GROQ_API_KEY is not configured. Please set the GROQ_API_KEY environment variable in ml-service-v2/.env"
         )
@@ -217,6 +228,42 @@ def get_groq_client(api_key: str | None = None):
         )
     except ImportError as e:
         raise RuntimeError(f"groq SDK is not installed: {e}") from e
+
+
+def _is_model_unavailable(error: Exception) -> bool:
+    if getattr(error, "status_code", None) == 404:
+        return True
+    body = getattr(error, "body", None)
+    if not isinstance(body, dict):
+        return False
+    details = body.get("error")
+    if not isinstance(details, dict):
+        return False
+    return details.get("code") in {"model_not_found", "model_decommissioned"}
+
+
+def _create_completion(client: Any, model: str, messages: list[dict[str, str]]) -> Any:
+    request_options: dict[str, Any] = {
+        "model": model,
+        "messages": messages,
+        "response_format": {"type": "json_object"},
+        "max_completion_tokens": 2500,
+    }
+    if model.startswith("qwen/"):
+        request_options.update(reasoning_effort="none", temperature=0.7)
+    else:
+        request_options["temperature"] = 0.2
+
+    try:
+        return client.chat.completions.create(**request_options)
+    except Exception as error:
+        if model == FALLBACK_GROQ_MODEL or not _is_model_unavailable(error):
+            raise
+        logger.warning(
+            "Configured Groq model is unavailable (status=%s); retrying with the supported fallback model.",
+            getattr(error, "status_code", None),
+        )
+        return _create_completion(client, FALLBACK_GROQ_MODEL, messages)
 
 
 def analyze_professor_documents(
@@ -274,63 +321,67 @@ def analyze_professor_documents(
             warnings=warnings + [str(val_err)],
         )
     except Exception as init_err:
+        logger.error("Groq client initialization failed (%s).", type(init_err).__name__)
         return ProfessorAnalysisResult(
             draft_id=draft_id,
             status="error",
-            reason=f"Failed to initialize Groq client: {init_err}",
+            error_code="client_initialization_error",
+            reason="The AI provider client could not be initialized.",
             extraction_metadata=metadata,
-            warnings=warnings + [str(init_err)],
+            warnings=warnings + ["The AI provider client could not be initialized."],
         )
 
+    messages = [
+        {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},
+        {"role": "user", "content": user_prompt},
+    ]
     try:
-        try:
-            response = client.chat.completions.create(
-                model=target_model,
-                messages=[
-                    {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},
-                    {"role": "user", "content": user_prompt},
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.2,
-                max_completion_tokens=2500,
-            )
-        except Exception as model_err:
-            if "model_not_found" in str(model_err) or "does not exist" in str(model_err):
-                fallback_model = "qwen/qwen3.8-27b" if target_model != "qwen/qwen3.8-27b" else "openai/gpt-oss-20b"
-                logger.warning("Configured model '%s' not accessible (%s). Retrying with '%s'.", target_model, model_err, fallback_model)
-                response = client.chat.completions.create(
-                    model=fallback_model,
-                    messages=[
-                        {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    response_format={"type": "json_object"},
-                    temperature=0.2,
-                    max_completion_tokens=2500,
-                )
-            else:
-                raise
-
+        response = _create_completion(client, target_model, messages)
         response_text = response.choices[0].message.content or "{}"
         parsed_json = json.loads(response_text)
 
     except json.JSONDecodeError as json_err:
-        logger.error("Groq returned invalid JSON: %s", json_err)
+        logger.error("Groq returned invalid JSON (%s).", type(json_err).__name__)
         return ProfessorAnalysisResult(
             draft_id=draft_id,
             status="error",
-            reason=f"Failed to parse LLM response into valid JSON: {json_err}",
+            error_code="malformed_response",
+            reason="The AI provider returned a malformed profile response.",
             extraction_metadata=metadata,
             warnings=warnings + ["LLM response was not formatted as valid JSON."],
         )
     except Exception as exc:
-        logger.error("Groq LLM analysis failed: %s", exc)
+        status_code = getattr(exc, "status_code", None)
+        error_code = getattr(exc, "code", None)
+        if status_code == 429:
+            result_status = "error"
+            public_reason = "The AI provider rate limit was reached. Please retry shortly."
+            public_code = "rate_limited"
+        elif status_code in {401, 403}:
+            result_status = "config_error"
+            public_reason = "The AI provider rejected its configured credentials."
+            public_code = "invalid_credentials"
+        elif status_code == 408 or "timeout" in type(exc).__name__.lower():
+            result_status = "error"
+            public_reason = "The AI provider request timed out. Please retry."
+            public_code = "timeout"
+        else:
+            result_status = "error"
+            public_reason = "The AI provider could not analyze these documents."
+            public_code = "provider_error"
+        logger.error(
+            "Groq LLM analysis failed (type=%s, status=%s, code=%s).",
+            type(exc).__name__,
+            status_code,
+            error_code,
+        )
         return ProfessorAnalysisResult(
             draft_id=draft_id,
-            status="error",
-            reason=f"Groq API error during research analysis: {exc}",
+            status=result_status,
+            error_code=public_code,
+            reason=public_reason,
             extraction_metadata=metadata,
-            warnings=warnings + [f"LLM API call failed: {exc}"],
+            warnings=warnings + [public_reason],
         )
 
     # Process structured output
@@ -368,6 +419,8 @@ def analyze_professor_documents(
         profile = ResearchProfile(
             research_interests=raw_profile.get("research_interests", []) or [],
             research_domains=raw_profile.get("research_domains", []) or [],
+            technical_skills=raw_profile.get("technical_skills", []) or [],
+            research_experience=raw_profile.get("research_experience", []) or [],
             methods=raw_profile.get("methods", []) or [],
             publications=raw_profile.get("publications", []) or [],
             contributions=raw_profile.get("contributions", []) or [],
@@ -429,7 +482,11 @@ def analyze_professor_documents(
     has_meaningful_fields = any([
         len(profile.research_interests) > 0,
         len(profile.research_domains) > 0,
+        len(profile.technical_skills) > 0,
+        len(profile.research_experience) > 0,
         len(profile.methods) > 0,
+        len(profile.publications) > 0,
+        len(profile.contributions) > 0,
         bool(profile.embedding_text.strip()),
     ])
 

@@ -7,6 +7,7 @@ from scholarbridge_ml.student_matching import (
     calculate_normalized_composite_score,
     rank_students_for_professor,
     rank_students_for_opportunity,
+    rank_opportunities_for_student,
     generate_why_matched,
     compute_skill_overlap,
 )
@@ -179,6 +180,43 @@ class TestStudentMatching(unittest.TestCase):
         self.assertIn("Qiskit", opp_ranked[0].relevant_technical_skills)
         # Professor profile remains unchanged
         self.assertEqual(self.prof_profile.methods, ["U-Net", "PyTorch", "OpenCV"])
+
+    def test_student_opportunity_feed_is_sorted_deduplicated_and_excludes_closed(self):
+        student_vector = [0.0] * 384
+        student_vector[0] = 1.0
+        student = StudentProfileRecord(id="student", embedding=student_vector)
+        best = OpportunityContext(
+            opportunity_id="best",
+            professor_id="faculty",
+            title="Best opening",
+            description="Relevant opening",
+            embedding=student_vector,
+        )
+        weaker_vector = [-value for value in student_vector]
+        weaker = OpportunityContext(
+            opportunity_id="weaker",
+            professor_id="faculty",
+            title="Weaker opening",
+            description="Less relevant opening",
+            embedding=weaker_vector,
+        )
+        closed = OpportunityContext(
+            opportunity_id="closed",
+            professor_id="faculty",
+            title="Closed opening",
+            description="Unavailable opening",
+            status="closed",
+            embedding=student_vector,
+        )
+
+        results = rank_opportunities_for_student(
+            student,
+            [weaker, best, best, closed],
+            top_k=10,
+        )
+
+        self.assertEqual([result.opportunity_id for result in results], ["best", "weaker"])
+        self.assertGreater(results[0].match_score, results[1].match_score)
 
     def test_match_explanations_based_only_on_existing_evidence(self):
         """Test 13: Deterministic why_matched cites only facts actually present and avoids probability claims."""

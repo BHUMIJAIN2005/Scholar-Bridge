@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApplicationStatusBadge } from '@/components/ApplicationStatusBadge';
 import { conferenceApi, Conference, ConferenceSubmission } from '@/api/conferenceApi';
+import { ConferenceFormatReport } from '@/components/ConferenceFormatReport';
 import { AlertCircle, Award, Check, FileText, Loader2, MessageSquare, RefreshCw, X } from 'lucide-react';
 
 interface SubmissionItem extends ConferenceSubmission {
@@ -109,6 +110,8 @@ export default function ReviewSubmissionsPage() {
                   </div>
                 </div>
               )}
+
+              <ConferenceFormatReport result={sub.formatValidation} />
 
               {(sub.status === 'SUBMITTED' || sub.status === 'UNDER_REVIEW') && (
                 <div className="space-y-3 pt-2">

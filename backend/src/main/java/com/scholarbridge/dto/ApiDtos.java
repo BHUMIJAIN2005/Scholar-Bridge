@@ -245,6 +245,14 @@ public final class ApiDtos {
         boolean isDemo
     ) {}
 
+    public record RecommendedOpeningResponse(
+        OpeningResponse opening,
+        double matchScore,
+        double relevanceScore,
+        List<String> matchingReasons,
+        List<String> eligibilityGaps
+    ) {}
+
     public record EducationItem(
         @Size(max = 180) String degree,
         @Size(max = 240) String institution,
@@ -335,8 +343,36 @@ public final class ApiDtos {
         @NotBlank @Size(max = 180) String title,
         @NotBlank @Size(max = 10000) String description,
         @NotBlank @Size(max = 1000) String requiredSkills,
-        @Min(1) int seats
-    ) {}
+        @Min(1) int seats,
+        @Size(max = 50) List<String> preferredSkills,
+        @Size(max = 10) List<String> preferredYears,
+        @Size(max = 50) List<String> eligibilityCriteria,
+        LocalDate deadline
+    ) {
+        public OpeningCreateRequest {
+            preferredSkills = preferredSkills == null ? List.of() : List.copyOf(preferredSkills);
+            preferredYears = preferredYears == null ? List.of() : List.copyOf(preferredYears);
+            eligibilityCriteria = eligibilityCriteria == null ? List.of() : List.copyOf(eligibilityCriteria);
+        }
+    }
+
+    public record OpeningUpdateRequest(
+        @NotBlank @Size(max = 180) String title,
+        @NotBlank @Size(max = 10000) String description,
+        @NotBlank @Size(max = 1000) String requiredSkills,
+        @Min(1) int seats,
+        @Size(max = 50) List<String> preferredSkills,
+        @Size(max = 10) List<String> preferredYears,
+        @Size(max = 50) List<String> eligibilityCriteria,
+        LocalDate deadline,
+        @NotNull OpeningStatus status
+    ) {
+        public OpeningUpdateRequest {
+            preferredSkills = preferredSkills == null ? List.of() : List.copyOf(preferredSkills);
+            preferredYears = preferredYears == null ? List.of() : List.copyOf(preferredYears);
+            eligibilityCriteria = eligibilityCriteria == null ? List.of() : List.copyOf(eligibilityCriteria);
+        }
+    }
 
     public record OpeningResponse(
         Long id,
@@ -346,8 +382,13 @@ public final class ApiDtos {
         String title,
         String description,
         String requiredSkills,
+        List<String> preferredSkills,
+        List<String> preferredYears,
+        List<String> eligibilityCriteria,
         int seats,
+        LocalDate deadline,
         OpeningStatus status,
+        boolean recommendationSyncPending,
         Instant createdAt
     ) {}
 
@@ -440,7 +481,19 @@ public final class ApiDtos {
         String category,
         Double confidenceScore,
         Instant acceptedAt,
-        String publicPdfUrl
+        String publicPdfUrl,
+        ConferenceFormatValidationResult formatValidation
+    ) {}
+
+    public record ConferenceFormatValidationResult(
+        boolean passed,
+        List<String> errors,
+        List<String> warnings,
+        @JsonAlias("page_count") int pageCount,
+        @JsonAlias("detected_fonts") List<String> detectedFonts,
+        @JsonAlias("detected_sections") List<String> detectedSections,
+        String filename,
+        @JsonAlias("validation_type") String validationType
     ) {}
 
     public record ErrorResponse(String message, Instant timestamp) {}
@@ -523,11 +576,23 @@ public final class ApiDtos {
     public record FacultyAiResearchProfileDto(
         List<String> research_interests,
         List<String> research_domains,
+        List<String> technical_skills,
+        List<String> research_experience,
         List<String> methods,
         List<String> publications,
         List<String> contributions,
         String embedding_text
-    ) {}
+    ) {
+        public FacultyAiResearchProfileDto {
+            research_interests = research_interests == null ? List.of() : List.copyOf(research_interests);
+            research_domains = research_domains == null ? List.of() : List.copyOf(research_domains);
+            technical_skills = technical_skills == null ? List.of() : List.copyOf(technical_skills);
+            research_experience = research_experience == null ? List.of() : List.copyOf(research_experience);
+            methods = methods == null ? List.of() : List.copyOf(methods);
+            publications = publications == null ? List.of() : List.copyOf(publications);
+            contributions = contributions == null ? List.of() : List.copyOf(contributions);
+        }
+    }
 
     public record FacultyAiLaymanSummaryDto(
         String tldr,
@@ -577,6 +642,7 @@ public final class ApiDtos {
         boolean is_confirmed,
         String confirmed_at,
         String message,
+        int embedding_dimensions,
         FacultyAiResearchProfileDto research_profile,
         FacultyAiStatedRequirementsDto stated_requirements,
         FacultyAiLaymanSummaryDto layman_summary

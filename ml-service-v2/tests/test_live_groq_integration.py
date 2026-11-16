@@ -10,8 +10,9 @@ from scholarbridge_ml.professor_analyzer import (
 
 class TestLiveGroqIntegration(unittest.TestCase):
     @pytest.mark.skipif(
-        not os.getenv("GROQ_API_KEY") or os.getenv("GROQ_API_KEY") == "your_groq_api_key",
-        reason="GROQ_API_KEY not configured in environment. Skipping live Groq API test.",
+        os.getenv("RUN_LIVE_GROQ_TESTS", "").lower() != "true"
+        or not os.getenv("GROQ_API_KEY"),
+        reason="Set RUN_LIVE_GROQ_TESTS=true to opt in to an external Groq API request.",
     )
     def test_live_groq_analysis(self):
         """Optional live test executing an actual request against the Groq API when a real key is present."""
