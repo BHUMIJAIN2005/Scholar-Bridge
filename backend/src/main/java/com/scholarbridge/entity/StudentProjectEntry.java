@@ -16,4 +16,7 @@ public class StudentProjectEntry {
 
     @Column(name = "description", length = 2000)
     private String description;
+
+    @Column(name = "technologies_json", columnDefinition = "TEXT")
+    private String technologiesJson;
 }

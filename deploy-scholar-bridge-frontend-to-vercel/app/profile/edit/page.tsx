@@ -1,16 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Loader2, Plus, Trash2 } from 'lucide-react';
 import { profileApi } from '@/api/profileApi';
 import { publicationsApi } from '@/api/publicationsApi';
 import type { Publication, PublicationRequest } from '@/api/publicationsApi';
-import type { EducationItem, FacultyProjectItem, StudentProjectItem, User } from '@/api/authApi';
+import type {
+  EducationItem,
+  FacultyProjectItem,
+  StudentEducationItem,
+  StudentExperienceItem,
+  StudentProjectItem,
+  User,
+} from '@/api/authApi';
 import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Avatar } from '@/components/Avatar';
+import type { StudentResumeAnalysisResponse } from '@/api/profileApi';
+import {
+  mergeStudentResumeDraft,
+  missingResumeProfileFields,
+  type ResumeConflict,
+  type StudentResumeFormDetails,
+} from '@/lib/studentResumeDraft';
 
 interface ProfileDraft {
   name: string;
@@ -41,6 +55,7 @@ interface ProfileDraft {
   skillTags: string;
   interests: string;
   studentProjects: StudentProjectItem[];
+  studentResumeDetails: StudentResumeFormDetails;
   githubUrl: string;
   linkedinUrl: string;
   visibility: 'ALL_USERS' | 'APPLIED_FACULTY_ONLY';
@@ -52,6 +67,10 @@ const emptyDraft: ProfileDraft = {
   orcidUrl: '', researchGateUrl: '', facultyLinkedinUrl: '', websiteUrl: '', citationsCount: '',
   hIndex: '', i10Index: '', statsAsOf: '', acceptingStudents: false, education: [], awards: '',
   facultyProjects: [], year: '', skills: '', skillTags: '', interests: '', studentProjects: [],
+  studentResumeDetails: {
+    contactEmail: '', phone: '', education: [], internships: [], workExperience: [],
+    certifications: [], achievements: [], researchExperience: [],
+  },
   githubUrl: '', linkedinUrl: '', visibility: 'ALL_USERS',
 };
 
@@ -68,7 +87,7 @@ const emptyPublicationDraft: PublicationDraft = {
   title: '', authors: '', venue: '', year: '', doi: '', url: '',
 };
 
-const listText = (values?: string[]) => values?.join(', ') ?? '';
+const listText = (values?: string[] | null) => values?.join(', ') ?? '';
 const splitList = (value: string) => value.split(',').map((item) => item.trim()).filter(Boolean);
 const optional = (value: string) => value.trim() || undefined;
 const optionalNumber = (value: string) => value.trim() ? Number(value) : undefined;
@@ -121,6 +140,16 @@ function draftFromUser(user: User): ProfileDraft {
     skillTags: listText(user.skillTags),
     interests: listText(user.interests),
     studentProjects: user.studentProjects?.length ? user.studentProjects : [],
+    studentResumeDetails: {
+      contactEmail: user.studentResumeDetails?.contactEmail ?? '',
+      phone: user.studentResumeDetails?.phone ?? '',
+      education: user.studentResumeDetails?.education ?? [],
+      internships: user.studentResumeDetails?.internships ?? [],
+      workExperience: user.studentResumeDetails?.workExperience ?? [],
+      certifications: user.studentResumeDetails?.certifications ?? [],
+      achievements: user.studentResumeDetails?.achievements ?? [],
+      researchExperience: user.studentResumeDetails?.researchExperience ?? [],
+    },
     githubUrl: user.githubUrl ?? '',
     linkedinUrl: user.linkedinUrl ?? '',
     visibility: user.visibility ?? 'ALL_USERS',
@@ -131,11 +160,14 @@ function ProfileEditForm() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
   const [draft, setDraft] = useState<ProfileDraft>(emptyDraft);
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
   const [completeness, setCompleteness] = useState<number | undefined>(user?.profileCompleteness);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+  const [recommendationSyncWarning, setRecommendationSyncWarning] = useState('');
   const [publications, setPublications] = useState<Publication[]>([]);
   const [publicationDraft, setPublicationDraft] = useState<PublicationDraft>(emptyPublicationDraft);
   const [editingPublicationId, setEditingPublicationId] = useState<number | null>(null);
@@ -147,6 +179,13 @@ function ProfileEditForm() {
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoError, setPhotoError] = useState('');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeBusy, setResumeBusy] = useState(false);
+  const [resumeError, setResumeError] = useState('');
+  const [resumeNotice, setResumeNotice] = useState('');
+  const [resumeWarnings, setResumeWarnings] = useState<string[]>([]);
+  const [resumeConflicts, setResumeConflicts] = useState<ResumeConflict[]>([]);
+  const [resumeExtraction, setResumeExtraction] = useState<StudentResumeAnalysisResponse['extractionMetadata'] | null>(null);
   const isFaculty = user?.role === 'FACULTY';
 
   useEffect(() => {
@@ -187,6 +226,7 @@ function ProfileEditForm() {
   const setField = <K extends keyof ProfileDraft>(key: K, value: ProfileDraft[K]) => {
     setDraft((current) => ({ ...current, [key]: value }));
     setSaved(false);
+    setRecommendationSyncWarning('');
   };
 
   const updateRow = <T, K extends keyof T>(
@@ -200,11 +240,85 @@ function ProfileEditForm() {
     setField(key, updated as ProfileDraft[typeof key]);
   };
 
+  const updateStudentEducation = (index: number, field: keyof StudentEducationItem, value: string) => {
+    const education = draft.studentResumeDetails.education.map((item, rowIndex) =>
+      rowIndex === index ? { ...item, [field]: value } : item);
+    setField('studentResumeDetails', { ...draft.studentResumeDetails, education });
+  };
+
+  const updateStudentExperience = (
+    key: 'internships' | 'workExperience' | 'researchExperience',
+    index: number,
+    field: keyof StudentExperienceItem,
+    value: string | string[],
+  ) => {
+    const rows = draft.studentResumeDetails[key].map((item, rowIndex) =>
+      rowIndex === index ? { ...item, [field]: value } : item);
+    setField('studentResumeDetails', { ...draft.studentResumeDetails, [key]: rows });
+  };
+
+  const selectResume = (file: File | undefined) => {
+    setResumeError('');
+    setResumeNotice('');
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+      setResumeFile(null);
+      setResumeError('Choose a PDF resume.');
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      setResumeFile(null);
+      setResumeError('Resume PDFs must be 20 MB or smaller.');
+      return;
+    }
+    setResumeFile(file);
+  };
+
+  const analyzeResume = async () => {
+    if (!resumeFile) return;
+    setResumeBusy(true);
+    setResumeError('');
+    setResumeNotice('');
+    setResumeConflicts([]);
+    setResumeWarnings([]);
+    setSaved(false);
+    setRecommendationSyncWarning('');
+    try {
+      const result = await profileApi.analyzeResume(resumeFile);
+      const merged = mergeStudentResumeDraft(draftRef.current, result.profile);
+      setDraft((current) => ({ ...current, ...merged.profile }));
+      setResumeConflicts(merged.conflicts);
+      setResumeWarnings([...new Set([...(result.warnings ?? []), ...(result.extractionMetadata.warnings ?? [])])]);
+      setResumeExtraction(result.extractionMetadata);
+      setResumeNotice('Resume analyzed. Review and edit the draft below; it has not been saved.');
+    } catch (err) {
+      const response = (err as { response?: { data?: { message?: string; detail?: string } } }).response;
+      setResumeError(response?.data?.message ?? response?.data?.detail ?? 'Could not analyze your resume. Please try again.');
+    } finally {
+      setResumeBusy(false);
+    }
+  };
+
+  const useResumeSuggestion = (field: ResumeConflict['field'], value: string) => {
+    if (field === 'name' || field === 'year') {
+      setField(field, value);
+    } else {
+      setField('studentResumeDetails', { ...draft.studentResumeDetails, [field]: value });
+    }
+    setResumeConflicts((current) => current.filter((conflict) => conflict.field !== field));
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!isFaculty && draft.studentResumeDetails.contactEmail.trim()
+      && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.studentResumeDetails.contactEmail.trim())) {
+      setError('Enter a valid contact email or clear the field.');
+      return;
+    }
     setSaving(true);
     setError('');
     setSaved(false);
+    setRecommendationSyncWarning('');
     try {
       const profile = await profileApi.updateMyProfile({
         name: optional(draft.name),
@@ -236,6 +350,11 @@ function ProfileEditForm() {
           skillTags: splitList(draft.skillTags),
           interests: splitList(draft.interests),
           studentProjects: draft.studentProjects,
+          studentResumeDetails: {
+            ...draft.studentResumeDetails,
+            contactEmail: draft.studentResumeDetails.contactEmail,
+            phone: draft.studentResumeDetails.phone,
+          },
           githubUrl: optional(draft.githubUrl),
           linkedinUrl: optional(draft.linkedinUrl),
           visibility: draft.visibility,
@@ -243,8 +362,11 @@ function ProfileEditForm() {
       });
       setDraft(draftFromUser(profile));
       setCompleteness(profile.profileCompleteness);
+      setRecommendationSyncWarning(profile.recommendationSyncWarning ?? '');
       await refreshUser();
       setSaved(true);
+      setResumeNotice('');
+      setResumeConflicts([]);
     } catch (err) {
       const response = (err as { response?: { data?: { message?: string } } }).response;
       setError(response?.data?.message ?? 'Could not save your profile. Please try again.');
@@ -414,6 +536,52 @@ function ProfileEditForm() {
       {children}
     </section>
   );
+  const experienceSection = (
+    title: string,
+    key: 'internships' | 'workExperience' | 'researchExperience',
+    includeTitle = false,
+  ) => {
+    const records = draft.studentResumeDetails[key];
+    return section(title, <>
+      {records.map((item, index) => <div key={`${key}-${index}`} className="grid gap-3 rounded-lg border border-sage/20 bg-mist p-3 sm:grid-cols-2">
+        {includeTitle && <label className={labelClass}>Title
+          <input className={inputClass} value={item.title ?? ''} onChange={(event) => updateStudentExperience(key, index, 'title', event.target.value)} />
+        </label>}
+        <label className={labelClass}>Role
+          <input className={inputClass} value={item.role ?? ''} onChange={(event) => updateStudentExperience(key, index, 'role', event.target.value)} />
+        </label>
+        <label className={labelClass}>Organization
+          <input className={inputClass} value={item.organization ?? ''} onChange={(event) => updateStudentExperience(key, index, 'organization', event.target.value)} />
+        </label>
+        <label className={`${labelClass} sm:col-span-2`}>Description
+          <textarea className={inputClass} rows={2} value={item.description ?? ''} onChange={(event) => updateStudentExperience(key, index, 'description', event.target.value)} />
+        </label>
+        <label className={labelClass}>Technologies (comma-separated)
+          <input className={inputClass} value={listText(item.technologies)} onChange={(event) => updateStudentExperience(key, index, 'technologies', splitList(event.target.value))} />
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className={labelClass}>Start date
+            <input className={inputClass} value={item.startDate ?? ''} onChange={(event) => updateStudentExperience(key, index, 'startDate', event.target.value)} />
+          </label>
+          <label className={labelClass}>End date
+            <input className={inputClass} value={item.endDate ?? ''} onChange={(event) => updateStudentExperience(key, index, 'endDate', event.target.value)} />
+          </label>
+        </div>
+        <button type="button" onClick={() => setField('studentResumeDetails', {
+          ...draft.studentResumeDetails,
+          [key]: records.filter((_, rowIndex) => rowIndex !== index),
+        })} aria-label={`Remove ${title.toLowerCase()} entry`} className="justify-self-start p-2 text-rose-600 hover:text-rose-800">
+          <Trash2 size={17} /> Remove
+        </button>
+      </div>)}
+      <button type="button" onClick={() => setField('studentResumeDetails', {
+        ...draft.studentResumeDetails,
+        [key]: [...records, {}],
+      })} className="inline-flex items-center gap-1 text-sm font-semibold text-forest hover:text-mid-green">
+        <Plus size={16} />Add {title.toLowerCase().replace(/s$/, '')}
+      </button>
+    </>);
+  };
 
   if (loading) {
     return <div className="flex min-h-[50vh] items-center justify-center gap-2 text-sm text-ink/70"><Loader2 size={18} className="animate-spin text-forest" />Loading profile...</div>;
@@ -446,7 +614,42 @@ function ProfileEditForm() {
       </section>
 
       {error && <div role="alert" className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"><AlertCircle size={17} className="mt-0.5 shrink-0" />{error}</div>}
-      {saved && <div role="status" className="flex items-center gap-2 rounded-lg border border-leaf/40 bg-mint/50 px-4 py-3 text-sm font-semibold text-forest"><CheckCircle2 size={17} />Profile saved successfully.</div>}
+      {saved && <div role="status" className="flex items-center gap-2 rounded-lg border border-leaf/40 bg-mint/50 px-4 py-3 text-sm font-semibold text-forest"><CheckCircle2 size={17} />{isFaculty ? 'Profile saved successfully.' : 'Profile confirmed and saved successfully.'}</div>}
+      {recommendationSyncWarning && <div role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Your profile was saved, but recommendations could not be updated: {recommendationSyncWarning}</div>}
+
+      {!isFaculty && section('Generate a profile from your resume', <>
+        <p className="text-sm text-ink/70">Upload a PDF to create an editable draft. Nothing is saved until you confirm below.</p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <label className={`${labelClass} flex-1`}>Resume PDF
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              onChange={(event) => selectResume(event.target.files?.[0])}
+              className="mt-1 block w-full text-sm text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-mint file:px-3 file:py-2 file:font-semibold file:text-forest hover:file:bg-mint/70"
+            />
+          </label>
+          <button type="button" disabled={!resumeFile || resumeBusy} onClick={() => void analyzeResume()} className="btn-primary inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold disabled:opacity-50">
+            {resumeBusy && <Loader2 size={15} className="animate-spin" />}
+            {resumeBusy ? 'Analyzing resume...' : 'Analyze resume'}
+          </button>
+        </div>
+        <p className="text-xs text-ink/60">PDF only, up to 20 MB. Existing profile details are preserved; conflicting resume values require your choice.</p>
+        {resumeError && <p role="alert" className="text-sm text-rose-700">{resumeError}</p>}
+        {resumeNotice && <p role="status" className="text-sm font-semibold text-forest">{resumeNotice}</p>}
+        {resumeExtraction && <p className="text-xs text-ink/60">Extracted {resumeExtraction.extractedCharCount} characters using {resumeExtraction.extractionMethod}.</p>}
+        {resumeWarnings.length > 0 && <ul className="list-disc space-y-1 pl-5 text-sm text-amber-800">{resumeWarnings.map((warning, index) => <li key={`${index}-${warning}`}>{warning}</li>)}</ul>}
+        {resumeExtraction && missingResumeProfileFields(draft).length > 0 && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <p className="font-semibold">Not found in the saved profile or resume draft:</p>
+          <p className="mt-1">{missingResumeProfileFields(draft).join(', ')}</p>
+        </div>}
+        {resumeConflicts.length > 0 && <div className="space-y-2 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-950">
+          <p className="font-semibold">These existing values were preserved. Choose a resume suggestion only if you want to replace one.</p>
+          {resumeConflicts.map((conflict) => <div key={conflict.field} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p><span className="font-semibold">{conflict.field === 'contactEmail' ? 'Contact email' : conflict.field === 'year' ? 'Academic year' : conflict.field}:</span> current “{conflict.current}”; resume “{conflict.extracted}”</p>
+            <button type="button" onClick={() => useResumeSuggestion(conflict.field, conflict.extracted)} className="btn-secondary shrink-0 px-3 py-1.5 text-xs font-semibold">Use resume value</button>
+          </div>)}
+        </div>}
+      </>)}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {section('Basic information', <div className="grid gap-4 sm:grid-cols-2">{input('Name', 'name', { max: 120 })}</div>)}
@@ -560,6 +763,12 @@ function ProfileEditForm() {
               {input('Year of study', 'year', { max: 120 })}{input('Skills summary', 'skills', { max: 1000 })}
               <label className={labelClass}>Skills (comma-separated)<input className={inputClass} value={draft.skillTags} onChange={(event) => setField('skillTags', event.target.value)} /></label>
               <label className={labelClass}>Interests (comma-separated)<input className={inputClass} value={draft.interests} onChange={(event) => setField('interests', event.target.value)} /></label>
+              <label className={labelClass}>Resume contact email
+                <input type="email" maxLength={254} className={inputClass} value={draft.studentResumeDetails.contactEmail} onChange={(event) => setField('studentResumeDetails', { ...draft.studentResumeDetails, contactEmail: event.target.value })} />
+              </label>
+              <label className={labelClass}>Phone
+                <input type="tel" maxLength={80} className={inputClass} value={draft.studentResumeDetails.phone} onChange={(event) => setField('studentResumeDetails', { ...draft.studentResumeDetails, phone: event.target.value })} />
+              </label>
               {input('GitHub URL', 'githubUrl', { type: 'url', max: 500 })}{input('LinkedIn URL', 'linkedinUrl', { type: 'url', max: 500 })}
               <label className={`${labelClass} sm:col-span-2`}>Profile visibility
                 <select className={inputClass} value={draft.visibility} onChange={(event) => setField('visibility', event.target.value as ProfileDraft['visibility'])}>
@@ -568,22 +777,61 @@ function ProfileEditForm() {
                 </select>
               </label>
             </div>)}
+            {section('Education', <>
+              {draft.studentResumeDetails.education.map((item, index) => <div key={`student-education-${index}`} className="grid gap-3 rounded-lg border border-sage/20 bg-mist p-3 sm:grid-cols-2">
+                <label className={labelClass}>Degree
+                  <input className={inputClass} value={item.degree ?? ''} onChange={(event) => updateStudentEducation(index, 'degree', event.target.value)} />
+                </label>
+                <label className={labelClass}>Field of study
+                  <input className={inputClass} value={item.fieldOfStudy ?? ''} onChange={(event) => updateStudentEducation(index, 'fieldOfStudy', event.target.value)} />
+                </label>
+                <label className={labelClass}>University
+                  <input className={inputClass} value={item.university ?? ''} onChange={(event) => updateStudentEducation(index, 'university', event.target.value)} />
+                </label>
+                <label className={labelClass}>Academic years
+                  <input className={inputClass} value={item.academicYear ?? ''} onChange={(event) => updateStudentEducation(index, 'academicYear', event.target.value)} />
+                </label>
+                <label className={labelClass}>CGPA
+                  <input className={inputClass} value={item.cgpa ?? ''} onChange={(event) => updateStudentEducation(index, 'cgpa', event.target.value)} />
+                </label>
+                <button type="button" onClick={() => setField('studentResumeDetails', {
+                  ...draft.studentResumeDetails,
+                  education: draft.studentResumeDetails.education.filter((_, rowIndex) => rowIndex !== index),
+                })} aria-label="Remove education" className="justify-self-start p-2 text-rose-600 hover:text-rose-800"><Trash2 size={17} /> Remove</button>
+              </div>)}
+              <button type="button" onClick={() => setField('studentResumeDetails', {
+                ...draft.studentResumeDetails,
+                education: [...draft.studentResumeDetails.education, {}],
+              })} className="inline-flex items-center gap-1 text-sm font-semibold text-forest hover:text-mid-green"><Plus size={16} />Add education</button>
+            </>)}
             {section('Projects', <>
               {draft.studentProjects.map((item, index) => <div key={index} className="grid gap-3 rounded-lg bg-mist p-3 border border-sage/20 sm:grid-cols-[1fr_2fr_auto]">
                 <input aria-label="Project title" placeholder="Project title" className={inputClass} value={item.title ?? ''} onChange={(event) => updateRow('studentProjects', draft.studentProjects, index, 'title', event.target.value)} />
                 <input aria-label="Project description" placeholder="Description" className={inputClass} value={item.description ?? ''} onChange={(event) => updateRow('studentProjects', draft.studentProjects, index, 'description', event.target.value)} />
+                <input aria-label="Project technologies" placeholder="Technologies (comma-separated)" className={inputClass} value={listText(item.technologies)} onChange={(event) => updateRow('studentProjects', draft.studentProjects, index, 'technologies', splitList(event.target.value))} />
                 <button type="button" onClick={() => setField('studentProjects', draft.studentProjects.filter((_, rowIndex) => rowIndex !== index))} aria-label="Remove project" className="justify-self-end p-2 text-rose-600 hover:text-rose-800"><Trash2 size={17} /></button>
               </div>)}
               <button type="button" onClick={() => setField('studentProjects', [...draft.studentProjects, {}])} className="inline-flex items-center gap-1 text-sm font-semibold text-forest hover:text-mid-green"><Plus size={16} />Add project</button>
             </>)}
+            {experienceSection('Internships', 'internships')}
+            {experienceSection('Work experience', 'workExperience')}
+            {section('Certifications and achievements', <div className="grid gap-4 sm:grid-cols-2">
+              <label className={labelClass}>Certifications (comma-separated)
+                <textarea className={inputClass} rows={3} value={listText(draft.studentResumeDetails.certifications)} onChange={(event) => setField('studentResumeDetails', { ...draft.studentResumeDetails, certifications: splitList(event.target.value) })} />
+              </label>
+              <label className={labelClass}>Achievements (comma-separated)
+                <textarea className={inputClass} rows={3} value={listText(draft.studentResumeDetails.achievements)} onChange={(event) => setField('studentResumeDetails', { ...draft.studentResumeDetails, achievements: splitList(event.target.value) })} />
+              </label>
+            </div>)}
+            {experienceSection('Research experience', 'researchExperience', true)}
           </>
         )}
 
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <button type="button" onClick={() => router.back()} className="btn-secondary px-5 py-2.5 text-sm font-semibold">Cancel</button>
-          <button type="submit" disabled={saving} className="btn-primary inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60">
+          <button type="submit" disabled={saving || resumeBusy} className="btn-primary inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60">
             {saving && <Loader2 size={16} className="animate-spin" />}
-            {saving ? 'Saving...' : 'Save profile'}
+            {saving ? 'Saving...' : saved ? 'Saved' : isFaculty ? 'Save profile' : 'Confirm and Save'}
           </button>
         </div>
       </form>

@@ -1,6 +1,7 @@
 package com.scholarbridge.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.scholarbridge.entity.ApplicationStatus;
 import com.scholarbridge.entity.BlogPostStatus;
 import com.scholarbridge.entity.BlogReactionType;
@@ -81,8 +82,21 @@ public final class ApiDtos {
         Boolean acceptingStudents,
         List<EducationItem> education,
         List<String> awards,
-        List<FacultyProjectItem> facultyProjects
-    ) {}
+        List<FacultyProjectItem> facultyProjects,
+        StudentResumeDetails studentResumeDetails,
+        String recommendationSyncWarning
+    ) {
+        public UserResponse withRecommendationSyncWarning(String warning) {
+            return new UserResponse(
+                id, name, email, photoUrl, role, approvalStatus, department, researchDomains, skills, year,
+                createdAt, profileCompleteness, skillTags, interests, studentProjects, githubUrl, linkedinUrl,
+                visibility, designation, qualifications, bio, researchInterests, officeRoom, officeHours,
+                scholarUrl, orcidUrl, researchGateUrl, facultyLinkedinUrl, websiteUrl, citationsCount, hIndex,
+                i10Index, statsAsOf, acceptingStudents, education, awards, facultyProjects, studentResumeDetails,
+                warning
+            );
+        }
+    }
 
     public record AuthResponse(String token, UserResponse user, String message) {}
 
@@ -116,7 +130,8 @@ public final class ApiDtos {
         @Size(max = 50) List<@NotBlank @Size(max = 120) String> interests,
         @Size(max = 50) List<@Valid StudentProjectItem> studentProjects,
         @Pattern(regexp = "(?i)^https?://\\S+$") @Size(max = 500) String githubUrl,
-        StudentVisibility visibility
+        StudentVisibility visibility,
+        @Valid StudentResumeDetails studentResumeDetails
     ) {}
 
     public record FacultyDirectoryResponse(
@@ -245,7 +260,75 @@ public final class ApiDtos {
 
     public record StudentProjectItem(
         @Size(max = 240) String title,
-        @Size(max = 2000) String description
+        @Size(max = 2000) String description,
+        @Size(max = 50) List<@NotBlank @Size(max = 120) String> technologies
+    ) {}
+
+    public record StudentEducationItem(
+        @Size(max = 180) String degree,
+        @JsonAlias("field_of_study")
+        @Size(max = 180) String fieldOfStudy,
+        @Size(max = 240) String university,
+        @JsonAlias("academic_year")
+        @Size(max = 120) String academicYear,
+        @Size(max = 40) String cgpa
+    ) {}
+
+    public record StudentExperienceItem(
+        @Size(max = 240) String title,
+        @Size(max = 180) String role,
+        @Size(max = 240) String organization,
+        @Size(max = 4000) String description,
+        @Size(max = 50) List<@NotBlank @Size(max = 120) String> technologies,
+        @JsonAlias("start_date")
+        @Size(max = 120) String startDate,
+        @JsonAlias("end_date")
+        @Size(max = 120) String endDate
+    ) {}
+
+    public record StudentResumeDetails(
+        @Pattern(regexp = "(?i)^$|^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$")
+        @Size(max = 254) String contactEmail,
+        @Size(max = 80) String phone,
+        @Size(max = 30) List<@Valid StudentEducationItem> education,
+        @Size(max = 50) List<@Valid StudentExperienceItem> internships,
+        @Size(max = 50) List<@Valid StudentExperienceItem> workExperience,
+        @Size(max = 100) List<@NotBlank @Size(max = 300) String> certifications,
+        @Size(max = 100) List<@NotBlank @Size(max = 500) String> achievements,
+        @Size(max = 50) List<@Valid StudentExperienceItem> researchExperience
+    ) {}
+
+    public record StudentResumeAnalysisResponse(
+        String status,
+        StudentResumeDraft profile,
+        @JsonAlias("extraction_metadata") ResumeExtractionMetadata extractionMetadata,
+        List<String> warnings
+    ) {}
+
+    public record StudentResumeDraft(
+        String name,
+        String email,
+        String phone,
+        @JsonAlias("academic_year") String academicYear,
+        List<StudentEducationItem> education,
+        @JsonAlias("technical_skills") List<String> technicalSkills,
+        @JsonAlias("skill_tags") List<String> skillTags,
+        List<StudentProjectItem> projects,
+        List<StudentExperienceItem> internships,
+        @JsonAlias("work_experience") List<StudentExperienceItem> workExperience,
+        List<String> certifications,
+        List<String> achievements,
+        @JsonAlias("research_interests") List<String> researchInterests,
+        @JsonAlias("research_experience") List<StudentExperienceItem> researchExperience
+    ) {}
+
+    public record ResumeExtractionMetadata(
+        String filename,
+        @JsonAlias("document_type") String documentType,
+        @JsonAlias("extraction_method") String extractionMethod,
+        @JsonAlias("extracted_char_count") int extractedCharCount,
+        String status,
+        List<String> warnings
     ) {}
 
     public record OpeningCreateRequest(

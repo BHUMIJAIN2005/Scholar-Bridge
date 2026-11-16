@@ -3,6 +3,8 @@ import uuid
 from typing import Any, Callable
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
+import os
+import tempfile
 
 from scholarbridge_ml.document_extractor import (
     combine_documents,
@@ -30,10 +32,20 @@ from scholarbridge_ml.student_matching import (
     rank_students_for_professor,
     rank_professors_for_student,
 )
+from scholarbridge_ml.student_resume_analyzer import (
+    StudentResumeAnalysisResponse,
+    StudentResumeConfigurationError,
+    StudentResumeProfile,
+    StudentResumeProviderError,
+    StudentResumeResponseError,
+    analyze_student_resume,
+)
+from scholarbridge_ml.format_validator import check_ieee_format
 
 logger = logging.getLogger("scholarbridge_ml.api_routes")
 
 router = APIRouter(tags=["Professor Matching & Research Discovery"])
+MAX_STUDENT_RESUME_SIZE = 25 * 1024 * 1024
 
 # Dependency container for encoder callable
 _encoder_getter: Callable[[], Any] | None = None
@@ -49,6 +61,200 @@ def get_shared_encoder() -> Any:
         raise RuntimeError("Shared encoder getter has not been configured.")
     return _encoder_getter()
 
+
+def _joined_value(value: Any) -> str:
+    if isinstance(value, list):
+        return ", ".join(str(item) for item in value if item is not None and str(item).strip())
+    return str(value).strip() if value is not None else ""
+
+
+def _resume_items_text(items: Any, fields: tuple[str, ...]) -> str:
+    if not isinstance(items, list):
+        return ""
+    sections = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        parts = [_joined_value(item.get(field)) for field in fields]
+        section = ". ".join(part for part in parts if part)
+        if section:
+            sections.append(section)
+    return ". ".join(sections)
+
+
+def student_embedding_text(student: StudentProfileRecord) -> str:
+    """Build the embedding source text from the confirmed student-profile fields."""
+    skills_text = ", ".join(student.skill_tags) if student.skill_tags else student.skills
+    interests_text = ", ".join(student.interests)
+    projects = []
+    for project in student.projects:
+        title = _joined_value(project.get("title"))
+        description = _joined_value(project.get("description"))
+        technologies = _joined_value(project.get("technologies"))
+        projects.append(f"{title}: {description}. Technologies: {technologies}")
+
+    details = student.resume_details
+    education_text = _resume_items_text(
+        details.get("education"),
+        ("degree", "fieldOfStudy", "university", "academicYear", "cgpa"),
+    )
+    internships_text = _resume_items_text(
+        details.get("internships"),
+        ("role", "organization", "description", "technologies"),
+    )
+    work_text = _resume_items_text(
+        details.get("workExperience"),
+        ("role", "organization", "description", "technologies"),
+    )
+    research_text = _resume_items_text(
+        details.get("researchExperience"),
+        ("title", "role", "organization", "description", "technologies"),
+    )
+    certifications_text = _joined_value(details.get("certifications"))
+    achievements_text = _joined_value(details.get("achievements"))
+    return (
+        f"Student background. Department: {student.department}. Academic year: {student.academic_year}. "
+        f"Skills: {skills_text}. Research interests: {interests_text}. Projects: {' '.join(projects)}. "
+        f"Education: {education_text}. Internships: {internships_text}. Work experience: {work_text}. "
+        f"Certifications: {certifications_text}. Achievements: {achievements_text}. "
+        f"Research experience: {research_text}"
+    )
+
+
+@router.post(
+    "/students/analyze-resume",
+    response_model=StudentResumeAnalysisResponse,
+    tags=["Student Resume Intelligence"],
+)
+async def analyze_student_resume_endpoint(
+    file: UploadFile = File(...),
+) -> StudentResumeAnalysisResponse:
+    """Extract a resume PDF and return a validated student profile draft."""
+    filename = file.filename or "resume.pdf"
+    if not (filename.lower().endswith(".pdf") or file.content_type == "application/pdf"):
+        raise HTTPException(status_code=415, detail="Only PDF resumes are supported.")
+
+    content = await file.read(MAX_STUDENT_RESUME_SIZE + 1)
+    if not content:
+        raise HTTPException(status_code=400, detail="The uploaded resume is empty.")
+    if len(content) > MAX_STUDENT_RESUME_SIZE:
+        raise HTTPException(status_code=413, detail="Resume PDF exceeds the 25 MB limit.")
+    if not content.startswith(b"%PDF-"):
+        raise HTTPException(status_code=400, detail="The uploaded file is not a valid PDF.")
+
+    try:
+        extracted = extract_single_document(
+            content,
+            filename=filename,
+            document_type="resume",
+        )
+    except Exception as exc:
+        logger.exception("Student resume PDF text extraction failed.")
+        raise HTTPException(
+            status_code=422,
+            detail="Could not extract readable text from the resume PDF.",
+        ) from exc
+
+    if not extracted.text.strip():
+        raise HTTPException(
+            status_code=422,
+            detail="No readable resume text was found, including after OCR fallback.",
+        )
+
+    try:
+        profile: StudentResumeProfile = analyze_student_resume(extracted.text)
+    except StudentResumeConfigurationError as exc:
+        logger.error("Student resume analysis is not configured.")
+        raise HTTPException(
+            status_code=503,
+            detail="Resume analysis is not configured.",
+        ) from exc
+    except (StudentResumeProviderError, StudentResumeResponseError) as exc:
+        logger.error("Student resume analysis failed: %s", exc)
+        raise HTTPException(
+            status_code=502,
+            detail="Resume analysis could not produce a valid profile draft.",
+        ) from exc
+
+    return StudentResumeAnalysisResponse(
+        profile=profile,
+        extraction_metadata=extracted.to_metadata(),
+        warnings=extracted.warnings,
+    )
+
+
+MAX_FORMAT_VALIDATION_SIZE = 20 * 1024 * 1024
+
+
+@router.post(
+    "/validate-format",
+    tags=["Conference Paper Screening"],
+)
+async def validate_paper_format(
+    file: UploadFile = File(...),
+) -> dict[str, Any]:
+    """Validate an uploaded research paper PDF against preliminary IEEE checks."""
+
+    filename = file.filename or "paper.pdf"
+
+    if not (
+        filename.lower().endswith(".pdf")
+        or file.content_type == "application/pdf"
+    ):
+        raise HTTPException(
+            status_code=415,
+            detail="Only PDF research papers are supported.",
+        )
+
+    content = await file.read(MAX_FORMAT_VALIDATION_SIZE + 1)
+
+    if not content:
+        raise HTTPException(
+            status_code=400,
+            detail="The uploaded PDF is empty.",
+        )
+
+    if len(content) > MAX_FORMAT_VALIDATION_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail="Research paper exceeds the 20 MB limit.",
+        )
+
+    if not content.startswith(b"%PDF-"):
+        raise HTTPException(
+            status_code=400,
+            detail="The uploaded file is not a valid PDF.",
+        )
+
+    temp_path = None
+
+    try:
+        with tempfile.NamedTemporaryFile(
+            suffix=".pdf",
+            delete=False,
+        ) as temp_file:
+            temp_file.write(content)
+            temp_path = temp_file.name
+
+        result = check_ieee_format(temp_path)
+
+        return {
+            **result,
+            "filename": filename,
+            "validation_type": "preliminary_ieee_format_check",
+        }
+
+    except Exception as exc:
+        logger.exception("Conference paper format validation failed.")
+
+        raise HTTPException(
+            status_code=500,
+            detail="Could not validate the uploaded research paper.",
+        ) from exc
+
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.unlink(temp_path)
 
 # ---------------------------------------------------------
 # Request & Response Models
@@ -103,11 +309,7 @@ class StudentProfileSyncResponse(BaseModel):
 
 def build_student_embedding(student: StudentProfileRecord, encoder: Any) -> list[float]:
     """Generate normalized 384-dim embedding for student from profile text."""
-    skills_text = ", ".join(student.skill_tags) if student.skill_tags else student.skills
-    interests_text = ", ".join(student.interests)
-    proj_text = " ".join(f"{p.get('title', '')}: {p.get('description', '')}" for p in student.projects)
-    combined = f"Student background. Department: {student.department}. Academic year: {student.academic_year}. Skills: {skills_text}. Research interests: {interests_text}. Projects: {proj_text}"
-    vec = encoder.encode([combined], normalize_embeddings=True)[0]
+    vec = encoder.encode([student_embedding_text(student)], normalize_embeddings=True)[0]
     return vec.tolist()
 
 
@@ -753,7 +955,16 @@ def sync_student_profile(
         )
 
     encoder = get_shared_encoder()
-    student.embedding = build_student_embedding(student, encoder)
+    existing = storage.get_student(student_id)
+    if (
+        existing is not None
+        and existing.embedding is not None
+        and len(existing.embedding) == 384
+        and student_embedding_text(existing) == student_embedding_text(student)
+    ):
+        student.embedding = existing.embedding
+    else:
+        student.embedding = build_student_embedding(student, encoder)
     if len(student.embedding) != 384:
         raise HTTPException(
             status_code=500,

@@ -1,6 +1,7 @@
 package com.scholarbridge.controller;
 
 import com.scholarbridge.dto.ApiDtos.ProfileUpdateRequest;
+import com.scholarbridge.dto.ApiDtos.StudentResumeAnalysisResponse;
 import com.scholarbridge.dto.ApiDtos.UserResponse;
 import com.scholarbridge.service.ProfileService;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -31,6 +33,11 @@ public class ProfileController {
     @PutMapping("/me")
     public UserResponse updateCurrent(@Valid @RequestBody ProfileUpdateRequest request) {
         return profileService.updateCurrent(request);
+    }
+
+    @PostMapping(value = "/analyze-resume", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public StudentResumeAnalysisResponse analyzeResume(@RequestParam("file") MultipartFile file) {
+        return profileService.analyzeResume(file);
     }
 
     @PostMapping("/me/photo")

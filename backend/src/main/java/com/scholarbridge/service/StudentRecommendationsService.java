@@ -3,6 +3,7 @@ package com.scholarbridge.service;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.scholarbridge.dto.ApiDtos.RecommendedProfessorResponse;
 import com.scholarbridge.dto.ApiDtos.StudentProjectItem;
+import com.scholarbridge.dto.ApiDtos.StudentResumeDetails;
 import com.scholarbridge.entity.FacultyApprovalStatus;
 import com.scholarbridge.entity.PaperSubmission;
 import com.scholarbridge.entity.StudentProfile;
@@ -33,17 +34,20 @@ public class StudentRecommendationsService {
     private final PaperSubmissionRepository papers;
     private final RestClient mlClient;
     private final UserRepository users;
+    private final ApiMapper mapper;
 
     public StudentRecommendationsService(
         CurrentUserService currentUser,
         PaperSubmissionRepository papers,
         RestClient mlClient,
-        UserRepository users
+        UserRepository users,
+        ApiMapper mapper
     ) {
         this.currentUser = currentUser;
         this.papers = papers;
         this.mlClient = mlClient;
         this.users = users;
+        this.mapper = mapper;
     }
 
     @Transactional(readOnly = true)
@@ -56,47 +60,9 @@ public class StudentRecommendationsService {
                 HttpStatus.NOT_FOUND,
                 "Student profile was not found."
             ));
-        StudentProfile profile = student.getStudentProfile();
         String studentId = student.getId().toString();
 
-        StudentProfileSyncRequest syncRequest = new StudentProfileSyncRequest(
-            studentId,
-            nonBlank(student.getName(), "Anonymous Student"),
-            DEFAULT_DEPARTMENT,
-            nonBlank(profile == null ? null : profile.getYear(), "3rd Year"),
-            profile == null ? "" : nonBlank(profile.getSkills(), ""),
-            profile == null ? List.of() : nonEmpty(profile.getSkillTags()),
-            profile == null ? List.of() : nonEmpty(profile.getInterests()),
-            profile == null ? List.of() : profile.getProjects().stream()
-                .map(project -> new StudentProjectItem(project.getTitle(), project.getDescription()))
-                .toList(),
-            papers.findByStudentIdOrderByUploadedAtDesc(student.getId()).stream()
-                .map(this::paperForMatching)
-                .toList()
-        );
-
-        StudentProfileSyncResponse syncResponse;
-        try {
-            syncResponse = mlClient.put()
-                .uri("/students/{studentId}/profile", studentId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(syncRequest)
-                .retrieve()
-                .body(StudentProfileSyncResponse.class);
-        } catch (RestClientException exception) {
-            logger.error("ML service could not sync recommendation profile for student {}", studentId, exception);
-            throw new BusinessRuleException(
-                HttpStatus.BAD_GATEWAY,
-                "Could not synchronize your profile with the recommendation service."
-            );
-        }
-        if (syncResponse == null || syncResponse.embeddingDimensions() != EMBEDDING_DIMENSIONS) {
-            logger.error("ML service returned an invalid embedding for student {}", studentId);
-            throw new BusinessRuleException(
-                HttpStatus.BAD_GATEWAY,
-                "The recommendation service could not generate a valid student profile embedding."
-            );
-        }
+        synchronizeStudentProfile(student);
 
         MlProfessorMatchesResponse mlResponse;
         try {
@@ -129,6 +95,55 @@ public class StudentRecommendationsService {
 
         logger.info("No professor matches found for student {}.", studentId);
         return List.of();
+    }
+
+    public void synchronizeStudentProfile(User student) {
+        if (student == null || student.getRole() != UserRole.STUDENT) {
+            throw new BusinessRuleException(HttpStatus.FORBIDDEN, "Only student profiles can be synchronized.");
+        }
+        StudentProfile profile = student.getStudentProfile();
+        String studentId = student.getId().toString();
+        StudentProfileSyncRequest syncRequest = new StudentProfileSyncRequest(
+            studentId,
+            nonBlank(student.getName(), "Anonymous Student"),
+            DEFAULT_DEPARTMENT,
+            nonBlank(profile == null ? null : profile.getYear(), "3rd Year"),
+            profile == null ? "" : nonBlank(profile.getSkills(), ""),
+            profile == null ? List.of() : nonEmpty(profile.getSkillTags()),
+            profile == null ? List.of() : nonEmpty(profile.getInterests()),
+            profile == null ? List.of() : profile.getProjects().stream()
+                .map(mapper::studentProject)
+                .toList(),
+            papers.findByStudentIdOrderByUploadedAtDesc(student.getId()).stream()
+                .map(this::paperForMatching)
+                .toList(),
+            mapper.user(student).studentResumeDetails()
+        );
+
+        StudentProfileSyncResponse syncResponse;
+        try {
+            syncResponse = mlClient.put()
+                .uri("/students/{studentId}/profile", studentId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(syncRequest)
+                .retrieve()
+                .body(StudentProfileSyncResponse.class);
+        } catch (RestClientException exception) {
+            logger.error("ML service could not sync recommendation profile for student {}", studentId, exception);
+            throw new BusinessRuleException(
+                HttpStatus.BAD_GATEWAY,
+                "Could not synchronize your profile with the recommendation service."
+            );
+        }
+        if (syncResponse == null
+            || !studentId.equals(syncResponse.studentId())
+            || syncResponse.embeddingDimensions() != EMBEDDING_DIMENSIONS) {
+            logger.error("ML service returned an invalid embedding for student {}", studentId);
+            throw new BusinessRuleException(
+                HttpStatus.BAD_GATEWAY,
+                "The recommendation service could not generate a valid student profile embedding."
+            );
+        }
     }
 
     private Optional<RecommendedProfessorResponse> findProfessor(MlProfessorMatch match) {
@@ -213,7 +228,8 @@ public class StudentRecommendationsService {
         @JsonProperty("skill_tags") List<String> skillTags,
         List<String> interests,
         List<StudentProjectItem> projects,
-        List<StudentPaperMatch> papers
+        List<StudentPaperMatch> papers,
+        @JsonProperty("resume_details") StudentResumeDetails resumeDetails
     ) {}
 
     private record StudentPaperMatch(String title, String category) {}
