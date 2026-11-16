@@ -234,7 +234,7 @@ export const Navbar = () => {
                     aria-expanded={profileMenuOpen}
                     aria-haspopup="menu"
                     onClick={() => setProfileMenuOpen((open) => !open)}
-                    className={`flex items-center gap-2.5 rounded-full border px-3 py-1.5 transition ${
+                    className={`profile-trigger flex items-center gap-2.5 rounded-full border px-3 py-1.5 transition ${
                       profileMenuOpen || isActive('/profile/edit')
                         ? 'border-sage/50 bg-mint/70'
                         : 'border-sage/30 bg-white/90 hover:bg-mint/40'

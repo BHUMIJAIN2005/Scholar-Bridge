@@ -45,11 +45,10 @@ body:has(.landing-page) footer {
   background-image:
     radial-gradient(circle at 78% 9%, rgba(68, 100, 255, 0.22), transparent 28rem),
     radial-gradient(circle at 18% 30%, rgba(104, 52, 255, 0.1), transparent 24rem),
-    linear-gradient(180deg, rgba(3, 7, 17, 0.18), #030711 76%),
-    url('/hero-backdrop.jpg');
-  background-position: center, center, center, right 7rem;
+    linear-gradient(180deg, rgba(3, 7, 17, 0.18), #030711 76%);
+  background-position: center;
   background-repeat: no-repeat;
-  background-size: cover, cover, cover, min(1024px, 100%) auto;
+  background-size: cover;
 }
 
 .landing-page::before {
@@ -155,8 +154,8 @@ body:has(.landing-page) footer {
 
 @media (max-width: 768px) {
   .landing-page {
-    background-position: center, center, center, 72% 5rem;
-    background-size: cover, cover, cover, auto 38%;
+    background-position: center;
+    background-size: cover;
   }
 
   .landing-page h1 {

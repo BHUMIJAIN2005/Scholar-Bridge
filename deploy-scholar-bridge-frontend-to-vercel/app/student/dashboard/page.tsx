@@ -121,7 +121,7 @@ export default function StudentDashboardPage() {
             <div className="shrink-0 flex items-center gap-3">
               <Link
                 href="/student/openings"
-                className="btn-secondary border-white text-white hover:bg-white/15 px-4 py-2.5 rounded-[12px] text-sm font-semibold shadow-xs transition flex items-center gap-2"
+                className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-4 py-2.5 rounded-[12px] text-sm font-semibold shadow-xs transition flex items-center gap-2"
               >
                 <span>Browse Openings</span>
                 <ArrowRight size={15} />
