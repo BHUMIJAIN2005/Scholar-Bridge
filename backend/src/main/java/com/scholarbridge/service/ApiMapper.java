@@ -1,5 +1,8 @@
 package com.scholarbridge.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scholarbridge.dto.ApiDtos.ApplicantPaperResponse;
 import com.scholarbridge.dto.ApiDtos.ApplicantResponse;
 import com.scholarbridge.dto.ApiDtos.ApplicationResponse;
@@ -17,6 +20,7 @@ import com.scholarbridge.dto.ApiDtos.StudentDetailResponse;
 import com.scholarbridge.dto.ApiDtos.StudentDirectoryResponse;
 import com.scholarbridge.dto.ApiDtos.StudentPaperSummaryResponse;
 import com.scholarbridge.dto.ApiDtos.StudentProjectItem;
+import com.scholarbridge.dto.ApiDtos.StudentResumeDetails;
 import com.scholarbridge.dto.ApiDtos.UserResponse;
 import com.scholarbridge.entity.Application;
 import com.scholarbridge.entity.Conference;
@@ -36,10 +40,21 @@ import com.scholarbridge.entity.User;
 import com.scholarbridge.entity.UserRole;
 import java.util.Arrays;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ApiMapper {
+    private static final Logger logger = LoggerFactory.getLogger(ApiMapper.class);
+    private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {};
+
+    private final ObjectMapper objectMapper;
+
+    public ApiMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     public UserResponse user(User user) {
         FacultyProfile faculty = user.getFacultyProfile();
         StudentProfile student = user.getStudentProfile();
@@ -84,7 +99,9 @@ public class ApiMapper {
             faculty == null ? null : faculty.getAcceptingStudents(),
             faculty == null ? List.of() : faculty.getEducation().stream().map(this::education).toList(),
             faculty == null ? List.of() : List.copyOf(faculty.getAwards()),
-            faculty == null ? List.of() : faculty.getProjects().stream().map(this::facultyProject).toList()
+            faculty == null ? List.of() : faculty.getProjects().stream().map(this::facultyProject).toList(),
+            studentResumeDetails(student),
+            null
         );
     }
 
@@ -268,8 +285,39 @@ public class ApiMapper {
         );
     }
 
-    private StudentProjectItem studentProject(StudentProjectEntry project) {
-        return new StudentProjectItem(project.getTitle(), project.getDescription());
+    public StudentProjectItem studentProject(StudentProjectEntry project) {
+        return new StudentProjectItem(
+            project.getTitle(),
+            project.getDescription(),
+            readTechnologies(project.getTechnologiesJson())
+        );
+    }
+
+    private List<String> readTechnologies(String technologiesJson) {
+        if (!present(technologiesJson)) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(technologiesJson, STRING_LIST_TYPE);
+        } catch (JsonProcessingException exception) {
+            logger.error("Could not deserialize student project technologies.", exception);
+            throw new IllegalStateException("Student project technologies could not be loaded.", exception);
+        }
+    }
+
+    private StudentResumeDetails studentResumeDetails(StudentProfile student) {
+        if (student == null) {
+            return null;
+        }
+        if (!present(student.getResumeDetailsJson())) {
+            return new StudentResumeDetails(null, null, List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+        }
+        try {
+            return objectMapper.readValue(student.getResumeDetailsJson(), StudentResumeDetails.class);
+        } catch (JsonProcessingException exception) {
+            logger.error("Could not deserialize student resume profile details.", exception);
+            throw new IllegalStateException("Student resume profile details could not be loaded.", exception);
+        }
     }
 
     public AuthResponse auth(User user, String token, String message) {

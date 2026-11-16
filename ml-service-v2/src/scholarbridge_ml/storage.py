@@ -37,8 +37,9 @@ class StudentProfileRecord(BaseModel):
     skills: str = ""
     skill_tags: list[str] = Field(default_factory=list)
     interests: list[str] = Field(default_factory=list)
-    projects: list[dict[str, str]] = Field(default_factory=list)
+    projects: list[dict[str, Any]] = Field(default_factory=list)
     papers: list[dict[str, Any]] = Field(default_factory=list)
+    resume_details: dict[str, Any] = Field(default_factory=dict)
     embedding: list[float] | None = None  # 384-dimensional normalized embedding
 
 

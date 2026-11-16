@@ -39,6 +39,8 @@ export interface User {
   linkedinUrl?: string;
   visibility?: 'ALL_USERS' | 'APPLIED_FACULTY_ONLY';
   year?: string;
+  studentResumeDetails?: StudentResumeDetails;
+  recommendationSyncWarning?: string | null;
   createdAt?: string;
 }
 
@@ -58,6 +60,36 @@ export interface FacultyProjectItem {
 export interface StudentProjectItem {
   title?: string;
   description?: string;
+  technologies?: string[];
+}
+
+export interface StudentEducationItem {
+  degree?: string;
+  fieldOfStudy?: string;
+  university?: string;
+  academicYear?: string;
+  cgpa?: string;
+}
+
+export interface StudentExperienceItem {
+  title?: string;
+  role?: string;
+  organization?: string;
+  description?: string;
+  technologies?: string[];
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface StudentResumeDetails {
+  contactEmail?: string;
+  phone?: string;
+  education?: StudentEducationItem[];
+  internships?: StudentExperienceItem[];
+  workExperience?: StudentExperienceItem[];
+  certifications?: string[];
+  achievements?: string[];
+  researchExperience?: StudentExperienceItem[];
 }
 
 export interface AuthResponse {

@@ -324,6 +324,47 @@ class TestApiEndpoints(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    @patch("scholarbridge_ml.api_routes.get_shared_encoder")
+    def test_student_profile_sync_reuses_unchanged_embedding_and_refreshes_changes(self, mock_encoder_getter):
+        import numpy as np
+
+        encoder = MagicMock()
+        encoder.encode.return_value = np.ones((1, 384), dtype=np.float32)
+        mock_encoder_getter.return_value = encoder
+        profile = {
+            "id": "resume-student",
+            "name": "Student",
+            "academic_year": "3rd Year",
+            "skills": "Python",
+            "skill_tags": ["Python"],
+            "interests": ["NLP"],
+            "projects": [{"title": "Parser", "technologies": ["Python"]}],
+            "resume_details": {
+                "education": [{"degree": "BSc", "university": "Example University"}],
+                "achievements": ["Dean's list"],
+            },
+        }
+
+        first = self.client.put("/students/resume-student/profile", json=profile)
+        unchanged = self.client.put("/students/resume-student/profile", json=profile)
+        changed_profile = {
+            **profile,
+            "resume_details": {
+                **profile["resume_details"],
+                "achievements": ["Dean's list", "Research award"],
+            },
+        }
+        changed = self.client.put("/students/resume-student/profile", json=changed_profile)
+
+        self.assertEqual(first.status_code, 200, first.text)
+        self.assertEqual(unchanged.status_code, 200, unchanged.text)
+        self.assertEqual(changed.status_code, 200, changed.text)
+        self.assertEqual(encoder.encode.call_count, 2)
+        self.assertEqual(
+            storage.get_student("resume-student").resume_details["achievements"],
+            ["Dean's list", "Research award"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
