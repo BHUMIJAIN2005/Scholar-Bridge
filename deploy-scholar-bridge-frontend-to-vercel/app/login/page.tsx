@@ -258,17 +258,7 @@ function LoginFormContent() {
         )}
 
         <div className="space-y-3">
-          {googleClientId ? (
-            <div className="flex min-h-10 justify-center" ref={googleButtonRef} />
-          ) : (
-            <button
-              type="button"
-              disabled
-              className="w-full rounded-lg border border-white/30 bg-white/10 px-4 py-3 text-sm font-semibold text-white/60"
-            >
-              Google sign-in is not configured
-            </button>
-          )}
+          {googleClientId && <div className="flex min-h-10 justify-center" ref={googleButtonRef} />}
           {googleNeedsRole && (
             <div className="space-y-2 rounded-lg border border-white/20 bg-white/10 p-3">
               <p className="text-center text-sm font-medium text-white">I am a...</p>

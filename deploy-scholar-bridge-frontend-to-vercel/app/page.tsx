@@ -4,7 +4,6 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import dashboardHeroImage from '../Dashboard hero image.jpeg';
 import {
   GraduationCap,
   BookOpen,
@@ -21,21 +20,32 @@ export default function HomePage() {
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <main className="landing-page min-h-[calc(100vh-4rem)] space-y-16 pb-16">
+    <main className="landing-page min-h-[calc(100vh-4rem)] pb-16">
       {/* Hero Section */}
-      <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4 sm:pt-8 lg:pt-12 lg:pb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+      <section className="landing-hero-section relative w-full">
+        <div className="landing-hero-backdrop absolute overflow-hidden">
+          <Image
+            src="/hero-bg.webp"
+            alt=""
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 1280px"
+            className="landing-hero-backdrop-image object-contain object-right"
+          />
+        </div>
+
+        <div className="landing-hero-content relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 pb-16 pt-20 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:px-8">
           {/* Hero Copy */}
           <div className="lg:col-span-7 space-y-6 z-10">
-            <div className="inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-white/45 border border-white/50 text-[#042558] backdrop-blur-md shadow-xs">
-              Madhav Institute of Technology and science -DU
+            <div className="inline-flex items-center px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-white/45 border border-white/50 text-white backdrop-blur-md shadow-xs">
+              Madhav Institute of Technology and Science -DU
             </div>
 
-            <h1 className="max-w-xl text-4xl font-extrabold leading-[1.12] tracking-tight text-[#011023] sm:text-5xl lg:text-[3.5rem]">
+            <h1 className="max-w-xl text-4xl font-extrabold leading-[1.12] tracking-tight text-white sm:text-5xl lg:text-[3.5rem]">
               Research that shapes the future of computing
             </h1>
 
-            <p className="max-w-xl text-base font-normal leading-relaxed text-[#042558]/85 sm:text-lg">
+            <p className="max-w-xl text-base font-normal leading-relaxed text-[#011023] sm:text-lg">
               We study intelligent systems, software and networks, and turn the results into technology people can use.
             </p>
 
@@ -72,24 +82,11 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Hero Illustration */}
-          <div className="lg:col-span-5 relative flex items-center justify-center">
-            <div className="hero-visual relative w-full aspect-[16/10] max-w-[540px] lg:max-w-none">
-              <Image
-                src={dashboardHeroImage}
-                alt="Technology research illustration"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-contain mix-blend-multiply"
-              />
-            </div>
-          </div>
         </div>
       </section>
 
       {/* Three Glass Cards */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="landing-feature-cards relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="glass-card p-6 flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white shadow-inner">
@@ -130,7 +127,7 @@ export default function HomePage() {
       </section>
 
       {/* Two Pillars: Student Portal vs Faculty Portal */}
-      <section className="max-w-6xl mx-auto">
+      <section className="landing-pillars-section max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Student Pillar */}
           <div className="glass-card p-8 relative overflow-hidden">

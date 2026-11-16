@@ -44,7 +44,7 @@ export const Navbar = () => {
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-sage/20 bg-mist/90 backdrop-blur-md">
+    <header className="site-navbar sticky top-0 z-40 w-full border-b border-sage/20 bg-mist/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo & Brand */}
@@ -335,7 +335,7 @@ export const Navbar = () => {
 
       {/* Mobile dropdown */}
       {mobileMenuOpen && !isLoginPage && (
-        <div className="md:hidden border-t border-sage/20 bg-mist px-4 pt-3 pb-6 space-y-2 shadow-lg">
+        <div className="site-navbar-menu md:hidden border-t border-sage/20 bg-mist px-4 pt-3 pb-6 space-y-2 shadow-lg">
           <Link
             href="/showcase"
             onClick={() => setMobileMenuOpen(false)}

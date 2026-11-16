@@ -55,7 +55,7 @@ function FacultyProfile() {
             <div className="px-5 pb-6 sm:px-8">
               <div className="-mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end">
                 <Avatar name={faculty.name} photoUrl={faculty.photoUrl} className="h-24 w-24 border-4 border-white sm:h-28 sm:w-28" textClassName="text-3xl" />
-                <div className="min-w-0 flex-1 pb-1">
+                <div className="min-w-0 flex-1 pt-4 pb-1">
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-mint px-2.5 py-1 text-xs font-semibold text-forest">Faculty</span>
                     {faculty.department && <span className="rounded-full border border-sage/30 bg-white px-2.5 py-1 text-xs font-semibold text-ink/70">{faculty.department}</span>}

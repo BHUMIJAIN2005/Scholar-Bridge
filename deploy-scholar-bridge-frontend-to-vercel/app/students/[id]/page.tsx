@@ -47,7 +47,7 @@ function StudentProfile() {
             <div className="px-6 pb-6 sm:px-8">
               <div className="-mt-14 flex flex-col gap-4 sm:flex-row sm:items-end">
                 <Avatar name={student.name} photoUrl={student.photoUrl} className="h-28 w-28 border-4 border-white" textClassName="text-3xl" />
-                <div className="pb-1">
+                <div className="pt-4 pb-1">
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-mint px-2.5 py-1 text-xs font-semibold text-forest">Student</span>
                     <span className="rounded-full border border-sage/30 bg-white px-2.5 py-1 text-xs font-semibold text-ink/70">{student.year || 'Student researcher'}</span>
