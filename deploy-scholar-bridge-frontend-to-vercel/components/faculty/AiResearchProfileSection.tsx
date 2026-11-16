@@ -37,11 +37,7 @@ import {
 interface UploadItem {
   id: string;
   file: File;
-  docType: 'cv' | 'paper';
-}
-
-interface AiResearchProfileSectionProps {
-  professorId?: string | number;
+  docType: 'cv' | 'paper' | 'other';
 }
 
 type ProcessingStage =
@@ -52,9 +48,7 @@ type ProcessingStage =
   | 'generating'
   | 'completed';
 
-export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> = ({
-  professorId = 'me',
-}) => {
+export const AiResearchProfileSection: React.FC = () => {
   // Upload state
   const [files, setFiles] = useState<UploadItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,6 +68,7 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
   // Confirmed Profile & Matching Students
   const [confirmedStatus, setConfirmedStatus] = useState<ProfileStatusResponse | null>(null);
   const [matches, setMatches] = useState<StudentMatch[]>([]);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmSuccess, setConfirmSuccess] = useState(false);
@@ -81,6 +76,8 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
   // Interactive tag inputs
   const [newInterest, setNewInterest] = useState('');
   const [newDomain, setNewDomain] = useState('');
+  const [newTechnicalSkill, setNewTechnicalSkill] = useState('');
+  const [newResearchExperience, setNewResearchExperience] = useState('');
   const [newMethod, setNewMethod] = useState('');
   const [newSkill, setNewSkill] = useState('');
   const [newYear, setNewYear] = useState('');
@@ -90,24 +87,27 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
   // Initial load: check if professor already has a confirmed profile
   useEffect(() => {
     void loadProfileStatus();
-  }, [professorId]);
+  }, []);
 
   const loadProfileStatus = async () => {
     setIsLoadingStatus(true);
     try {
-      const status = await facultyResearchProfileApi.getConfirmedProfile(professorId);
+      setProfileError(null);
+      const status = await facultyResearchProfileApi.getConfirmedProfile();
       setConfirmedStatus(status);
       if (status.is_confirmed) {
         // Load matching students
         try {
-          const matchRes = await facultyResearchProfileApi.getStudentMatches(professorId, 10);
+          const matchRes = await facultyResearchProfileApi.getStudentMatches(10);
           setMatches(matchRes.matches || []);
         } catch (e) {
-          console.warn('Could not load student matches:', e);
+          const response = (e as { response?: { data?: { message?: string; detail?: string } } }).response;
+          setProfileError(response?.data?.detail || response?.data?.message || 'Could not load student matches.');
         }
       }
     } catch (err) {
-      console.warn('Error loading confirmed profile status:', err);
+      const response = (err as { response?: { data?: { message?: string; detail?: string } } }).response;
+      setProfileError(response?.data?.detail || response?.data?.message || 'Could not load the confirmed research profile.');
     } finally {
       setIsLoadingStatus(false);
     }
@@ -122,13 +122,22 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
   };
 
   const addFiles = (selectedFiles: File[]) => {
-    const validPdfs = selectedFiles.filter(
+    setErrorMessage(null);
+    const pdfs = selectedFiles.filter(
       (f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
     );
-    if (validPdfs.length < selectedFiles.length) {
+    const validPdfs = pdfs.filter((file) => file.size <= 25 * 1024 * 1024);
+    if (pdfs.length < selectedFiles.length) {
       setErrorMessage('Some selected files were ignored. Only PDF documents are supported.');
     }
-    const newItems: UploadItem[] = validPdfs.map((f, i) => {
+    if (validPdfs.length < pdfs.length) {
+      setErrorMessage('Files larger than 25 MB were ignored.');
+    }
+    const availableSlots = Math.max(0, 10 - files.length);
+    if (validPdfs.length > availableSlots) {
+      setErrorMessage('Upload no more than 10 documents at a time.');
+    }
+    const newItems: UploadItem[] = validPdfs.slice(0, availableSlots).map((f, i) => {
       const isCv = f.name.toLowerCase().includes('cv') || f.name.toLowerCase().includes('resume');
       return {
         id: `${Date.now()}_${i}_${f.name}`,
@@ -143,10 +152,10 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
     setFiles((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const toggleDocType = (id: string) => {
+  const toggleDocType = (id: string, docType: UploadItem['docType']) => {
     setFiles((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, docType: item.docType === 'cv' ? 'paper' : 'cv' } : item
+        item.id === id ? { ...item, docType } : item
       )
     );
   };
@@ -183,11 +192,17 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
       clearTimeout(timer3);
       setStage('completed');
 
-      if (result.no_research_content) {
+      if (result.no_research_content || result.status === 'no_research_content') {
         setErrorMessage(
           result.reason ||
             'The uploaded documents did not contain readable research content. Please upload valid academic CVs or research papers.'
         );
+        setDraftProfile(null);
+        return;
+      }
+
+      if (result.status !== 'success' || !result.research_profile) {
+        setErrorMessage(result.reason || 'The AI service did not return a usable research profile.');
         setDraftProfile(null);
         return;
       }
@@ -237,11 +252,12 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
           stated_requirements: draftRequirements,
           layman_summary: draftLayman,
           draft_id: draftId,
-        },
-        professorId
+        }
       );
 
       setConfirmSuccess(true);
+      setDraftProfile(null);
+      setDraftId(null);
       // Refresh status & student matches
       await loadProfileStatus();
       setTimeout(() => setConfirmSuccess(false), 4000);
@@ -255,7 +271,7 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
 
   // Helper Tag Adders
   const addTag = (
-    field: 'interests' | 'domains' | 'methods' | 'skills' | 'years' | 'pubs' | 'contribs',
+    field: 'interests' | 'domains' | 'technicalSkills' | 'experience' | 'methods' | 'skills' | 'years' | 'pubs' | 'contribs',
     value: string
   ) => {
     const trimmed = value.trim();
@@ -277,6 +293,22 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
         });
       }
       setNewDomain('');
+    } else if (field === 'technicalSkills') {
+      if (!draftProfile.technical_skills.includes(trimmed)) {
+        setDraftProfile({
+          ...draftProfile,
+          technical_skills: [...draftProfile.technical_skills, trimmed],
+        });
+      }
+      setNewTechnicalSkill('');
+    } else if (field === 'experience') {
+      if (!draftProfile.research_experience.includes(trimmed)) {
+        setDraftProfile({
+          ...draftProfile,
+          research_experience: [...draftProfile.research_experience, trimmed],
+        });
+      }
+      setNewResearchExperience('');
     } else if (field === 'methods') {
       if (!draftProfile.methods.includes(trimmed)) {
         setDraftProfile({
@@ -317,7 +349,7 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
   };
 
   const removeTag = (
-    field: 'interests' | 'domains' | 'methods' | 'skills' | 'years' | 'pubs' | 'contribs',
+    field: 'interests' | 'domains' | 'technicalSkills' | 'experience' | 'methods' | 'skills' | 'years' | 'pubs' | 'contribs',
     index: number
   ) => {
     if (!draftProfile) return;
@@ -330,6 +362,16 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
       setDraftProfile({
         ...draftProfile,
         research_domains: draftProfile.research_domains.filter((_, i) => i !== index),
+      });
+    } else if (field === 'technicalSkills') {
+      setDraftProfile({
+        ...draftProfile,
+        technical_skills: draftProfile.technical_skills.filter((_, i) => i !== index),
+      });
+    } else if (field === 'experience') {
+      setDraftProfile({
+        ...draftProfile,
+        research_experience: draftProfile.research_experience.filter((_, i) => i !== index),
       });
     } else if (field === 'methods') {
       setDraftProfile({
@@ -412,6 +454,13 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
       )}
 
       {/* ERROR BANNER */}
+      {profileError && (
+        <div role="alert" className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+          <AlertCircle size={18} className="mt-0.5 shrink-0 text-rose-600" />
+          <span>{profileError}</span>
+        </div>
+      )}
+
       {errorMessage && (
         <div className="flex items-start justify-between gap-3 p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-900 text-sm">
           <div className="flex items-start gap-2.5">
@@ -450,11 +499,11 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
               Upload Research Documents
             </h3>
             <p className="text-xs text-ink/70 mt-0.5">
-              Upload your CV and recent publication PDFs. You can label each file as a CV or Research Paper.
+              Upload your CV, research papers, or other relevant research PDFs.
             </p>
           </div>
           <span className="text-xs font-semibold text-leaf bg-mint/50 px-2.5 py-1 rounded-full">
-            PDF only (Max 25MB)
+            PDF only · 25MB each · up to 10 files
           </span>
         </div>
 
@@ -523,19 +572,16 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    {/* Toggle Document Type */}
-                    <button
-                      type="button"
-                      onClick={() => toggleDocType(item.id)}
-                      className={`text-xs px-2.5 py-1 rounded-full font-semibold border transition ${
-                        item.docType === 'cv'
-                          ? 'bg-purple-100 text-purple-800 border-purple-300'
-                          : 'bg-blue-100 text-blue-800 border-blue-300'
-                      }`}
-                      title="Click to toggle document type"
+                    <select
+                      value={item.docType}
+                      onChange={(event) => toggleDocType(item.id, event.target.value as UploadItem['docType'])}
+                      aria-label={`Document type for ${item.file.name}`}
+                      className="rounded-full border border-sage/40 bg-white px-2.5 py-1 text-xs font-semibold text-ink"
                     >
-                      {item.docType === 'cv' ? '📄 CV / Resume' : '📑 Research Paper'}
-                    </button>
+                      <option value="cv">CV / Resume</option>
+                      <option value="paper">Research Paper</option>
+                      <option value="other">Other Research Document</option>
+                    </select>
 
                     <button
                       type="button"
@@ -719,6 +765,75 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
                     <Plus size={12} />
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="space-y-2 border border-sage/20 p-3.5 rounded-xl bg-mist/20">
+              <label className="text-xs font-bold text-ink uppercase tracking-wider">
+                Technical Skills
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {draftProfile.technical_skills.map((skill, idx) => (
+                  <span key={idx} className="inline-flex items-center gap-1 rounded-full border border-sage/30 bg-white px-2.5 py-1 text-xs">
+                    {skill}
+                    <button type="button" onClick={() => removeTag('technicalSkills', idx)} aria-label={`Remove ${skill}`}>
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTechnicalSkill}
+                  onChange={(event) => setNewTechnicalSkill(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      addTag('technicalSkills', newTechnicalSkill);
+                    }
+                  }}
+                  placeholder="Add a technical skill"
+                  className="min-w-0 flex-1 text-xs p-1.5 rounded-lg border border-sage/30 bg-white"
+                />
+                <button type="button" onClick={() => addTag('technicalSkills', newTechnicalSkill)} className="rounded-lg bg-mint px-2.5 text-xs font-semibold text-forest">
+                  Add
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2 border border-sage/20 p-3.5 rounded-xl bg-mist/20">
+              <label className="text-xs font-bold text-ink uppercase tracking-wider">
+                Research Experience
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {draftProfile.research_experience.map((experience, idx) => (
+                  <span key={idx} className="inline-flex items-center gap-1 rounded-full border border-sage/30 bg-white px-2.5 py-1 text-xs">
+                    {experience}
+                    <button type="button" onClick={() => removeTag('experience', idx)} aria-label={`Remove ${experience}`}>
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newResearchExperience}
+                  onChange={(event) => setNewResearchExperience(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      addTag('experience', newResearchExperience);
+                    }
+                  }}
+                  placeholder="Add a research role or project"
+                  className="min-w-0 flex-1 text-xs p-1.5 rounded-lg border border-sage/30 bg-white"
+                />
+                <button type="button" onClick={() => addTag('experience', newResearchExperience)} className="rounded-lg bg-mint px-2.5 text-xs font-semibold text-forest">
+                  Add
+                </button>
               </div>
             </div>
           </div>
@@ -928,7 +1043,7 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
           </div>
 
           {/* STATED PREFERENCES */}
-          {draftRequirements && (
+          {draftRequirements ? (
             <div className="p-4 rounded-xl border border-sage/20 bg-mist/20 space-y-3">
               <h4 className="text-xs font-bold text-ink uppercase tracking-wider">
                 Stated Student Collaborator Preferences
@@ -968,7 +1083,32 @@ export const AiResearchProfileSection: React.FC<AiResearchProfileSectionProps> =
                   </div>
                 </div>
               </div>
+              <label className="block text-xs font-semibold text-ink/70">
+                Additional stated preferences
+                <textarea
+                  rows={2}
+                  value={draftRequirements.notes || ''}
+                  onChange={(event) => setDraftRequirements({
+                    ...draftRequirements,
+                    notes: event.target.value,
+                  })}
+                  className="mt-1 w-full rounded-lg border border-sage/30 bg-white p-2 text-xs text-ink"
+                  placeholder="Only include requirements explicitly stated by you."
+                />
+              </label>
             </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setDraftRequirements({
+                preferred_skills: [],
+                preferred_years: [],
+                notes: '',
+              })}
+              className="text-xs font-semibold text-forest underline"
+            >
+              + Add stated student collaborator preferences
+            </button>
           )}
 
           {/* ACTION BUTTONS */}

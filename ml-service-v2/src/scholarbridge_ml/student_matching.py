@@ -418,7 +418,15 @@ def rank_opportunities_for_student(
     if not opportunities or not student.embedding or len(student.embedding) != 384:
         return []
 
-    valid_opps = [opp for opp in opportunities if opp.embedding and len(opp.embedding) == 384]
+    unique_opportunities: dict[str, OpportunityContext] = {}
+    for opportunity in opportunities:
+        if (
+            opportunity.status.lower() == "open"
+            and opportunity.embedding
+            and len(opportunity.embedding) == 384
+        ):
+            unique_opportunities.setdefault(opportunity.opportunity_id, opportunity)
+    valid_opps = list(unique_opportunities.values())
     if not valid_opps:
         return []
 
@@ -488,6 +496,10 @@ def rank_opportunities_for_student(
                 status=opp.status,
             )
         )
+
+    matches.sort(key=lambda match: (match.match_score, match.relevance_score), reverse=True)
+    return matches[:top_k]
+
 
 def rank_professors_for_student(
     student: StudentProfileRecord,

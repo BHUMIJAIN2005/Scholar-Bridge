@@ -1,9 +1,10 @@
 import axiosClient from './axiosClient';
-import axios from 'axios';
 
 export interface ResearchProfile {
   research_interests: string[];
   research_domains: string[];
+  technical_skills: string[];
+  research_experience: string[];
   methods: string[];
   publications: string[];
   contributions: string[];
@@ -78,145 +79,53 @@ export interface StudentMatch {
   why_matched: string;
 }
 
-const ML_SERVICE_URL = process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8000';
-
 export const facultyResearchProfileApi = {
   /**
    * Upload and analyze professor documents (CV and research papers).
-   * Primary route: Spring Boot backend (/api/faculty/research-profile/analyze).
-   * Fallback: FastAPI ML microservice (/professor/analyze-documents).
+   * Routes through the authenticated Spring Boot backend.
    */
   async analyzeDocuments(files: File[], documentTypes: string[]): Promise<AnalysisResult> {
     const formData = new FormData();
     files.forEach((file) => formData.append('files', file));
     documentTypes.forEach((type) => formData.append('document_types', type));
 
-    try {
-      // Primary: Route via Spring Boot backend
-      const response = await axiosClient.post<AnalysisResult>(
-        '/api/faculty/research-profile/analyze',
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          timeout: 90000,
-        }
-      );
-      return response.data;
-    } catch (error: any) {
-      // Fallback directly to ML service if Spring Boot is offline or unrouted
-      if (
-        !error.response ||
-        error.code === 'ECONNREFUSED' ||
-        error.response?.status === 404 ||
-        error.response?.status === 502
-      ) {
-        console.warn('Spring Boot endpoint unavailable, falling back to ML service:', ML_SERVICE_URL);
-        const fallbackRes = await axios.post<AnalysisResult>(
-          `${ML_SERVICE_URL}/professor/analyze-documents`,
-          formData,
-          {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            timeout: 90000,
-          }
-        );
-        return fallbackRes.data;
-      }
-      throw error;
-    }
+    const response = await axiosClient.post<AnalysisResult>(
+      '/api/faculty/research-profile/analyze',
+      formData,
+      { timeout: 180000 }
+    );
+    return response.data;
   },
 
   /**
    * Confirm research profile, generate final 384-dim embedding, and persist to database.
    */
-  async confirmProfile(
-    payload: ProfileConfirmRequest,
-    professorId: string | number = 'me'
-  ): Promise<any> {
-    try {
-      const response = await axiosClient.put(
-        '/api/faculty/research-profile/confirm',
-        payload
-      );
-      return response.data;
-    } catch (error: any) {
-      if (
-        !error.response ||
-        error.code === 'ECONNREFUSED' ||
-        error.response?.status === 404 ||
-        error.response?.status === 502
-      ) {
-        console.warn('Falling back to ML service for confirmation');
-        const fallbackRes = await axios.put(
-          `${ML_SERVICE_URL}/professor/${professorId}/research-profile/confirm`,
-          payload
-        );
-        return fallbackRes.data;
-      }
-      throw error;
-    }
+  async confirmProfile(payload: ProfileConfirmRequest): Promise<unknown> {
+    const response = await axiosClient.put(
+      '/api/faculty/research-profile/confirm',
+      payload
+    );
+    return response.data;
   },
 
   /**
    * Retrieve confirmed research profile.
    */
-  async getConfirmedProfile(professorId: string | number = 'me'): Promise<ProfileStatusResponse> {
-    try {
-      const response = await axiosClient.get<ProfileStatusResponse>(
-        '/api/faculty/research-profile'
-      );
-      return response.data;
-    } catch (error: any) {
-      if (
-        !error.response ||
-        error.code === 'ECONNREFUSED' ||
-        error.response?.status === 404 ||
-        error.response?.status === 502
-      ) {
-        try {
-          const fallbackRes = await axios.get<any>(
-            `${ML_SERVICE_URL}/professor/${professorId}/research-profile`
-          );
-          return {
-            is_confirmed: true,
-            research_profile: fallbackRes.data.research_profile,
-            stated_requirements: fallbackRes.data.stated_requirements,
-            layman_summary: fallbackRes.data.layman_summary,
-            confirmed_at: fallbackRes.data.confirmed_at,
-          };
-        } catch {
-          return { is_confirmed: false };
-        }
-      }
-      return { is_confirmed: false };
-    }
+  async getConfirmedProfile(): Promise<ProfileStatusResponse> {
+    const response = await axiosClient.get<ProfileStatusResponse>(
+      '/api/faculty/research-profile'
+    );
+    return response.data;
   },
 
   /**
    * Retrieve ranked student research collaborator matches.
    */
-  async getStudentMatches(
-    professorId: string | number = 'me',
-    topK = 20
-  ): Promise<{ matches: StudentMatch[]; count: number }> {
-    try {
-      const response = await axiosClient.get<{ matches: StudentMatch[]; count: number }>(
-        `/api/faculty/research-profile/matches?top_k=${topK}`
-      );
-      return response.data;
-    } catch (error: any) {
-      if (
-        !error.response ||
-        error.code === 'ECONNREFUSED' ||
-        error.response?.status === 404 ||
-        error.response?.status === 502
-      ) {
-        const fallbackRes = await axios.post<{ matches: StudentMatch[]; count: number }>(
-          `${ML_SERVICE_URL}/professor/${professorId}/match-students`,
-          { top_k: topK }
-        );
-        return fallbackRes.data;
-      }
-      throw error;
-    }
+  async getStudentMatches(topK = 20): Promise<{ matches: StudentMatch[]; count: number }> {
+    const response = await axiosClient.get<{ matches: StudentMatch[]; count: number }>(
+      '/api/faculty/research-profile/matches',
+      { params: { top_k: topK } }
+    );
+    return response.data;
   },
 };

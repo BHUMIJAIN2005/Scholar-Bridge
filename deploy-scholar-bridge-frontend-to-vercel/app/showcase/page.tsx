@@ -23,6 +23,7 @@ import {
 
 import { CategoryChip } from '@/components/CategoryChip';
 import { conferenceApi, Conference, ConferenceSubmission } from '@/api/conferenceApi';
+import { ConferenceFormatReport } from '@/components/ConferenceFormatReport';
 import { useAuth } from '@/context/AuthContext';
 
 interface ShowcasePaper extends ConferenceSubmission {
@@ -687,6 +688,7 @@ export default function ShowcasePage() {
                       {paper.abstractText}
                     </p>
                   )}
+                  <ConferenceFormatReport result={paper.formatValidation} />
                 </div>
 
                 <div className="pt-4 border-t border-forest/10 flex items-center justify-between gap-3">

@@ -9,6 +9,7 @@ import com.scholarbridge.dto.ApiDtos.ApplicationResponse;
 import com.scholarbridge.dto.ApiDtos.AuthResponse;
 import com.scholarbridge.dto.ApiDtos.ConferenceResponse;
 import com.scholarbridge.dto.ApiDtos.ConferenceSubmissionResponse;
+import com.scholarbridge.dto.ApiDtos.ConferenceFormatValidationResult;
 import com.scholarbridge.dto.ApiDtos.EducationItem;
 import com.scholarbridge.dto.ApiDtos.FacultyDetailResponse;
 import com.scholarbridge.dto.ApiDtos.FacultyDirectoryResponse;
@@ -297,11 +298,18 @@ public class ApiMapper {
         if (!present(technologiesJson)) {
             return List.of();
         }
+        return readStringList(technologiesJson, "student project technologies");
+    }
+
+    private List<String> readStringList(String json, String fieldName) {
+        if (!present(json)) {
+            return List.of();
+        }
         try {
-            return objectMapper.readValue(technologiesJson, STRING_LIST_TYPE);
+            return objectMapper.readValue(json, STRING_LIST_TYPE);
         } catch (JsonProcessingException exception) {
-            logger.error("Could not deserialize student project technologies.", exception);
-            throw new IllegalStateException("Student project technologies could not be loaded.", exception);
+            logger.error("Could not deserialize {}.", fieldName, exception);
+            throw new IllegalStateException(fieldName + " could not be loaded.", exception);
         }
     }
 
@@ -329,7 +337,11 @@ public class ApiMapper {
             opening.getId(), opening.getFaculty().getId(), opening.getFaculty().getName(),
             opening.getFaculty().getFacultyProfile() == null ? null : opening.getFaculty().getFacultyProfile().getDepartment(),
             opening.getTitle(), opening.getDescription(), opening.getRequiredSkills(),
-            opening.getSeats(), opening.getStatus(), opening.getCreatedAt()
+            readStringList(opening.getPreferredSkillsJson(), "opening preferred skills"),
+            readStringList(opening.getPreferredYearsJson(), "opening preferred years"),
+            readStringList(opening.getEligibilityCriteriaJson(), "opening eligibility criteria"),
+            opening.getSeats(), opening.getDeadline(), opening.getStatus(),
+            opening.isRecommendationSyncPending(), opening.getCreatedAt()
         );
     }
 
@@ -376,8 +388,21 @@ public class ApiMapper {
             submission.getStatus() == SubmissionStatus.ACCEPTED
                 && Boolean.TRUE.equals(submission.getPublicPdfAllowed())
                 ? "/api/public/conference-submissions/" + submission.getId() + "/paper"
-                : null
+                : null,
+            conferenceFormatValidation(submission.getFormatValidationJson())
         );
+    }
+
+    private ConferenceFormatValidationResult conferenceFormatValidation(String value) {
+        if (!present(value)) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(value, ConferenceFormatValidationResult.class);
+        } catch (JsonProcessingException exception) {
+            logger.error("Could not deserialize conference paper format validation.", exception);
+            throw new IllegalStateException("Conference paper format validation could not be loaded.", exception);
+        }
     }
 
     private ApplicantPaperResponse applicantPaper(PaperSubmission paper) {

@@ -1,5 +1,7 @@
 package com.scholarbridge.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scholarbridge.dto.ApiDtos.ConferenceCreateRequest;
 import com.scholarbridge.dto.ApiDtos.ConferenceResponse;
 import com.scholarbridge.dto.ApiDtos.ConferenceSubmissionResponse;
@@ -31,19 +33,25 @@ public class ConferenceService {
     private final PaperSubmissionRepository papers;
     private final CurrentUserService currentUser;
     private final ApiMapper mapper;
+    private final ConferenceFormatValidationService formatValidation;
+    private final ObjectMapper objectMapper;
 
     public ConferenceService(
         ConferenceRepository conferences,
         ConferenceSubmissionRepository submissions,
         PaperSubmissionRepository papers,
         CurrentUserService currentUser,
-        ApiMapper mapper
+        ApiMapper mapper,
+        ConferenceFormatValidationService formatValidation,
+        ObjectMapper objectMapper
     ) {
         this.conferences = conferences;
         this.submissions = submissions;
         this.papers = papers;
         this.currentUser = currentUser;
         this.mapper = mapper;
+        this.formatValidation = formatValidation;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -91,11 +99,17 @@ public class ConferenceService {
         if (submissions.existsByPaperIdAndConferenceId(paper.getId(), conference.getId())) {
             throw new BusinessRuleException(HttpStatus.CONFLICT, "This paper has already been submitted to this conference.");
         }
+        var formatValidationResult = formatValidation.validate(paper);
         ConferenceSubmission submission = new ConferenceSubmission();
         submission.setPaper(paper);
         submission.setConference(conference);
         submission.setTrack(conference.getTracks().stream().filter(track -> track.equalsIgnoreCase(requestedTrack)).findFirst().orElse(requestedTrack));
         submission.setPublicPdfAllowed(request.allowPublicPdf());
+        try {
+            submission.setFormatValidationJson(objectMapper.writeValueAsString(formatValidationResult));
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("The conference format validation result could not be stored.", exception);
+        }
         return mapper.conferenceSubmission(submissions.save(submission));
     }
 

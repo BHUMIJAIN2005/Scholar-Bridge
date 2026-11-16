@@ -52,6 +52,11 @@ export const OpeningCard: React.FC<OpeningCardProps> = ({
         )}
 
         <p className="text-sm text-ink/80 line-clamp-3 mb-4">{opening.description}</p>
+        {opening.deadline && (
+          <p className="mb-3 text-xs font-semibold text-ink/70">
+            Deadline: {new Date(`${opening.deadline}T00:00:00`).toLocaleDateString()}
+          </p>
+        )}
 
         {skillsList.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-4">
@@ -62,6 +67,18 @@ export const OpeningCard: React.FC<OpeningCardProps> = ({
               >
                 {skill}
               </span>
+            ))}
+          </div>
+        )}
+        {(opening.preferredYears?.length > 0 || opening.eligibilityCriteria?.length > 0) && (
+          <div className="mb-4 space-y-1">
+            {opening.preferredYears?.length > 0 && (
+              <p className="text-xs text-ink/70">
+                Preferred years: {opening.preferredYears.join(', ')}
+              </p>
+            )}
+            {opening.eligibilityCriteria?.map((criterion) => (
+              <p key={criterion} className="text-xs text-ink/70">{criterion}</p>
             ))}
           </div>
         )}

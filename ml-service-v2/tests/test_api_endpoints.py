@@ -121,6 +121,102 @@ class TestApiEndpoints(unittest.TestCase):
         confirmed_profile = storage.get_confirmed_profile("prof_jane")
         self.assertIsNone(confirmed_profile)
 
+    @patch("scholarbridge_ml.api_routes.analyze_professor_documents")
+    def test_multiple_documents_keep_types_and_separators_in_analysis_draft(self, mock_analyzer):
+        from scholarbridge_ml.professor_analyzer import ProfessorAnalysisResult, ResearchProfile
+
+        mock_analyzer.return_value = ProfessorAnalysisResult(
+            draft_id="draft_multi",
+            status="success",
+            research_profile=ResearchProfile(
+                research_interests=["Graph Learning"],
+                research_domains=["Artificial Intelligence"],
+                methods=["Graph Neural Networks"],
+                embedding_text="Research in graph learning for scientific knowledge discovery.",
+            ),
+        )
+        document_text = "Research in graph learning and scientific knowledge discovery. " * 8
+        response = self.client.post(
+            "/professor/analyze-documents",
+            files=[
+                ("files", ("faculty_cv.pdf", create_test_pdf_bytes(document_text), "application/pdf")),
+                ("files", ("graph_paper.pdf", create_test_pdf_bytes(document_text), "application/pdf")),
+                ("files", ("lab_notes.pdf", create_test_pdf_bytes(document_text), "application/pdf")),
+            ],
+            data={"document_types": ["cv", "paper", "other"]},
+        )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        data = response.json()
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(
+            [item["document_type"] for item in data["extraction_metadata"]],
+            ["cv", "paper", "other"],
+        )
+        analyzed_text = mock_analyzer.call_args.kwargs["combined_text"]
+        self.assertIn("=== CV ===", analyzed_text)
+        self.assertIn("=== Paper 1 ===", analyzed_text)
+        self.assertIn("=== Paper 2 ===", analyzed_text)
+        self.assertIsNotNone(storage.get_unconfirmed_analysis(data["draft_id"]))
+
+    @patch("scholarbridge_ml.api_routes.analyze_professor_documents")
+    @patch("scholarbridge_ml.api_routes.extract_single_document")
+    def test_unreadable_documents_skip_groq_and_return_clear_draft_error(
+        self, mock_extract, mock_analyzer
+    ):
+        from scholarbridge_ml.document_extractor import ExtractedDocument
+
+        mock_extract.return_value = ExtractedDocument(
+            filename="blank.pdf",
+            document_type="paper",
+            text="",
+            extraction_method="pymupdf_tesseract_ocr",
+            extracted_char_count=0,
+            status="warning",
+            warnings=["No readable text."],
+        )
+        response = self.client.post(
+            "/professor/analyze-documents",
+            files={"files": ("blank.pdf", create_test_pdf_bytes(""), "application/pdf")},
+            data={"document_types": "paper"},
+        )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["status"], "no_research_content")
+        self.assertIn("including after OCR", response.json()["reason"])
+        mock_analyzer.assert_not_called()
+        self.assertEqual(storage._unconfirmed_analyses, {})
+
+    @patch("scholarbridge_ml.api_routes.analyze_professor_documents")
+    def test_groq_errors_are_returned_as_actionable_http_errors(self, mock_analyzer):
+        from scholarbridge_ml.professor_analyzer import ProfessorAnalysisResult
+
+        document = create_test_pdf_bytes("Research in graph neural networks. " * 8)
+        for error_code, expected_status in [
+            ("rate_limited", 429),
+            ("timeout", 504),
+            ("provider_error", 502),
+        ]:
+            mock_analyzer.return_value = ProfessorAnalysisResult(
+                status="error",
+                error_code=error_code,
+                reason="The AI provider could not analyze these documents.",
+            )
+            response = self.client.post(
+                "/professor/analyze-documents",
+                files={"files": ("research.pdf", document, "application/pdf")},
+            )
+            self.assertEqual(response.status_code, expected_status, response.text)
+            self.assertIn("detail", response.json())
+        self.assertEqual(storage._unconfirmed_analyses, {})
+
+    def test_professor_upload_rejects_non_pdf_bytes_even_with_pdf_name(self):
+        response = self.client.post(
+            "/professor/analyze-documents",
+            files={"files": ("fake.pdf", b"not a PDF", "application/pdf")},
+        )
+        self.assertEqual(response.status_code, 400)
+
     def test_confirm_research_profile_and_embedding_generation(self):
         """Test 2: Confirm research profile generates normalized 384-dim embedding and persists."""
         prof_id = "prof_jane_101"
@@ -154,6 +250,7 @@ class TestApiEndpoints(unittest.TestCase):
         self.assertEqual(data["professor_id"], prof_id)
         self.assertTrue(data["is_confirmed"])
         self.assertEqual(data["status"], "confirmed")
+        self.assertEqual(data["embedding_dimensions"], 384)
 
         # Verify embedding was generated with 384 dimensions and normalized
         embedding = storage.get_professor_embedding(prof_id)
@@ -272,6 +369,63 @@ class TestApiEndpoints(unittest.TestCase):
             self.assertIn("relevance_score", item)
             self.assertIn("matching_reasons", item)
             self.assertIn("eligibility_gaps", item)
+
+    def test_validate_format_endpoint_returns_preliminary_report(self):
+        response = self.client.post(
+            "/validate-format",
+            files={"file": ("sample-paper.pdf", create_test_pdf_bytes("Abstract Introduction Conclusion References"), "application/pdf")},
+        )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        report = response.json()
+        self.assertEqual(report["filename"], "sample-paper.pdf")
+        self.assertEqual(report["validation_type"], "preliminary_ieee_format_check")
+        self.assertEqual(report["page_count"], 1)
+        self.assertIsInstance(report["passed"], bool)
+        self.assertIsInstance(report["errors"], list)
+        self.assertIsInstance(report["warnings"], list)
+        self.assertIsInstance(report["detected_fonts"], list)
+        self.assertIsInstance(report["detected_sections"], list)
+
+    def test_validate_format_endpoint_rejects_non_pdf_and_invalid_pdf(self):
+        non_pdf = self.client.post(
+            "/validate-format",
+            files={"file": ("paper.txt", b"not a pdf", "text/plain")},
+        )
+        invalid_pdf = self.client.post(
+            "/validate-format",
+            files={"file": ("paper.pdf", b"not a pdf", "application/pdf")},
+        )
+
+        self.assertEqual(non_pdf.status_code, 415)
+        self.assertEqual(invalid_pdf.status_code, 400)
+
+    @patch("scholarbridge_ml.api_routes.get_shared_encoder")
+    def test_opportunity_sync_reuses_embedding_for_unchanged_content(self, mock_encoder_getter):
+        import numpy as np
+
+        encoder = MagicMock()
+        encoder.encode.return_value = np.ones((1, 384), dtype=np.float32)
+        mock_encoder_getter.return_value = encoder
+        payload = {
+            "opportunity_id": "spring-opening-42",
+            "professor_id": "17",
+            "title": "Machine Learning Research",
+            "description": "Research semantic document retrieval.",
+            "research_domains": ["Information Retrieval"],
+            "required_skills": ["Python"],
+        }
+
+        created = self.client.post("/opportunities", json=payload)
+        unchanged = self.client.post("/opportunities", json=payload)
+        closed = self.client.post("/opportunities", json={**payload, "status": "closed"})
+
+        self.assertEqual(created.status_code, 200)
+        self.assertEqual(unchanged.status_code, 200)
+        self.assertEqual(closed.status_code, 200)
+        self.assertEqual(closed.json()["status"], "closed")
+        encoder.encode.assert_called_once()
+        self.assertEqual(self.client.get("/opportunities").json(), [])
 
     @patch("scholarbridge_ml.api_routes.get_shared_encoder")
     def test_student_profile_sync_generates_embedding_for_professor_matches(self, mock_encoder_getter):

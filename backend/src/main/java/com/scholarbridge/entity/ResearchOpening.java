@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -38,6 +39,20 @@ public class ResearchOpening {
 
     @Column(length = 1000)
     private String requiredSkills;
+
+    @Column(columnDefinition = "text")
+    private String preferredSkillsJson = "[]";
+
+    @Column(columnDefinition = "text")
+    private String preferredYearsJson = "[]";
+
+    @Column(columnDefinition = "text")
+    private String eligibilityCriteriaJson = "[]";
+
+    private LocalDate deadline;
+
+    private boolean recommendationSyncPending;
+
     private int seats;
 
     @Enumerated(EnumType.STRING)

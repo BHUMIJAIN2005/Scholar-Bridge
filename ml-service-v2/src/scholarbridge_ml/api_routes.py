@@ -2,6 +2,7 @@ import logging
 import uuid
 from typing import Any, Callable
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
+import numpy as np
 from pydantic import BaseModel, Field
 import os
 import tempfile
@@ -46,6 +47,9 @@ logger = logging.getLogger("scholarbridge_ml.api_routes")
 
 router = APIRouter(tags=["Professor Matching & Research Discovery"])
 MAX_STUDENT_RESUME_SIZE = 25 * 1024 * 1024
+MAX_PROFESSOR_FILE_SIZE = 25 * 1024 * 1024
+MAX_PROFESSOR_TOTAL_SIZE = 100 * 1024 * 1024
+MAX_PROFESSOR_DOCUMENT_COUNT = 10
 
 # Dependency container for encoder callable
 _encoder_getter: Callable[[], Any] | None = None
@@ -274,6 +278,7 @@ class ProfileConfirmResponse(BaseModel):
     is_confirmed: bool
     confirmed_at: str
     message: str
+    embedding_dimensions: int
     research_profile: ResearchProfile
     stated_requirements: StatedRequirements | None
     layman_summary: LaymanSummary | None
@@ -501,12 +506,17 @@ async def analyze_documents(
     """
     if not files:
         raise HTTPException(status_code=400, detail="Please upload at least one PDF document.")
+    if len(files) > MAX_PROFESSOR_DOCUMENT_COUNT:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Upload no more than {MAX_PROFESSOR_DOCUMENT_COUNT} research documents at a time.",
+        )
 
     extracted_docs = []
     types_list = document_types or []
+    total_size = 0
 
     for idx, file in enumerate(files):
-        # Validate filename and PDF extension
         filename = file.filename or f"doc_{idx + 1}.pdf"
         if not (filename.lower().endswith(".pdf") or file.content_type == "application/pdf"):
             raise HTTPException(
@@ -514,17 +524,37 @@ async def analyze_documents(
                 detail=f"File '{filename}' is not a PDF. Only PDF documents are supported.",
             )
 
-        content = await file.read()
-        if len(content) > 25 * 1024 * 1024:
+        if idx < len(types_list) and types_list[idx].strip().lower() not in {
+            "cv", "paper", "publication", "other",
+        }:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported document type for '{filename}'.",
+            )
+
+        content = await file.read(MAX_PROFESSOR_FILE_SIZE + 1)
+        if len(content) > MAX_PROFESSOR_FILE_SIZE:
             raise HTTPException(
                 status_code=413,
                 detail=f"File '{filename}' exceeds maximum allowed size of 25MB.",
             )
+        total_size += len(content)
+        if total_size > MAX_PROFESSOR_TOTAL_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail="The combined research documents exceed the 100MB upload limit.",
+            )
+        if not content:
+            raise HTTPException(status_code=400, detail=f"File '{filename}' is empty.")
+        if not content.startswith(b"%PDF-"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"File '{filename}' is not a valid PDF.",
+            )
 
-        # Determine document type (cv vs paper vs publication)
         doc_type = "paper"
         if idx < len(types_list) and types_list[idx].strip():
-            doc_type = types_list[idx].strip()
+            doc_type = types_list[idx].strip().lower()
         elif "cv" in filename.lower() or "resume" in filename.lower():
             doc_type = "cv"
 
@@ -533,6 +563,16 @@ async def analyze_documents(
 
     # Combine extracted texts preserving document boundaries
     combined = combine_documents(extracted_docs)
+    if not combined.has_readable_content:
+        return ProfessorAnalysisResult(
+            status="no_research_content",
+            no_research_content=True,
+            reason="No readable academic content was extracted from these documents, including after OCR.",
+            extraction_metadata=combined.documents_metadata,
+            warnings=combined.warnings
+            + ["Upload a text-based or clearly scanned research CV or document and try again."],
+        )
+
     draft_id = f"draft_{uuid.uuid4().hex[:12]}"
 
     # Run Groq LLM research analysis
@@ -541,7 +581,23 @@ async def analyze_documents(
         documents_metadata=combined.documents_metadata,
         draft_id=draft_id,
     )
+    result.draft_id = draft_id
+    result.extraction_metadata = combined.documents_metadata
     result.warnings.extend(combined.warnings)
+
+    if result.status == "config_error":
+        raise HTTPException(status_code=503, detail=result.reason or "AI analysis is not configured.")
+    if result.status == "error":
+        status_code = {
+            "rate_limited": 429,
+            "timeout": 504,
+        }.get(result.error_code, 502)
+        raise HTTPException(
+            status_code=status_code,
+            detail=result.reason or "The AI provider could not analyze these documents.",
+        )
+    if result.status != "success" or result.research_profile is None:
+        raise HTTPException(status_code=502, detail="The AI provider returned an incomplete research profile.")
 
     # Save draft analysis in unconfirmed storage for subsequent review
     storage.save_unconfirmed_analysis(
@@ -587,7 +643,13 @@ def confirm_research_profile(
         ).strip()
         profile.embedding_text = embedding_text
 
-    if not any([profile.research_interests, profile.research_domains, profile.methods]):
+    if not any([
+        profile.research_interests,
+        profile.research_domains,
+        profile.methods,
+        profile.publications,
+        profile.contributions,
+    ]):
         raise HTTPException(
             status_code=422,
             detail="Cannot confirm an empty research profile. Provide at least research interests or domains.",
@@ -596,11 +658,20 @@ def confirm_research_profile(
     # Generate normalized 384-dim embedding using shared SentenceTransformer
     try:
         encoder = get_shared_encoder()
-        embedding_vector = encoder.encode([embedding_text], normalize_embeddings=True)[0]
+        embedding_vector = np.asarray(
+            encoder.encode([embedding_text], normalize_embeddings=True)[0],
+            dtype=np.float32,
+        )
+        if (
+            embedding_vector.shape != (384,)
+            or not np.isfinite(embedding_vector).all()
+            or not np.isclose(float(np.linalg.norm(embedding_vector)), 1.0, atol=1e-3)
+        ):
+            raise ValueError("The encoder returned an invalid normalized 384-dimensional vector.")
     except Exception as exc:
-        logger.error("Embedding generation failed during confirmation: %s", exc)
+        logger.error("Embedding generation failed during confirmation (%s).", type(exc).__name__)
         raise HTTPException(
-            status_code=500, detail=f"Embedding generation failed: {exc}"
+            status_code=500, detail="Embedding generation failed. Please retry."
         ) from exc
 
     # Retrieve original profile if draft_id provided
@@ -628,6 +699,7 @@ def confirm_research_profile(
         is_confirmed=True,
         confirmed_at=stored.confirmed_at,
         message="Research profile confirmed and 384-dimensional embedding generated successfully.",
+        embedding_dimensions=int(embedding_vector.shape[0]),
         research_profile=stored.confirmed_profile,
         stated_requirements=stored.stated_requirements,
         layman_summary=stored.layman_summary,
@@ -741,36 +813,55 @@ def create_opportunity(request: OpportunityCreateRequest) -> OpportunityPublicRe
     """
     opp_id = request.opportunity_id or f"opp_{uuid.uuid4().hex[:10]}"
 
-    encoder = get_shared_encoder()
-    opp_text = (
-        f"Research opening: {request.title}. "
-        f"Domains: {', '.join(request.research_domains)}. "
-        f"Required skills: {', '.join(request.required_skills)}. "
-        f"Description: {request.description}"
-    )
+    title = request.title.strip()
+    description = request.description.strip()
+    existing = storage.get_opportunity(opp_id)
+    if existing is not None and (
+        existing.embedding is not None
+        and len(existing.embedding) == 384
+        and existing.title == title
+        and existing.description == description
+        and existing.research_domains == request.research_domains
+        and existing.required_skills == request.required_skills
+    ):
+        existing.professor_id = request.professor_id
+        existing.preferred_skills = request.preferred_skills
+        existing.preferred_years = request.preferred_years
+        existing.eligibility_criteria = request.eligibility_criteria
+        existing.status = request.status or "open"
+        opportunity = storage.save_opportunity(existing)
+    else:
+        opp_text = (
+            f"Research opening: {title}. "
+            f"Domains: {', '.join(request.research_domains)}. "
+            f"Required skills: {', '.join(request.required_skills)}. "
+            f"Description: {description}"
+        )
 
-    try:
-        embedding_vec = encoder.encode([opp_text], normalize_embeddings=True)[0].tolist()
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to generate opportunity embedding: {exc}"
-        ) from exc
+        try:
+            encoder = get_shared_encoder()
+            embedding_vec = encoder.encode([opp_text], normalize_embeddings=True)[0].tolist()
+        except Exception as exc:
+            raise HTTPException(
+                status_code=500, detail=f"Failed to generate opportunity embedding: {exc}"
+            ) from exc
 
-    opportunity = OpportunityContext(
-        opportunity_id=opp_id,
-        professor_id=request.professor_id,
-        title=request.title.strip(),
-        description=request.description.strip(),
-        research_domains=request.research_domains,
-        required_skills=request.required_skills,
-        preferred_skills=request.preferred_skills,
-        preferred_years=request.preferred_years,
-        eligibility_criteria=request.eligibility_criteria,
-        status=request.status or "open",
-        embedding=embedding_vec,
-    )
-
-    storage.save_opportunity(opportunity)
+        opportunity = OpportunityContext(
+            opportunity_id=opp_id,
+            professor_id=request.professor_id,
+            title=title,
+            description=description,
+            research_domains=request.research_domains,
+            required_skills=request.required_skills,
+            preferred_skills=request.preferred_skills,
+            preferred_years=request.preferred_years,
+            eligibility_criteria=request.eligibility_criteria,
+            status=request.status or "open",
+            embedding=embedding_vec,
+        )
+        if existing is not None:
+            opportunity.created_at = existing.created_at
+        storage.save_opportunity(opportunity)
 
     return OpportunityPublicResponse(
         opportunity_id=opportunity.opportunity_id,
