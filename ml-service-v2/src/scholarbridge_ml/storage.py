@@ -140,6 +140,7 @@ class InMemoryStorage:
         professor_name: str | None = None,
         department: str | None = None,
         is_demo: bool = False,
+        confirmed_at: str | None = None,
     ) -> StoredProfile:
         with self._lock:
             professor_id = str(professor_id)
@@ -154,7 +155,7 @@ class InMemoryStorage:
                 layman_summary=layman_summary,
                 is_confirmed=True,
                 is_demo=is_demo,
-                confirmed_at=datetime.now(timezone.utc).isoformat(),
+                confirmed_at=confirmed_at or datetime.now(timezone.utc).isoformat(),
             )
 
             self._confirmed_profiles[professor_id] = stored
@@ -215,6 +216,15 @@ class InMemoryStorage:
                 professor_id: embedding.copy()
                 for professor_id, embedding in self._embeddings.items()
             }
+
+    def retain_confirmed_profiles(self, professor_ids: set[str]) -> list[str]:
+        """Remove cached profiles that are no longer confirmed in the source database."""
+        with self._lock:
+            stale_ids = set(self._confirmed_profiles) - {str(value) for value in professor_ids}
+            for professor_id in stale_ids:
+                self._confirmed_profiles.pop(professor_id, None)
+                self._embeddings.pop(professor_id, None)
+            return sorted(stale_ids)
 
     def save_opportunity(
         self, opportunity: OpportunityContext

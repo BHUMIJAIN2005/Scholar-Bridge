@@ -1,0 +1,9 @@
+id | paper_id | conference_id
+(0 rows, 7 ms)
+id | title | linked_paper_id
+(0 rows, 0 ms)
+table_name             | fk_column       | referenced_column
+blog_posts             | linked_paper_id | id
+conference_submissions | paper_id        | id
+paper_submissions      | student_id      | student_id
+(3 rows, 9 ms)

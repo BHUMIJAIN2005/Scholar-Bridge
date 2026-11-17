@@ -72,6 +72,7 @@ export const AiResearchProfileSection: React.FC = () => {
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmSuccess, setConfirmSuccess] = useState(false);
+  const [syncWarning, setSyncWarning] = useState<string | null>(null);
 
   // Interactive tag inputs
   const [newInterest, setNewInterest] = useState('');
@@ -95,11 +96,20 @@ export const AiResearchProfileSection: React.FC = () => {
       setProfileError(null);
       const status = await facultyResearchProfileApi.getConfirmedProfile();
       setConfirmedStatus(status);
+      setSyncWarning(
+        status.embedding_sync_status === 'PENDING'
+          ? status.sync_message || 'Your confirmed profile is saved; embedding synchronization is pending.'
+          : null
+      );
       if (status.is_confirmed) {
         // Load matching students
         try {
           const matchRes = await facultyResearchProfileApi.getStudentMatches(10);
           setMatches(matchRes.matches || []);
+          setSyncWarning(null);
+          setConfirmedStatus((current) => current
+            ? { ...current, embedding_sync_status: 'SYNCED', sync_message: null }
+            : current);
         } catch (e) {
           const response = (e as { response?: { data?: { message?: string; detail?: string } } }).response;
           setProfileError(response?.data?.detail || response?.data?.message || 'Could not load student matches.');
@@ -246,7 +256,7 @@ export const AiResearchProfileSection: React.FC = () => {
     setErrorMessage(null);
 
     try {
-      await facultyResearchProfileApi.confirmProfile(
+      const result = await facultyResearchProfileApi.confirmProfile(
         {
           research_profile: draftProfile,
           stated_requirements: draftRequirements,
@@ -254,8 +264,20 @@ export const AiResearchProfileSection: React.FC = () => {
           draft_id: draftId,
         }
       );
+      if (
+        !result.is_confirmed ||
+        result.status !== 'confirmed' ||
+        (result.embedding_sync_status === 'SYNCED' && result.embedding_dimensions !== 384)
+      ) {
+        throw new Error('The server returned an invalid research profile confirmation.');
+      }
 
       setConfirmSuccess(true);
+      setSyncWarning(
+        result.embedding_sync_status === 'PENDING'
+          ? result.sync_message || 'Your profile is saved; embedding synchronization is pending.'
+          : null
+      );
       setDraftProfile(null);
       setDraftId(null);
       // Refresh status & student matches
@@ -445,11 +467,16 @@ export const AiResearchProfileSection: React.FC = () => {
           <CheckCircle2 size={20} className="text-[#507CA9] shrink-0" />
           <div>
             <p className="font-semibold">Research Profile Confirmed Successfully!</p>
-            <p className="text-xs text-[#042558]">
-              Your 384-dimensional normalized MiniLM research embedding has been generated and stored.
-              Student collaborator recommendations are now active.
-            </p>
+            <p className="text-xs text-[#042558]">{syncWarning ||
+              'Your confirmed profile and 384-dimensional normalized MiniLM embedding are saved. Student collaborator recommendations are active.'}</p>
           </div>
+        </div>
+      )}
+
+      {syncWarning && !confirmSuccess && (
+        <div role="status" className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <AlertCircle size={18} className="mt-0.5 shrink-0 text-amber-600" />
+          <span>{syncWarning}</span>
         </div>
       )}
 

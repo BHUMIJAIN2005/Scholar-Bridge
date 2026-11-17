@@ -15,6 +15,7 @@ build/
 coverage/
 *.tsbuildinfo
 backend/target/
+backend/data/
 
 # Python-generated files and environments
 # Python virtual environments

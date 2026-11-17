@@ -1,0 +1,25 @@
+ScholarBridge approved test-data cleanup — verification report
+Backup directory: /Users/anusha/Documents/Scholar-Bridge/backups/demo-cleanup-20261117-095114
+Cold H2 backup SHA-256 (verified against source before deletion): f356ec1f32ad4f083a02e7d43ef5f2792bba47d208e9f901f792d46fa36fd589
+Database rows deleted: paper_submissions IDs 2 and 35; exactly 2 rows committed transactionally.
+Paper row 1: before/after CSV exports are byte-identical.
+Confirmed AI faculty profile: before/after CSV exports are byte-identical; confirmed timestamp, JSON, embedding model and embedding retained.
+Accounts/profiles before and after: 8 student accounts; 5 faculty accounts; 8 student profiles; 5 faculty profiles.
+Blog posts: 5 before and after; complete before/after CSV exports are byte-identical.
+Conference submissions: 0 before and after; complete before/after CSV exports are byte-identical.
+Foreign-key integrity: 30 constraints checked; 0 violations.
+PDFs quarantined: 10; each SHA-256 matches the audited sample hash.
+Unrelated PDFs preserved in backend/uploads: 6.
+Original-list filename discrepancy: approved substitute used after user acceptance: 3e772b74-99bd-4b43-8dee-2244dbd283e4.pdf (the originally listed 4b4e variant was absent).
+
+Quarantined PDFs:
+- 0940e6fc-3f7c-4850-a4be-b5444b11a16a.pdf
+- 168e0385-55a4-4650-be1e-d75e5dbd82cb.pdf
+- 176318d7-2d9d-4db1-98e4-4300a0f6b085.pdf
+- 3e772b74-99bd-4b43-8dee-2244dbd283e4.pdf
+- 69762dc5-c35d-4b4e-8e2d-508d090c20e7.pdf
+- 76407c3b-bc41-4d5f-b8a1-6ac64b1633ca.pdf
+- bd30ef00-9396-467a-a209-8b838cb4a81a.pdf
+- d713a6a1-ef73-41b9-a6be-75ec5153b7fd.pdf
+- dcc0a2a7-df21-4550-9735-781065db7491.pdf
+- f692182b-419c-459e-86e6-40ae1520ddf9.pdf

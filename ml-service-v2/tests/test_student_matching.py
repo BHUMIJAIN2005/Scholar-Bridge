@@ -1,13 +1,17 @@
+import sys
 import unittest
+from pathlib import Path
+
 import numpy as np
 
 from scholarbridge_ml.professor_analyzer import ResearchProfile, StatedRequirements, LaymanSummary
-from scholarbridge_ml.storage import OpportunityContext, StudentProfileRecord, storage
+from scholarbridge_ml.storage import OpportunityContext, StoredProfile, StudentProfileRecord, storage
 from scholarbridge_ml.student_matching import (
     calculate_normalized_composite_score,
     rank_students_for_professor,
     rank_students_for_opportunity,
     rank_opportunities_for_student,
+    rank_professors_for_student,
     generate_why_matched,
     compute_skill_overlap,
 )
@@ -104,6 +108,121 @@ class TestStudentMatching(unittest.TestCase):
         self.assertEqual(ranked[0].student_id, "student_a")
         self.assertGreater(ranked[0].match_score, ranked[1].match_score)
         self.assertGreaterEqual(ranked[0].match_score, 80.0)
+
+    def test_topic_profiles_produce_personalized_top_five_cosine_rankings(self):
+        service_dir = Path(__file__).resolve().parent.parent
+        sys.path.insert(0, str(service_dir))
+        sys.path.insert(0, str(service_dir / "src"))
+        from main import get_encoder
+
+        student_texts = [
+            "Student research profile: computer vision, deepfake detection, image forensics, facial manipulation detection, and visual media integrity.",
+            "Student research profile: natural language processing, large language models, transformer architectures, retrieval augmented generation, and text understanding.",
+            "Student research profile: robotics, autonomous navigation, SLAM, path planning, sensor fusion, and mobile robots.",
+        ]
+        faculty_texts = [
+            "Faculty research profile: computer vision and deepfake detection, image forensics, facial manipulation detection, and visual media integrity.",
+            "Faculty research profile: natural language processing and large language models, transformers, retrieval augmented generation, and computational linguistics.",
+            "Faculty research profile: robotics and autonomous navigation, SLAM, path planning, sensor fusion, and mobile robot systems.",
+            "Faculty research profile: cybersecurity, network defense, secure software, privacy engineering, and threat analysis.",
+            "Faculty research profile: medical imaging, radiology, image segmentation, and healthcare analytics.",
+            "Faculty research profile: distributed databases, cloud systems, data consistency, and scalable services.",
+        ]
+        encoded = get_encoder().encode(
+            student_texts + faculty_texts,
+            normalize_embeddings=True,
+        )
+        faculty_data = [
+            ("cv-faculty", "Computer Vision", "Deepfake Detection"),
+            ("nlp-faculty", "Natural Language Processing", "Large Language Models"),
+            ("robotics-faculty", "Robotics", "Autonomous Navigation"),
+            ("security-faculty", "Cybersecurity", "Network Defense"),
+            ("imaging-faculty", "Medical Imaging", "Image Segmentation"),
+            ("systems-faculty", "Distributed Systems", "Cloud Databases"),
+        ]
+        stored_professors = []
+        for index, (professor_id, domain, interest) in enumerate(faculty_data):
+            profile = ResearchProfile(
+                research_interests=[interest],
+                research_domains=[domain],
+                methods=[],
+                publications=[],
+                contributions=[],
+                embedding_text=faculty_texts[index],
+            )
+            stored_professors.append((
+                StoredProfile(
+                    professor_id=professor_id,
+                    confirmed_profile=profile,
+                    is_confirmed=True,
+                ),
+                encoded[len(student_texts) + index],
+            ))
+
+        expected_first_matches = [
+            ("cv-faculty", "Computer Vision and Deepfake Detection"),
+            ("nlp-faculty", "Natural Language Processing and Large Language Models"),
+            ("robotics-faculty", "Robotics and Autonomous Navigation"),
+        ]
+        actual_first_matches = []
+        for index, (expected, interest) in enumerate(expected_first_matches):
+            student = StudentProfileRecord(
+                id=f"topic-student-{index}",
+                interests=[interest],
+                embedding=encoded[index].tolist(),
+            )
+            ranked = rank_professors_for_student(student, stored_professors, top_k=5)
+
+            self.assertEqual(len(ranked), 5)
+            self.assertEqual(ranked[0]["professor_id"], expected)
+            self.assertTrue(all(
+                ranked[position]["match_score"] >= ranked[position + 1]["match_score"]
+                for position in range(len(ranked) - 1)
+            ))
+            actual_first_matches.append(ranked[0]["professor_id"])
+
+        self.assertEqual(len(set(actual_first_matches)), 3)
+
+    def test_professor_ranking_limits_to_five_highest_cosine_scores(self):
+        student_vector = np.zeros(384, dtype=np.float32)
+        student_vector[0] = 1.0
+        professors = []
+        for index, similarity in enumerate((1.0, 0.9, 0.8, 0.7, 0.6, 0.5)):
+            vector = np.zeros(384, dtype=np.float32)
+            vector[0] = similarity
+            vector[1] = np.sqrt(1 - similarity**2)
+            profile = ResearchProfile(
+                research_interests=[],
+                research_domains=[],
+                methods=[],
+                publications=[],
+                contributions=[],
+                embedding_text="",
+            )
+            professors.append((
+                StoredProfile(
+                    professor_id=f"professor-{index}",
+                    confirmed_profile=profile,
+                    is_confirmed=True,
+                ),
+                vector,
+            ))
+
+        ranked = rank_professors_for_student(
+            StudentProfileRecord(id="top-five-student", embedding=student_vector.tolist()),
+            professors,
+            top_k=5,
+        )
+
+        self.assertEqual(
+            [match["professor_id"] for match in ranked],
+            [f"professor-{index}" for index in range(5)],
+        )
+        self.assertEqual(len(ranked), 5)
+        self.assertTrue(all(
+            ranked[position]["match_score"] >= ranked[position + 1]["match_score"]
+            for position in range(len(ranked) - 1)
+        ))
 
     def test_no_cgpa_based_automatic_rejection_and_weight_normalization(self):
         """Test 11: Missing student optional info (e.g. no projects/papers, no CGPA) does not reject them."""

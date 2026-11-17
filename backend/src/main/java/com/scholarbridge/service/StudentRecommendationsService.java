@@ -76,11 +76,18 @@ public class StudentRecommendationsService {
         String studentId = student.getId().toString();
 
         synchronizeStudentProfile(student);
+        Set<String> eligibleProfessorIds = users.findApprovedFacultyWithConfirmedAiResearchProfile(
+                UserRole.FACULTY, FacultyApprovalStatus.APPROVED
+            ).stream()
+            .map(faculty -> faculty.getId().toString())
+            .collect(java.util.stream.Collectors.toSet());
 
         MlProfessorMatchesResponse mlResponse;
         try {
             mlResponse = mlClient.post()
-                .uri("/students/{studentId}/match-professors", studentId)
+                .uri("/students/{studentId}/match-professors?top_k=5", studentId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new MlProfessorMatchRequest(List.copyOf(eligibleProfessorIds)))
                 .retrieve()
                 .body(MlProfessorMatchesResponse.class);
         } catch (RestClientException exception) {
@@ -90,7 +97,9 @@ public class StudentRecommendationsService {
                 "Could not retrieve professor recommendations from the matching service."
             );
         }
-        if (mlResponse == null || mlResponse.matches() == null) {
+        if (mlResponse == null
+            || !studentId.equals(mlResponse.studentId())
+            || mlResponse.matches() == null) {
             logger.error("ML professor matching returned an invalid response for student {}", studentId);
             throw new BusinessRuleException(
                 HttpStatus.BAD_GATEWAY,
@@ -99,8 +108,11 @@ public class StudentRecommendationsService {
         }
 
         List<RecommendedProfessorResponse> matchedProfessors = mlResponse.matches().stream()
+            .filter(match -> match.isDemo() || eligibleProfessorIds.contains(match.professorId()))
             .map(this::findProfessor)
             .flatMap(Optional::stream)
+            .sorted(java.util.Comparator.comparingDouble(RecommendedProfessorResponse::matchScore).reversed())
+            .limit(5)
             .toList();
         if (!matchedProfessors.isEmpty()) {
             return matchedProfessors;
@@ -370,7 +382,7 @@ public class StudentRecommendationsService {
     }
 
     private StudentPaperMatch paperForMatching(PaperSubmission paper) {
-        return new StudentPaperMatch(paper.getTitle(), paper.getCategory());
+        return new StudentPaperMatch(paper.getTitle(), paper.getAbstractText(), paper.getCategory());
     }
 
     private List<String> nonEmpty(List<String> values) {
@@ -397,7 +409,11 @@ public class StudentRecommendationsService {
         @JsonProperty("resume_details") StudentResumeDetails resumeDetails
     ) {}
 
-    private record StudentPaperMatch(String title, String category) {}
+    private record StudentPaperMatch(
+        String title,
+        @JsonProperty("abstract") String abstractText,
+        String category
+    ) {}
 
     private record MlOpportunitySyncRequest(
         @JsonProperty("opportunity_id") String opportunityId,
@@ -448,6 +464,10 @@ public class StudentRecommendationsService {
         List<MlProfessorMatch> matches,
         int count,
         String note
+    ) {}
+
+    private record MlProfessorMatchRequest(
+        @JsonProperty("eligible_professor_ids") List<String> eligibleProfessorIds
     ) {}
 
     private record MlProfessorMatch(

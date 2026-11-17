@@ -1,5 +1,6 @@
 import io
 import json
+import os
 import unittest
 from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
@@ -251,6 +252,8 @@ class TestApiEndpoints(unittest.TestCase):
         self.assertTrue(data["is_confirmed"])
         self.assertEqual(data["status"], "confirmed")
         self.assertEqual(data["embedding_dimensions"], 384)
+        self.assertEqual(data["embedding_model"], "all-MiniLM-L6-v2")
+        self.assertEqual(len(data["embedding"]), 384)
 
         # Verify embedding was generated with 384 dimensions and normalized
         embedding = storage.get_professor_embedding(prof_id)
@@ -266,6 +269,118 @@ class TestApiEndpoints(unittest.TestCase):
         get_data = get_resp.json()
         self.assertEqual(get_data["professor_id"], prof_id)
         self.assertEqual(get_data["research_profile"]["methods"], ["U-Net", "PyTorch", "Differential Privacy"])
+
+    @patch("scholarbridge_ml.api_routes.get_shared_encoder")
+    def test_confirm_reuses_valid_database_embedding_and_original_confirmation_time(self, encoder):
+        import numpy as np
+
+        vector = np.zeros(384, dtype=np.float32)
+        vector[0] = 1.0
+        confirmed_at = "2026-11-16T12:00:00Z"
+        response = self.client.put(
+            "/professor/17/research-profile/confirm",
+            json={
+                "research_profile": {
+                    "research_interests": ["Graph Learning"],
+                    "research_domains": ["Artificial Intelligence"],
+                    "embedding_text": "Research in graph learning.",
+                },
+                "embedding": vector.tolist(),
+                "embedding_model": "all-MiniLM-L6-v2",
+                "confirmed_at": confirmed_at,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["confirmed_at"], confirmed_at)
+        self.assertEqual(response.json()["embedding"], vector.tolist())
+        encoder.assert_not_called()
+
+    @patch("scholarbridge_ml.api_routes.get_shared_encoder")
+    def test_confirm_builds_embedding_text_from_experience_and_technical_skills(self, encoder):
+        import numpy as np
+
+        vector = np.zeros(384, dtype=np.float32)
+        vector[0] = 1.0
+        encoder.return_value.encode.return_value = [vector]
+        response = self.client.put(
+            "/professor/18/research-profile/confirm",
+            json={
+                "research_profile": {
+                    "technical_skills": ["PyTorch"],
+                    "research_experience": ["Built a graph neural network for scientific data."],
+                    "embedding_text": "",
+                },
+            },
+        )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        embedding_text = response.json()["research_profile"]["embedding_text"]
+        self.assertIn("PyTorch", embedding_text)
+        self.assertIn("graph neural network", embedding_text)
+        encoder.return_value.encode.assert_called_once()
+
+    def test_reconcile_removes_profiles_not_present_in_spring_snapshot(self):
+        import numpy as np
+        from scholarbridge_ml.professor_analyzer import ResearchProfile
+
+        for professor_id in ("kept", "stale"):
+            storage.save_confirmed_profile(
+                professor_id=professor_id,
+                confirmed_profile=ResearchProfile(
+                    research_interests=["Graph Learning"],
+                    research_domains=["Artificial Intelligence"],
+                    embedding_text="Research in graph learning.",
+                ),
+                original_profile=None,
+                stated_requirements=None,
+                layman_summary=None,
+                embedding=np.eye(1, 384, dtype=np.float32)[0],
+            )
+
+        response = self.client.put(
+            "/professor/confirmed-profiles/reconcile",
+            json={"professor_ids": ["kept"]},
+        )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json(), {"removed_ids": ["stale"], "remaining_count": 1})
+        self.assertIsNotNone(storage.get_confirmed_profile("kept"))
+        self.assertIsNone(storage.get_confirmed_profile("stale"))
+        self.assertIsNone(storage.get_professor_embedding("stale"))
+
+    @patch("scholarbridge_ml.api_routes.demo_professors_enabled", return_value=False)
+    @patch("scholarbridge_ml.api_routes.get_shared_encoder")
+    def test_matching_only_returns_professors_in_spring_eligibility_snapshot(self, encoder, _demo_enabled):
+        import numpy as np
+        from scholarbridge_ml.professor_analyzer import ResearchProfile
+        from scholarbridge_ml.storage import StudentProfileRecord
+
+        vector = np.zeros(384, dtype=np.float32)
+        vector[0] = 1.0
+        storage.save_student(StudentProfileRecord(id="student-6", embedding=vector.tolist()))
+        for professor_id in ("eligible", "stale"):
+            storage.save_confirmed_profile(
+                professor_id=professor_id,
+                confirmed_profile=ResearchProfile(
+                    research_interests=["Graph Learning"],
+                    research_domains=["Artificial Intelligence"],
+                    embedding_text="Research in graph learning.",
+                ),
+                original_profile=None,
+                stated_requirements=None,
+                layman_summary=None,
+                embedding=vector,
+            )
+
+        response = self.client.post(
+            "/students/student-6/match-professors?top_k=5",
+            json={"eligible_professor_ids": ["eligible"]},
+        )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual([match["professor_id"] for match in response.json()["matches"]], ["eligible"])
+        encoder.assert_called_once()
 
     def test_match_students_for_professor_endpoint(self):
         """Test 3: Match students for confirmed professor returns explainable ranked candidates."""
@@ -455,7 +570,8 @@ class TestApiEndpoints(unittest.TestCase):
         self.assertIsNotNone(stored_student)
         self.assertEqual(len(stored_student.embedding), 384)
 
-        match_response = self.client.post("/students/6/match-professors")
+        with patch.dict(os.environ, {"SCHOLARBRIDGE_ENABLE_DEMO_PROFESSORS": "true"}):
+            match_response = self.client.post("/students/6/match-professors")
         self.assertEqual(match_response.status_code, 200)
         match_data = match_response.json()
         self.assertEqual(match_data["student_id"], "6")
@@ -470,6 +586,101 @@ class TestApiEndpoints(unittest.TestCase):
             self.assertTrue(professor.is_confirmed)
             self.assertTrue(professor.is_demo)
             self.assertEqual(len(storage.get_professor_embedding(professor_id)), 384)
+
+    @patch("scholarbridge_ml.api_routes.get_shared_encoder")
+    def test_empty_production_match_does_not_seed_demo_professors(self, mock_encoder_getter):
+        import numpy as np
+
+        encoder = MagicMock()
+        encoder.encode.return_value = np.ones((1, 384), dtype=np.float32)
+        mock_encoder_getter.return_value = encoder
+        self.client.put(
+            "/students/production-student/profile",
+            json={"id": "production-student", "name": "Student"},
+        )
+
+        with patch.dict(os.environ, {"SCHOLARBRIDGE_ENABLE_DEMO_PROFESSORS": "false"}):
+            response = self.client.post("/students/production-student/match-professors")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["matches"], [])
+        self.assertEqual(response.json()["count"], 0)
+        self.assertEqual(storage.get_all_confirmed_profiles(), [])
+
+    @patch("scholarbridge_ml.api_routes.get_shared_encoder")
+    def test_production_match_ignores_demo_profiles_already_in_storage(self, mock_encoder_getter):
+        import numpy as np
+        from scholarbridge_ml.professor_analyzer import ResearchProfile
+
+        encoder = MagicMock()
+        encoder.encode.return_value = np.ones((1, 384), dtype=np.float32)
+        mock_encoder_getter.return_value = encoder
+        storage.save_confirmed_profile(
+            professor_id="-1001",
+            confirmed_profile=ResearchProfile(
+                research_interests=["Computer Vision"],
+                research_domains=["Computer Vision"],
+                methods=[],
+                publications=[],
+                contributions=[],
+                embedding_text="Synthetic demo professor.",
+            ),
+            original_profile=None,
+            stated_requirements=None,
+            layman_summary=None,
+            embedding=np.ones(384, dtype=np.float32),
+            professor_name="[TEST DATA] Demo professor",
+            is_demo=True,
+        )
+        self.client.put(
+            "/students/production-demo-student/profile",
+            json={"id": "production-demo-student", "name": "Student"},
+        )
+
+        with patch.dict(os.environ, {"SCHOLARBRIDGE_ENABLE_DEMO_PROFESSORS": "false"}):
+            response = self.client.post("/students/production-demo-student/match-professors")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["matches"], [])
+
+    @patch("scholarbridge_ml.api_routes.get_shared_encoder")
+    def test_paper_abstract_changes_refresh_student_embedding(self, mock_encoder_getter):
+        import numpy as np
+
+        encoder = MagicMock()
+        encoder.encode.return_value = np.ones((1, 384), dtype=np.float32)
+        mock_encoder_getter.return_value = encoder
+        profile = {
+            "id": "paper-student",
+            "name": "Student",
+            "papers": [{
+                "title": "Visual Media Integrity",
+                "abstract": "Detecting deepfake videos using visual artifacts.",
+                "category": "Computer Vision",
+            }],
+        }
+
+        first = self.client.put("/students/paper-student/profile", json=profile)
+        unchanged = self.client.put("/students/paper-student/profile", json=profile)
+        changed = self.client.put(
+            "/students/paper-student/profile",
+            json={
+                **profile,
+                "papers": [{
+                    **profile["papers"][0],
+                    "abstract": "Detecting synthetic faces in manipulated video streams.",
+                }],
+            },
+        )
+
+        self.assertEqual(first.status_code, 200, first.text)
+        self.assertEqual(unchanged.status_code, 200, unchanged.text)
+        self.assertEqual(changed.status_code, 200, changed.text)
+        self.assertEqual(encoder.encode.call_count, 2)
+        self.assertEqual(
+            storage.get_student("paper-student").papers[0]["abstract"],
+            "Detecting synthetic faces in manipulated video streams.",
+        )
 
     def test_student_profile_sync_rejects_mismatched_ids(self):
         response = self.client.put(

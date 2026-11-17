@@ -113,8 +113,13 @@ class ProfileDirectoryIntegrationTest {
         paper.setStatus(PaperStatus.DONE);
         papers.saveAndFlush(paper);
 
-        assertThat(exchange("/api/students", HttpMethod.GET, studentToken, null).getStatusCode())
-            .isEqualTo(HttpStatus.FORBIDDEN);
+        ResponseEntity<String> studentDirectory = exchange(
+            "/api/students", HttpMethod.GET, studentToken, null);
+        assertThat(studentDirectory.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(containsId(
+            objectMapper.readTree(studentDirectory.getBody()).get("content"),
+            studentId
+        )).isTrue();
         JsonNode hiddenDirectory = objectMapper.readTree(
             exchange("/api/students?q=student-" + suffix, HttpMethod.GET, facultyToken, null).getBody());
         assertThat(containsId(hiddenDirectory.get("content"), studentId)).isFalse();

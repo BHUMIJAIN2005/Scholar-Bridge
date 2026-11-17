@@ -1,0 +1,17 @@
+metric                 | row_count
+accounts_faculty       | 5
+accounts_student       | 8
+blog_posts             | 5
+conference_submissions | 0
+faculty_profiles       | 5
+paper_submissions      | 1
+student_profiles       | 8
+(7 rows, 9 ms)
+id | stored_filename                          | student_id | title | status | has_embedding
+1  | 518475fe-615e-4252-bccf-69856449878d.pdf | 6          | jhi   | DONE   | TRUE
+(1 row, 1 ms)
+id | stored_filename
+(0 rows, 0 ms)
+user_id | ai_profile_confirmed | ai_profile_confirmed_at      | ai_research_embedding_model | profile_json_chars | embedding_chars
+1       | TRUE                 | 2026-11-17 03:56:26.07501+00 | all-MiniLM-L6-v2            | 1994               | 8040
+(1 row, 0 ms)

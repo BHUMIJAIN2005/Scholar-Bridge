@@ -105,7 +105,7 @@ In VS Code, run **Tasks: Run Task** and choose **ScholarBridge: Start all local 
 - H2 console: http://localhost:8080/h2-console
 - ML API docs and health: http://localhost:8000/docs and http://localhost:8000/health
 
-The Java service connects to the ML API at `http://localhost:8000`; the frontend connects to the Java API at `http://localhost:8080`. The local H2 database is in memory and resets when the backend stops. Uploaded PDFs are saved under `backend/uploads`.
+The Java service connects to the ML API at `http://localhost:8000`; the frontend connects to the Java API at `http://localhost:8080`. Local H2 data is stored in `backend/data/` and survives backend restarts. The database files are ignored by Git. Set `LOCAL_DATABASE_URL` to override the local JDBC URL. Production continues to use the PostgreSQL settings in `application-prod.yml`. Uploaded PDFs are saved under `backend/uploads`.
 
 The frontend is a Next.js app in `deploy-scholar-bridge-frontend-to-vercel/`. From that directory, install dependencies and start the development server:
 

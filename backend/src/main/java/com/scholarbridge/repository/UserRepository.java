@@ -18,6 +18,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByGoogleSubject(String googleSubject);
     boolean existsByEmailIgnoreCase(String email);
 
+    @EntityGraph(attributePaths = "facultyProfile")
+    Optional<User> findByIdAndRole(Long id, UserRole role);
+
     @EntityGraph(attributePaths = "studentProfile")
     List<User> findAllByRole(UserRole role);
 
@@ -68,6 +71,21 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findApprovedFacultyById(@Param("id") Long id,
         @Param("facultyRole") UserRole facultyRole,
         @Param("approved") FacultyApprovalStatus approved);
+
+    @EntityGraph(attributePaths = "facultyProfile")
+    @Query("""
+        select u from User u
+        left join u.facultyProfile fp
+        where u.role = :facultyRole
+          and (fp.approvalStatus = :approved
+            or (fp.approvalStatus is null and (u.approvalStatus = :approved or u.approvalStatus is null)))
+          and fp.aiProfileConfirmed = true
+          and fp.aiResearchProfileJson is not null
+        """)
+    List<User> findApprovedFacultyWithConfirmedAiResearchProfile(
+        @Param("facultyRole") UserRole facultyRole,
+        @Param("approved") FacultyApprovalStatus approved
+    );
 
     @EntityGraph(attributePaths = "studentProfile")
     @Query(value = """

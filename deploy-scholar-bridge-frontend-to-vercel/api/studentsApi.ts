@@ -13,5 +13,7 @@ export interface RecommendedProfessor {
 
 export async function getRecommendedProfessors(): Promise<RecommendedProfessor[]> {
   const response = await axiosClient.get<RecommendedProfessor[]>('/api/students/me/recommended');
-  return response.data;
+  return [...response.data]
+    .sort((first, second) => second.matchScore - first.matchScore)
+    .slice(0, 5);
 }

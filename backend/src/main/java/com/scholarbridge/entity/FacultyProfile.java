@@ -113,6 +113,11 @@ public class FacultyProfile {
     @Column(columnDefinition = "TEXT")
     private String aiStatedRequirementsJson;
 
+    @Column(columnDefinition = "TEXT")
+    private String aiResearchProfileEmbeddingJson;
+
+    private String aiResearchEmbeddingModel;
+
     private Boolean aiProfileConfirmed = false;
     private java.time.Instant aiProfileConfirmedAt;
 }

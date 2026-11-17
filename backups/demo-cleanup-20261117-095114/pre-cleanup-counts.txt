@@ -1,0 +1,9 @@
+metric                 | row_count
+accounts_faculty       | 5
+accounts_student       | 8
+blog_posts             | 5
+conference_submissions | 0
+faculty_profiles       | 5
+paper_submissions      | 3
+student_profiles       | 8
+(7 rows, 9 ms)

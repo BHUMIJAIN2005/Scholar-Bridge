@@ -1,0 +1,550 @@
+{
+  "evaluation_type": "arXiv primary-category proxy-label evaluation; NOT a verified model-training-independent holdout",
+  "collection_date": "2026-11-17T05:57:51+05:30",
+  "source": {
+    "name": "arXiv Atom API",
+    "api_url": "https://export.arxiv.org/api/query",
+    "paper_urls": [
+      "https://arxiv.org/abs/2611.18248v1",
+      "https://arxiv.org/abs/2611.18480v1",
+      "https://arxiv.org/abs/2611.18409v1",
+      "https://arxiv.org/abs/2611.18180v1",
+      "https://arxiv.org/abs/2611.18098v1",
+      "https://arxiv.org/abs/2611.18235v1",
+      "https://arxiv.org/abs/2611.18553v1",
+      "https://arxiv.org/abs/2611.18245v1",
+      "https://arxiv.org/abs/2611.18464v1",
+      "https://arxiv.org/abs/2611.18453v1",
+      "https://arxiv.org/abs/2611.18199v1",
+      "https://arxiv.org/abs/2611.18382v1",
+      "https://arxiv.org/abs/2611.18455v1",
+      "https://arxiv.org/abs/2611.18346v1",
+      "https://arxiv.org/abs/2611.18450v1",
+      "https://arxiv.org/abs/2611.18396v1",
+      "https://arxiv.org/abs/2611.18149v1",
+      "https://arxiv.org/abs/2611.18419v1",
+      "https://arxiv.org/abs/2611.18542v1",
+      "https://arxiv.org/abs/2611.18163v1",
+      "https://arxiv.org/abs/2611.18256v1",
+      "https://arxiv.org/abs/2611.17957v1",
+      "https://arxiv.org/abs/2611.17903v1",
+      "https://arxiv.org/abs/2611.17695v1",
+      "https://arxiv.org/abs/2611.18170v1",
+      "https://arxiv.org/abs/2611.18350v1",
+      "https://arxiv.org/abs/2611.17321v1",
+      "https://arxiv.org/abs/2611.18099v1",
+      "https://arxiv.org/abs/2611.17786v1",
+      "https://arxiv.org/abs/2611.17853v1",
+      "https://arxiv.org/abs/2611.17733v1",
+      "https://arxiv.org/abs/2611.17831v1",
+      "https://arxiv.org/abs/2611.17966v1",
+      "https://arxiv.org/abs/2611.17919v1",
+      "https://arxiv.org/abs/2611.18550v1",
+      "https://arxiv.org/abs/2611.18379v1",
+      "https://arxiv.org/abs/2611.18189v1",
+      "https://arxiv.org/abs/2611.17438v1",
+      "https://arxiv.org/abs/2611.17852v1",
+      "https://arxiv.org/abs/2611.17900v1",
+      "https://arxiv.org/abs/2611.16244v1",
+      "https://arxiv.org/abs/2611.16158v1",
+      "https://arxiv.org/abs/2611.17907v1",
+      "https://arxiv.org/abs/2611.15472v1",
+      "https://arxiv.org/abs/2611.16922v1",
+      "https://arxiv.org/abs/2611.17646v1",
+      "https://arxiv.org/abs/2611.18463v1",
+      "https://arxiv.org/abs/2611.15583v1",
+      "https://arxiv.org/abs/2611.15737v1",
+      "https://arxiv.org/abs/2611.17395v1",
+      "https://arxiv.org/abs/2611.16800v1",
+      "https://arxiv.org/abs/2611.16048v1",
+      "https://arxiv.org/abs/2611.17980v1",
+      "https://arxiv.org/abs/2611.17747v1",
+      "https://arxiv.org/abs/2611.18437v1",
+      "https://arxiv.org/abs/2611.17065v1",
+      "https://arxiv.org/abs/2611.17012v1",
+      "https://arxiv.org/abs/2611.17596v1",
+      "https://arxiv.org/abs/2611.17818v1",
+      "https://arxiv.org/abs/2611.17534v1",
+      "https://arxiv.org/abs/2611.14284v2",
+      "https://arxiv.org/abs/2611.13691v1",
+      "https://arxiv.org/abs/2611.14389v1",
+      "https://arxiv.org/abs/2611.14029v1",
+      "https://arxiv.org/abs/2611.15561v1",
+      "https://arxiv.org/abs/2611.17830v1",
+      "https://arxiv.org/abs/2611.15170v1",
+      "https://arxiv.org/abs/2611.13287v2",
+      "https://arxiv.org/abs/2611.12834v1",
+      "https://arxiv.org/abs/2611.16287v1",
+      "https://arxiv.org/abs/2611.17114v1",
+      "https://arxiv.org/abs/2611.15580v1",
+      "https://arxiv.org/abs/2611.14878v1",
+      "https://arxiv.org/abs/2611.13919v1",
+      "https://arxiv.org/abs/2611.14333v1",
+      "https://arxiv.org/abs/2611.15949v1",
+      "https://arxiv.org/abs/2611.16351v2",
+      "https://arxiv.org/abs/2611.13652v1",
+      "https://arxiv.org/abs/2611.15686v1",
+      "https://arxiv.org/abs/2611.15394v1",
+      "https://arxiv.org/abs/2611.17068v1",
+      "https://arxiv.org/abs/2611.18513v1",
+      "https://arxiv.org/abs/2611.17332v2",
+      "https://arxiv.org/abs/2611.17320v1",
+      "https://arxiv.org/abs/2611.18244v1",
+      "https://arxiv.org/abs/2611.18168v1",
+      "https://arxiv.org/abs/2611.18264v1",
+      "https://arxiv.org/abs/2611.17788v1",
+      "https://arxiv.org/abs/2611.17280v1",
+      "https://arxiv.org/abs/2611.17226v1",
+      "https://arxiv.org/abs/2611.17461v1",
+      "https://arxiv.org/abs/2611.17464v1",
+      "https://arxiv.org/abs/2611.18371v1",
+      "https://arxiv.org/abs/2611.18319v1",
+      "https://arxiv.org/abs/2611.16919v1",
+      "https://arxiv.org/abs/2611.16956v1",
+      "https://arxiv.org/abs/2611.18397v1",
+      "https://arxiv.org/abs/2611.17563v1",
+      "https://arxiv.org/abs/2611.18506v1",
+      "https://arxiv.org/abs/2611.17808v1",
+      "https://arxiv.org/abs/2611.17159v1",
+      "https://arxiv.org/abs/2611.18546v1",
+      "https://arxiv.org/abs/2611.17660v1",
+      "https://arxiv.org/abs/2611.16346v1",
+      "https://arxiv.org/abs/2611.16671v1",
+      "https://arxiv.org/abs/2611.17775v1",
+      "https://arxiv.org/abs/2611.16297v1",
+      "https://arxiv.org/abs/2611.16386v1",
+      "https://arxiv.org/abs/2611.16472v1",
+      "https://arxiv.org/abs/2611.15928v1",
+      "https://arxiv.org/abs/2611.17394v1",
+      "https://arxiv.org/abs/2611.18026v1",
+      "https://arxiv.org/abs/2611.15689v1",
+      "https://arxiv.org/abs/2611.16473v1",
+      "https://arxiv.org/abs/2611.16645v1",
+      "https://arxiv.org/abs/2611.18501v1",
+      "https://arxiv.org/abs/2611.16374v1",
+      "https://arxiv.org/abs/2611.16439v1",
+      "https://arxiv.org/abs/2611.18305v1",
+      "https://arxiv.org/abs/2611.18186v1",
+      "https://arxiv.org/abs/2611.16718v1",
+      "https://arxiv.org/abs/2611.16787v1",
+      "https://arxiv.org/abs/2611.16646v1",
+      "https://arxiv.org/abs/2611.15936v1",
+      "https://arxiv.org/abs/2611.16185v1",
+      "https://arxiv.org/abs/2611.18205v1",
+      "https://arxiv.org/abs/2611.15722v1",
+      "https://arxiv.org/abs/2611.15837v1",
+      "https://arxiv.org/abs/2611.18013v1",
+      "https://arxiv.org/abs/2611.15465v1",
+      "https://arxiv.org/abs/2611.15390v1",
+      "https://arxiv.org/abs/2611.17673v1",
+      "https://arxiv.org/abs/2611.15464v1",
+      "https://arxiv.org/abs/2611.18155v1",
+      "https://arxiv.org/abs/2611.17895v1",
+      "https://arxiv.org/abs/2611.18181v1",
+      "https://arxiv.org/abs/2611.15362v1",
+      "https://arxiv.org/abs/2611.16558v1",
+      "https://arxiv.org/abs/2611.18460v1",
+      "https://arxiv.org/abs/2611.15532v1",
+      "https://arxiv.org/abs/2611.17669v1",
+      "https://arxiv.org/abs/2611.16737v1",
+      "https://arxiv.org/abs/2611.16467v1",
+      "https://arxiv.org/abs/2611.16566v1",
+      "https://arxiv.org/abs/2611.17779v1",
+      "https://arxiv.org/abs/2611.18459v1",
+      "https://arxiv.org/abs/2611.17898v1",
+      "https://arxiv.org/abs/2611.18275v1",
+      "https://arxiv.org/abs/2611.18477v1",
+      "https://arxiv.org/abs/2611.18338v1",
+      "https://arxiv.org/abs/2611.17212v1",
+      "https://arxiv.org/abs/2611.16219v1",
+      "https://arxiv.org/abs/2611.17581v1",
+      "https://arxiv.org/abs/2611.16155v1",
+      "https://arxiv.org/abs/2611.18030v1",
+      "https://arxiv.org/abs/2611.16652v1",
+      "https://arxiv.org/abs/2611.16801v1",
+      "https://arxiv.org/abs/2611.16180v1",
+      "https://arxiv.org/abs/2611.16516v1",
+      "https://arxiv.org/abs/2611.16293v1"
+    ]
+  },
+  "mapping": {
+    "AI and Machine Learning": [
+      "cs.AI",
+      "cs.LG",
+      "stat.ML"
+    ],
+    "Computer Vision and Imaging": [
+      "cs.CV",
+      "eess.IV"
+    ],
+    "Cybersecurity and Privacy": [
+      "cs.CR",
+      "cs.CY"
+    ],
+    "Human-Computer Interaction and Social Computing": [
+      "cs.HC",
+      "cs.SI"
+    ],
+    "NLP and Information Retrieval": [
+      "cs.CL",
+      "cs.IR",
+      "cs.DL"
+    ],
+    "Robotics and Control": [
+      "cs.RO"
+    ],
+    "Signal Processing and Audio": [
+      "eess.SP",
+      "eess.AS",
+      "cs.SD"
+    ],
+    "Software Engineering and Systems": [
+      "cs.SE",
+      "cs.DC",
+      "cs.DB",
+      "cs.NI",
+      "cs.PF",
+      "cs.OS"
+    ]
+  },
+  "mapping_source": "ml-service-v2/models/category_map.json, conservatively subset to direct primary categories; ambiguous source categories excluded",
+  "dataset": {
+    "path": "data/independent_test_dataset.csv",
+    "records": 160,
+    "class_counts": {
+      "AI and Machine Learning": 20,
+      "Computer Vision and Imaging": 20,
+      "Cybersecurity and Privacy": 20,
+      "Human-Computer Interaction and Social Computing": 20,
+      "NLP and Information Retrieval": 20,
+      "Robotics and Control": 20,
+      "Signal Processing and Audio": 20,
+      "Software Engineering and Systems": 20
+    },
+    "source_category_counts": {
+      "cs.AI": 6,
+      "cs.LG": 10,
+      "stat.ML": 4,
+      "cs.CV": 19,
+      "eess.IV": 1,
+      "cs.CR": 17,
+      "cs.CY": 3,
+      "cs.HC": 15,
+      "cs.SI": 5,
+      "cs.CL": 16,
+      "cs.IR": 4,
+      "cs.DL": 0,
+      "cs.RO": 20,
+      "eess.SP": 14,
+      "eess.AS": 3,
+      "cs.SD": 3,
+      "cs.SE": 4,
+      "cs.DC": 7,
+      "cs.DB": 2,
+      "cs.NI": 4,
+      "cs.PF": 3,
+      "cs.OS": 0
+    },
+    "duplicate_arxiv_ids": 0,
+    "duplicate_abstracts": 0,
+    "exact_overlap_with_training_csv": 0,
+    "near_duplicate_threshold": 0.9,
+    "excluded_record_count": 0,
+    "excluded_records": [],
+    "query_log": [],
+    "empty_or_unusable_abstract_count": 0,
+    "minimum_abstract_characters": 553,
+    "near_duplicate_exclusion_threshold": 0.9,
+    "training_exact_overlap_count": 0
+  },
+  "model": {
+    "artifact": "models/tfidf_classifier.joblib",
+    "pipeline": "Pipeline(steps=[('tfidf',\n                 TfidfVectorizer(max_features=50000, min_df=2,\n                                 ngram_range=(1, 2), stop_words='english')),\n                ('classifier',\n                 LogisticRegression(class_weight='balanced', max_iter=1500,\n                                    random_state=42))])",
+    "labels": [
+      "AI and Machine Learning",
+      "Computer Vision and Imaging",
+      "Cybersecurity and Privacy",
+      "Human-Computer Interaction and Social Computing",
+      "NLP and Information Retrieval",
+      "Robotics and Control",
+      "Signal Processing and Audio",
+      "Software Engineering and Systems"
+    ],
+    "labels_exactly_match_targets": true,
+    "last_modified": "2026-11-16T00:38:23+05:30",
+    "training_provenance": "NOT VERIFIED"
+  },
+  "evaluation": {
+    "metrics_kind": "proxy category agreement; not manually verified scientific ground truth",
+    "metrics": {
+      "accuracy": 0.65,
+      "weighted_precision": 0.681781823510389,
+      "weighted_recall": 0.65,
+      "weighted_f1": 0.6563655618323138,
+      "macro_precision": 0.681781823510389,
+      "macro_recall": 0.6499999999999999,
+      "macro_f1": 0.6563655618323136,
+      "per_class": {
+        "AI and Machine Learning": {
+          "precision": 0.41935483870967744,
+          "recall": 0.65,
+          "f1": 0.5098039215686274,
+          "support": 20
+        },
+        "Computer Vision and Imaging": {
+          "precision": 0.7894736842105263,
+          "recall": 0.75,
+          "f1": 0.7692307692307693,
+          "support": 20
+        },
+        "Cybersecurity and Privacy": {
+          "precision": 0.7142857142857143,
+          "recall": 0.5,
+          "f1": 0.5882352941176471,
+          "support": 20
+        },
+        "Human-Computer Interaction and Social Computing": {
+          "precision": 0.6666666666666666,
+          "recall": 0.5,
+          "f1": 0.5714285714285714,
+          "support": 20
+        },
+        "NLP and Information Retrieval": {
+          "precision": 0.5,
+          "recall": 0.65,
+          "f1": 0.5652173913043478,
+          "support": 20
+        },
+        "Robotics and Control": {
+          "precision": 0.7894736842105263,
+          "recall": 0.75,
+          "f1": 0.7692307692307693,
+          "support": 20
+        },
+        "Signal Processing and Audio": {
+          "precision": 0.7,
+          "recall": 0.7,
+          "f1": 0.7,
+          "support": 20
+        },
+        "Software Engineering and Systems": {
+          "precision": 0.875,
+          "recall": 0.7,
+          "f1": 0.7777777777777778,
+          "support": 20
+        }
+      },
+      "confusion_matrix": {
+        "labels_order": [
+          "AI and Machine Learning",
+          "Computer Vision and Imaging",
+          "Cybersecurity and Privacy",
+          "Human-Computer Interaction and Social Computing",
+          "NLP and Information Retrieval",
+          "Robotics and Control",
+          "Signal Processing and Audio",
+          "Software Engineering and Systems"
+        ],
+        "counts": [
+          [
+            13,
+            0,
+            0,
+            1,
+            4,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            15,
+            0,
+            0,
+            4,
+            1,
+            0,
+            0
+          ],
+          [
+            5,
+            1,
+            10,
+            1,
+            2,
+            0,
+            1,
+            0
+          ],
+          [
+            3,
+            1,
+            3,
+            10,
+            1,
+            0,
+            1,
+            1
+          ],
+          [
+            2,
+            0,
+            1,
+            2,
+            13,
+            0,
+            1,
+            1
+          ],
+          [
+            2,
+            1,
+            0,
+            0,
+            0,
+            15,
+            2,
+            0
+          ],
+          [
+            3,
+            1,
+            0,
+            0,
+            1,
+            1,
+            14,
+            0
+          ],
+          [
+            3,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            14
+          ]
+        ]
+      }
+    },
+    "sample_selection": "six records with lowest SHA-256 digest of ScholarBridge-Arxiv-Sample-v1-2026-11-17|sample|<source_id>; selection independent of predictions/correctness",
+    "sample_predictions": [
+      {
+        "source_id": "2611.18409v1",
+        "source_url": "https://arxiv.org/abs/2611.18409v1",
+        "title": "Fuse-PINN: Combining Finite Element Methods and Physics-Informed Neural Networks to enable massively parallel simulations of non-linear PDEs",
+        "ground_truth_category": "AI and Machine Learning",
+        "predicted_category": "AI and Machine Learning",
+        "correct": true,
+        "confidence": 0.4602951315031538
+      },
+      {
+        "source_id": "2611.18030v1",
+        "source_url": "https://arxiv.org/abs/2611.18030v1",
+        "title": "PerfArena: Ranking LLMs by Code Performance",
+        "ground_truth_category": "Software Engineering and Systems",
+        "predicted_category": "Software Engineering and Systems",
+        "correct": true,
+        "confidence": 0.4824900770639513
+      },
+      {
+        "source_id": "2611.15394v1",
+        "source_url": "https://arxiv.org/abs/2611.15394v1",
+        "title": "Tracking What Works: Social Engineering Lures as Signatures for Victim-Centric Infostealer Campaign Discovery",
+        "ground_truth_category": "Human-Computer Interaction and Social Computing",
+        "predicted_category": "Human-Computer Interaction and Social Computing",
+        "correct": true,
+        "confidence": 0.34661757099845214
+      },
+      {
+        "source_id": "2611.18553v1",
+        "source_url": "https://arxiv.org/abs/2611.18553v1",
+        "title": "WeightBench: Evaluating Language Models as Weight-Space Programmers",
+        "ground_truth_category": "AI and Machine Learning",
+        "predicted_category": "NLP and Information Retrieval",
+        "correct": false,
+        "confidence": 0.307578548804708
+      },
+      {
+        "source_id": "2611.17581v1",
+        "source_url": "https://arxiv.org/abs/2611.17581v1",
+        "title": "Beyond Source Code: Evaluating Natural Language Specifications for LLM-Based C-to-Rust Translation",
+        "ground_truth_category": "Software Engineering and Systems",
+        "predicted_category": "NLP and Information Retrieval",
+        "correct": false,
+        "confidence": 0.3439573332270998
+      },
+      {
+        "source_id": "2611.17788v1",
+        "source_url": "https://arxiv.org/abs/2611.17788v1",
+        "title": "RAG-FGO: Dynamic Optimization of Query-Rewriting Agents for Generative RAG",
+        "ground_truth_category": "NLP and Information Retrieval",
+        "predicted_category": "NLP and Information Retrieval",
+        "correct": true,
+        "confidence": 0.1999182307123824
+      }
+    ]
+  },
+  "latency": {
+    "measurement": "direct sklearn predict_proba; 30 calls, zero explicit warm-ups, one arXiv abstract; no HTTP/PDF extraction",
+    "model_load_ms": 166.60408303141594,
+    "n": 30,
+    "mean_ms": 0.6407985,
+    "median_ms": 0.25768800000000003,
+    "p95_ms": 0.44270174999999967,
+    "first_call_ms": 11.344917,
+    "min_ms": 0.237042,
+    "max_ms": 11.344917
+  },
+  "full_document_latency": {
+    "status": "NOT MEASURED",
+    "reason": "arXiv PDF download failed with DNS resolution error (nodename nor servname provided, or not known)",
+    "n": 0,
+    "includes": [
+      "not measured"
+    ],
+    "excludes": [
+      "not measured"
+    ]
+  },
+  "api_checks": {
+    "endpoint": "POST /categorize",
+    "valid_research_abstract": {
+      "status": 200,
+      "category_present": true,
+      "confidence_present": true
+    },
+    "missing_text": 422,
+    "empty_text": 422,
+    "whitespace_text": 422,
+    "invalid_type": 422,
+    "multiple_requests": [
+      200,
+      200,
+      200,
+      200
+    ],
+    "valid_pdf": {
+      "status": "NOT MEASURED",
+      "reason": "arXiv PDF download failed with DNS resolution error (nodename nor servname provided, or not known)"
+    }
+  },
+  "limitations": [
+    "Exact abstract overlap with the tracked 40-row training CSV was checked and none found.",
+    "The training data/provenance used to build the fitted classifier is unavailable; independence from hidden model-training records cannot be proven.",
+    "arXiv primary subject categories are proxy ground truth for broader ScholarBridge classes; they are not manual paper-by-paper expert labels.",
+    "The tracked CSV has five differently worded labels, while the runtime classifier has eight outputs; no train/eval lineage is documented."
+  ],
+  "mapping_rationale": {
+    "AI and Machine Learning": "Direct arXiv AI, learning, and statistical ML primary subjects.",
+    "Computer Vision and Imaging": "Direct computer vision and image/video processing subjects.",
+    "Cybersecurity and Privacy": "Direct computer security and cybersecurity subjects.",
+    "Human-Computer Interaction and Social Computing": "Direct HCI and social computing subjects; broader sociology category excluded.",
+    "NLP and Information Retrieval": "Direct computational linguistics, information retrieval, and digital libraries subjects.",
+    "Robotics and Control": "Robotics primary subject only; broad systems/control and optimization subjects excluded as ambiguous.",
+    "Signal Processing and Audio": "Direct signal processing, audio, and sound subjects.",
+    "Software Engineering and Systems": "Direct software engineering and systems subjects covering distributed systems, databases, networks, performance, and operating systems."
+  }
+}

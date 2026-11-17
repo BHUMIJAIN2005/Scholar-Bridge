@@ -1,0 +1,17 @@
+id | stored_filename                          | student_id | title
+2  | f692182b-419c-459e-86e6-40ae1520ddf9.pdf | 6          | classificaton
+35 | dcc0a2a7-df21-4550-9735-781065db7491.pdf | 6          | hi
+(2 rows, 8 ms)
+id | paper_id
+(0 rows, 0 ms)
+id | linked_paper_id
+(0 rows, 0 ms)
+metric           | row_count
+faculty_accounts | 5
+faculty_profiles | 5
+student_accounts | 8
+student_profiles | 8
+(4 rows, 1 ms)
+user_id | ai_profile_confirmed | ai_profile_confirmed_at      | ai_research_embedding_model | profile_json_chars | embedding_chars
+1       | TRUE                 | 2026-11-17 03:56:26.07501+00 | all-MiniLM-L6-v2            | 1994               | 8040
+(1 row, 0 ms)

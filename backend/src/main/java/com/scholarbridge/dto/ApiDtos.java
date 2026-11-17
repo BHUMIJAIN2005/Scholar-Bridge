@@ -645,7 +645,9 @@ public final class ApiDtos {
         int embedding_dimensions,
         FacultyAiResearchProfileDto research_profile,
         FacultyAiStatedRequirementsDto stated_requirements,
-        FacultyAiLaymanSummaryDto layman_summary
+        FacultyAiLaymanSummaryDto layman_summary,
+        String embedding_sync_status,
+        String sync_message
     ) {}
 
     public record FacultyAiProfileStatusResponse(
@@ -654,7 +656,8 @@ public final class ApiDtos {
         String confirmed_at,
         FacultyAiResearchProfileDto research_profile,
         FacultyAiStatedRequirementsDto stated_requirements,
-        FacultyAiLaymanSummaryDto layman_summary
+        FacultyAiLaymanSummaryDto layman_summary,
+        String embedding_sync_status
     ) {}
 
     public record FacultyStudentMatchDto(

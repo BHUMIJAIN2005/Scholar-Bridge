@@ -1,0 +1,17 @@
+ScholarBridge approved test-data cleanup backup manifest
+Backup directory: /Users/anusha/Documents/Scholar-Bridge/backups/demo-cleanup-20261117-095114
+Cold H2 backup: scholarbridge.mv.db
+H2 SHA-256: f356ec1f32ad4f083a02e7d43ef5f2792bba47d208e9f901f792d46fa36fd589
+Expected sample PDF SHA-256: f56ea72bb2b70a4455ee9cb02fc684f893d89d0c5c7ad17338526620415a26d0
+
+Approved PDFs (backup copies):
+0940e6fc-3f7c-4850-a4be-b5444b11a16a.pdf	f56ea72bb2b70a4455ee9cb02fc684f893d89d0c5c7ad17338526620415a26d0	no paper_submissions row
+168e0385-55a4-4650-be1e-d75e5dbd82cb.pdf	f56ea72bb2b70a4455ee9cb02fc684f893d89d0c5c7ad17338526620415a26d0	no paper_submissions row
+176318d7-2d9d-4db1-98e4-4300a0f6b085.pdf	f56ea72bb2b70a4455ee9cb02fc684f893d89d0c5c7ad17338526620415a26d0	no paper_submissions row
+3e772b74-99bd-4b43-8dee-2244dbd283e4.pdf	f56ea72bb2b70a4455ee9cb02fc684f893d89d0c5c7ad17338526620415a26d0	no paper_submissions row
+69762dc5-c35d-4b4e-8e2d-508d090c20e7.pdf	f56ea72bb2b70a4455ee9cb02fc684f893d89d0c5c7ad17338526620415a26d0	no paper_submissions row
+76407c3b-bc41-4d5f-b8a1-6ac64b1633ca.pdf	f56ea72bb2b70a4455ee9cb02fc684f893d89d0c5c7ad17338526620415a26d0	no paper_submissions row
+bd30ef00-9396-467a-a209-8b838cb4a81a.pdf	f56ea72bb2b70a4455ee9cb02fc684f893d89d0c5c7ad17338526620415a26d0	no paper_submissions row
+d713a6a1-ef73-41b9-a6be-75ec5153b7fd.pdf	f56ea72bb2b70a4455ee9cb02fc684f893d89d0c5c7ad17338526620415a26d0	no paper_submissions row
+dcc0a2a7-df21-4550-9735-781065db7491.pdf	f56ea72bb2b70a4455ee9cb02fc684f893d89d0c5c7ad17338526620415a26d0	paper_submissions.id=35
+f692182b-419c-459e-86e6-40ae1520ddf9.pdf	f56ea72bb2b70a4455ee9cb02fc684f893d89d0c5c7ad17338526620415a26d0	paper_submissions.id=2

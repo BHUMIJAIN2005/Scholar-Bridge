@@ -50,6 +50,8 @@ MAX_STUDENT_RESUME_SIZE = 25 * 1024 * 1024
 MAX_PROFESSOR_FILE_SIZE = 25 * 1024 * 1024
 MAX_PROFESSOR_TOTAL_SIZE = 100 * 1024 * 1024
 MAX_PROFESSOR_DOCUMENT_COUNT = 10
+DEMO_PROFESSORS_ENV = "SCHOLARBRIDGE_ENABLE_DEMO_PROFESSORS"
+RESEARCH_EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
 # Dependency container for encoder callable
 _encoder_getter: Callable[[], Any] | None = None
@@ -96,6 +98,24 @@ def student_embedding_text(student: StudentProfileRecord) -> str:
         description = _joined_value(project.get("description"))
         technologies = _joined_value(project.get("technologies"))
         projects.append(f"{title}: {description}. Technologies: {technologies}")
+    papers = []
+    for paper in student.papers:
+        title = _joined_value(paper.get("title"))
+        abstract = _joined_value(
+            paper.get("abstract")
+            or paper.get("abstractText")
+            or paper.get("abstract_text")
+        )
+        category = _joined_value(paper.get("category"))
+        paper_text = ". ".join(
+            part for part in (
+                f"Title: {title}" if title else "",
+                f"Category: {category}" if category else "",
+                f"Abstract: {abstract}" if abstract else "",
+            ) if part
+        )
+        if paper_text:
+            papers.append(paper_text)
 
     details = student.resume_details
     education_text = _resume_items_text(
@@ -119,6 +139,7 @@ def student_embedding_text(student: StudentProfileRecord) -> str:
     return (
         f"Student background. Department: {student.department}. Academic year: {student.academic_year}. "
         f"Skills: {skills_text}. Research interests: {interests_text}. Projects: {' '.join(projects)}. "
+        f"Papers: {' '.join(papers)}. "
         f"Education: {education_text}. Internships: {internships_text}. Work experience: {work_text}. "
         f"Certifications: {certifications_text}. Achievements: {achievements_text}. "
         f"Research experience: {research_text}"
@@ -270,6 +291,9 @@ class ProfileConfirmRequest(BaseModel):
     stated_requirements: StatedRequirements | None = None
     layman_summary: LaymanSummary | None = None
     draft_id: str | None = None
+    embedding: list[float] | None = None
+    embedding_model: str | None = None
+    confirmed_at: str | None = None
 
 
 class ProfileConfirmResponse(BaseModel):
@@ -282,6 +306,21 @@ class ProfileConfirmResponse(BaseModel):
     research_profile: ResearchProfile
     stated_requirements: StatedRequirements | None
     layman_summary: LaymanSummary | None
+    embedding: list[float]
+    embedding_model: str
+
+
+class ConfirmedProfileReconcileRequest(BaseModel):
+    professor_ids: list[str] = Field(default_factory=list)
+
+
+class ConfirmedProfileReconcileResponse(BaseModel):
+    removed_ids: list[str]
+    remaining_count: int
+
+
+class StudentProfessorMatchRequest(BaseModel):
+    eligible_professor_ids: list[str] = Field(default_factory=list)
 
 
 class MatchStudentsRequest(BaseModel):
@@ -617,6 +656,15 @@ async def analyze_documents(
 # ---------------------------------------------------------
 
 
+def demo_professors_enabled() -> bool:
+    return os.getenv(DEMO_PROFESSORS_ENV, "false").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 @router.put(
     "/professor/{professor_id}/research-profile/confirm",
     response_model=ProfileConfirmResponse,
@@ -634,18 +682,40 @@ def confirm_research_profile(
     embedding_text = profile.embedding_text.strip()
 
     if not embedding_text:
-        # Fallback to synthesizing embedding text from interests, domains, and methods
-        embedding_text = (
-            f"Professor with research focus in {', '.join(profile.research_domains)}. "
-            f"Key research interests: {', '.join(profile.research_interests)}. "
-            f"Methodologies and tools: {', '.join(profile.methods)}. "
-            f"Key contributions: {', '.join(profile.contributions)}."
+        embedding_text = " ".join(
+            section
+            for section in (
+                f"Research domains: {', '.join(profile.research_domains)}."
+                if profile.research_domains
+                else "",
+                f"Research interests: {', '.join(profile.research_interests)}."
+                if profile.research_interests
+                else "",
+                f"Technical skills: {', '.join(profile.technical_skills)}."
+                if profile.technical_skills
+                else "",
+                f"Research experience: {', '.join(profile.research_experience)}."
+                if profile.research_experience
+                else "",
+                f"Methods: {', '.join(profile.methods)}."
+                if profile.methods
+                else "",
+                f"Publications: {', '.join(profile.publications)}."
+                if profile.publications
+                else "",
+                f"Contributions: {', '.join(profile.contributions)}."
+                if profile.contributions
+                else "",
+            )
+            if section
         ).strip()
         profile.embedding_text = embedding_text
 
     if not any([
         profile.research_interests,
         profile.research_domains,
+        profile.technical_skills,
+        profile.research_experience,
         profile.methods,
         profile.publications,
         profile.contributions,
@@ -655,24 +725,36 @@ def confirm_research_profile(
             detail="Cannot confirm an empty research profile. Provide at least research interests or domains.",
         )
 
-    # Generate normalized 384-dim embedding using shared SentenceTransformer
-    try:
-        encoder = get_shared_encoder()
-        embedding_vector = np.asarray(
-            encoder.encode([embedding_text], normalize_embeddings=True)[0],
-            dtype=np.float32,
-        )
+    embedding_vector: np.ndarray | None = None
+    if request.embedding is not None and request.embedding_model == RESEARCH_EMBEDDING_MODEL:
+        candidate = np.asarray(request.embedding, dtype=np.float32)
         if (
-            embedding_vector.shape != (384,)
-            or not np.isfinite(embedding_vector).all()
-            or not np.isclose(float(np.linalg.norm(embedding_vector)), 1.0, atol=1e-3)
+            candidate.shape == (384,)
+            and np.isfinite(candidate).all()
+            and np.isclose(float(np.linalg.norm(candidate)), 1.0, atol=1e-3)
         ):
-            raise ValueError("The encoder returned an invalid normalized 384-dimensional vector.")
-    except Exception as exc:
-        logger.error("Embedding generation failed during confirmation (%s).", type(exc).__name__)
-        raise HTTPException(
-            status_code=500, detail="Embedding generation failed. Please retry."
-        ) from exc
+            embedding_vector = candidate
+        else:
+            logger.warning("Ignoring invalid persisted faculty embedding for professor %s.", professor_id)
+
+    if embedding_vector is None:
+        try:
+            encoder = get_shared_encoder()
+            embedding_vector = np.asarray(
+                encoder.encode([embedding_text], normalize_embeddings=True)[0],
+                dtype=np.float32,
+            )
+            if (
+                embedding_vector.shape != (384,)
+                or not np.isfinite(embedding_vector).all()
+                or not np.isclose(float(np.linalg.norm(embedding_vector)), 1.0, atol=1e-3)
+            ):
+                raise ValueError("The encoder returned an invalid normalized 384-dimensional vector.")
+        except Exception as exc:
+            logger.error("Embedding generation failed during confirmation (%s).", type(exc).__name__)
+            raise HTTPException(
+                status_code=500, detail="Embedding generation failed. Please retry."
+            ) from exc
 
     # Retrieve original profile if draft_id provided
     original_profile: ResearchProfile | None = None
@@ -691,6 +773,7 @@ def confirm_research_profile(
         stated_requirements=request.stated_requirements,
         layman_summary=request.layman_summary,
         embedding=embedding_vector,
+        confirmed_at=request.confirmed_at,
     )
 
     return ProfileConfirmResponse(
@@ -703,6 +786,8 @@ def confirm_research_profile(
         research_profile=stored.confirmed_profile,
         stated_requirements=stored.stated_requirements,
         layman_summary=stored.layman_summary,
+        embedding=embedding_vector.tolist(),
+        embedding_model=RESEARCH_EMBEDDING_MODEL,
     )
 
 
@@ -729,6 +814,21 @@ def get_research_profile(professor_id: str) -> dict[str, Any]:
         "stated_requirements": stored.stated_requirements,
         "layman_summary": stored.layman_summary,
     }
+
+
+@router.put(
+    "/professor/confirmed-profiles/reconcile",
+    response_model=ConfirmedProfileReconcileResponse,
+)
+def reconcile_confirmed_profiles(
+    request: ConfirmedProfileReconcileRequest,
+) -> ConfirmedProfileReconcileResponse:
+    """Keep the ML cache aligned with the confirmed profiles in Spring's database."""
+    removed_ids = storage.retain_confirmed_profiles(set(request.professor_ids))
+    return ConfirmedProfileReconcileResponse(
+        removed_ids=removed_ids,
+        remaining_count=len(storage.get_all_confirmed_profiles()),
+    )
 
 
 # ---------------------------------------------------------
@@ -1077,6 +1177,7 @@ def sync_student_profile(
 def match_professors_for_student(
     student_id: str,
     top_k: int = Query(default=20, ge=1, le=100),
+    request: StudentProfessorMatchRequest | None = None,
 ) -> dict[str, Any]:
     """
     Rank confirmed professors for a student using research
@@ -1103,8 +1204,33 @@ def match_professors_for_student(
 
     # Retrieve all confirmed professor profiles and embeddings
     professors = storage.get_all_confirmed_profiles_with_embeddings()
+    demo_enabled = demo_professors_enabled()
+    eligible_ids = (
+        {str(professor_id) for professor_id in request.eligible_professor_ids}
+        if request is not None
+        else None
+    )
+    if not demo_enabled:
+        professors = [
+            (profile, embedding)
+            for profile, embedding in professors
+            if not profile.is_demo
+        ]
+    if eligible_ids is not None:
+        professors = [
+            (profile, embedding)
+            for profile, embedding in professors
+            if profile.is_demo or profile.professor_id in eligible_ids
+        ]
 
     if not professors:
+        if not demo_enabled:
+            return {
+                "student_id": student_id,
+                "matches": [],
+                "count": 0,
+                "note": "No confirmed faculty profiles are available.",
+            }
         seed_demo_professor_profiles_if_empty(encoder)
         professors = storage.get_all_confirmed_profiles_with_embeddings()
 

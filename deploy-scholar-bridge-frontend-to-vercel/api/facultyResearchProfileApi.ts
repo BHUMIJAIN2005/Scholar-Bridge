@@ -61,6 +61,17 @@ export interface ProfileStatusResponse {
   research_profile?: ResearchProfile | null;
   stated_requirements?: StatedRequirements | null;
   layman_summary?: LaymanSummary | null;
+  embedding_sync_status?: 'SYNCED' | 'PENDING' | 'NOT_CONFIRMED' | string;
+  sync_message?: string | null;
+}
+
+export interface ProfileConfirmResponse extends ProfileStatusResponse {
+  professor_id: string;
+  status: string;
+  is_confirmed: boolean;
+  embedding_dimensions: number;
+  message: string;
+  embedding_sync_status: 'SYNCED' | 'PENDING';
 }
 
 export interface StudentMatch {
@@ -100,8 +111,8 @@ export const facultyResearchProfileApi = {
   /**
    * Confirm research profile, generate final 384-dim embedding, and persist to database.
    */
-  async confirmProfile(payload: ProfileConfirmRequest): Promise<unknown> {
-    const response = await axiosClient.put(
+  async confirmProfile(payload: ProfileConfirmRequest): Promise<ProfileConfirmResponse> {
+    const response = await axiosClient.put<ProfileConfirmResponse>(
       '/api/faculty/research-profile/confirm',
       payload
     );
