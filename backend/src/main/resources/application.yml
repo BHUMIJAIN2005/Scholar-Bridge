@@ -33,10 +33,9 @@ app:
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   uploads:
     directory: ${SCHOLARBRIDGE_UPLOAD_DIR:./uploads}
-    profile-photos-dir: ${SCHOLARBRIDGE_PROFILE_PHOTOS_DIR:uploads/profile-photos}
   ml:
     service-url: ${ML_SERVICE_URL:http://localhost:8000}
   cors:
-    allowed-origin: ${FRONTEND_ORIGIN:http://localhost:3000}
+    allowed-origins: ${FRONTEND_ORIGIN:http://localhost:3000}
   seed:
     enabled: false

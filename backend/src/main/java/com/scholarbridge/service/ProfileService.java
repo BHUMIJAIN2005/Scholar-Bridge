@@ -67,7 +67,7 @@ public class ProfileService {
         ObjectMapper objectMapper,
         RestClient mlClient,
         StudentRecommendationsService recommendations,
-        @Value("${app.uploads.profile-photos-dir:uploads/profile-photos}") String profilePhotosDir
+        @Value("${app.uploads.directory}") String uploadDirectory
     ) {
         this.currentUser = currentUser;
         this.users = users;
@@ -75,7 +75,7 @@ public class ProfileService {
         this.objectMapper = objectMapper;
         this.mlClient = mlClient;
         this.recommendations = recommendations;
-        this.profilePhotosDirectory = Paths.get(profilePhotosDir).toAbsolutePath().normalize();
+        this.profilePhotosDirectory = Paths.get(uploadDirectory).toAbsolutePath().normalize().resolve("profile-photos");
     }
 
     @Transactional(readOnly = true)

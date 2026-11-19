@@ -59,6 +59,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**", "/error").permitAll()
+                .requestMatchers(HttpMethod.GET, "/health").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/conferences", "/api/conferences/*/showcase",
                     "/api/public/conference-submissions/*/paper").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/files/profile-photos/**").permitAll()
@@ -75,7 +76,7 @@ public class SecurityConfig {
 
     @Bean
     CorsConfigurationSource corsConfigurationSource(
-        @Value("${app.cors.allowed-origin}") String allowedOrigins
+        @Value("${app.cors.allowed-origins}") String allowedOrigins
     ) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(Arrays.stream(allowedOrigins.split(","))
