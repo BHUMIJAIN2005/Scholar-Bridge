@@ -1,6 +1,10 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+const rawBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://backend-production-8758ef00.up.railway.app';
+const cleanBaseUrl = rawBaseUrl.trim().replace(/\/+$/, '');
+export const API_BASE_URL = cleanBaseUrl.startsWith('http://') || cleanBaseUrl.startsWith('https://')
+  ? cleanBaseUrl
+  : `https://${cleanBaseUrl}`;
 
 export const axiosClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
